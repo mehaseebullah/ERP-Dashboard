@@ -1,41 +1,33 @@
 {
-  "name": "erp-dashboard",
-  "version": "0.1.0",
-  "private": true,
-  "dependencies": {
-    "axios": "^1.3.4",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-router-dom": "^6.9.0",
-    "react-scripts": "5.0.1",
-    "web-vitals": "^2.1.4",
-    "zustand": "^4.3.7"
-  },
+  "name": "user-dashboard",
+  "version": "0.0.0",
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --fix --ignore-path .gitignore",
+    "prettier": "prettier --write \"src/**/*.{js,jsx,ts,tsx,vue}\""
   },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
+  "dependencies": {
+    "@mdi/font": "7.0.96",
+    "axios": "^1.3.4",
+    "nanoid": "^4.0.2",
+    "pinia": "^2.0.23",
+    "roboto-fontface": "*",
+    "sweetalert2": "^11.7.3",
+    "vue": "^3.2.38",
+    "vue-router": "^4.0.0",
+    "vuetify": "3.1.13",
+    "webfontloader": "^1.0.0"
   },
   "devDependencies": {
-    "tailwindcss": "^3.2.7"
+    "@vitejs/plugin-vue": "^3.0.3",
+    "@vue/eslint-config-prettier": "^7.1.0",
+    "eslint": "^8.22.0",
+    "eslint-plugin-vue": "^9.3.0",
+    "prettier": "^2.8.7",
+    "unplugin-auto-import": "^0.15.2",
+    "vite": "^3.1.9",
+    "vite-plugin-vuetify": "^1.0.0-alpha.12"
   }
 }
