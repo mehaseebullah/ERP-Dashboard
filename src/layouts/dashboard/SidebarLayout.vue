@@ -15,16 +15,16 @@ const mainStore = useMainStore();
     <v-divider></v-divider>
 
     <v-list active-color="primary" density="compact" nav>
-      <v-list-item exact to="/dashboard" prepend-icon="mdi-home-city" title="Home"></v-list-item>
-      <v-list-item to="/dashboard/customers" prepend-icon="mdi-account-group" title="Customers"></v-list-item>
-      <v-list-item to="/dashboard/suppliers" prepend-icon="mdi-briefcase" title="Suppliers"></v-list-item>
+      <v-list-item exact to="/home" prepend-icon="mdi-home-city" title="Home"></v-list-item>
+      <v-list-item to="/customers" prepend-icon="mdi-account-group" title="Customers"></v-list-item>
+      <v-list-item to="/suppliers" prepend-icon="mdi-briefcase" title="Suppliers"></v-list-item>
       <v-list-group>
         <template v-slot:activator="{ props }">
           <v-list-item v-bind="props" prepend-icon="mdi-view-list" title="Inventory"></v-list-item>
         </template>
-        <v-list-item to="/dashboard/product/categories" title="Product Categories"></v-list-item>
+        <v-list-item to="/inventory/categories" title="Product Categories"></v-list-item>
         <v-list-item title="Products"></v-list-item>
-        <v-list-item title="Units"></v-list-item>
+        <v-list-item to="/inventory/units" title="Units"></v-list-item>
       </v-list-group>
       <v-list-group>
         <template v-slot:activator="{ props }">

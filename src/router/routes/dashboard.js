@@ -3,12 +3,12 @@ import HomeView from '@/views/HomeView.vue';
 
 const routes = [
   {
-    path: '/dashboard',
+    path: '/',
     component: Layout,
     name: 'DashboardLayout',
     children: [
       {
-        path: '',
+        path: '/home',
         name: 'home',
         component: HomeView,
         meta: {
@@ -17,7 +17,7 @@ const routes = [
         },
       },
       {
-        path: '/dashboard/customers',
+        path: '/customers',
         name: 'customers',
         component: import('@/views/Dashboard/Customers/CustomerView.vue'),
         meta: {
@@ -26,7 +26,7 @@ const routes = [
         },
       },
       {
-        path: '/dashboard/suppliers',
+        path: '/suppliers',
         name: 'suppliers',
         component: import('@/views/Dashboard/Suppliers/SupplierView.vue'),
         meta: {
@@ -35,9 +35,18 @@ const routes = [
         },
       },
       {
-        path: '/dashboard/product/categories',
+        path: '/inventory/categories',
         name: 'productCategories',
-        component: import('@/views/Dashboard/Catalog/ProductCategoriesView.vue'),
+        component: import('@/views/Dashboard/Inventory/ProductCategoriesView.vue'),
+        meta: {
+          title: 'Product Categories',
+          role: ['admin'],
+        },
+      },
+      {
+        path: '/inventory/units',
+        name: 'productUnits',
+        component: import('@/views/Dashboard/Inventory/ProductUnitsView.vue'),
         meta: {
           title: 'Product Categories',
           role: ['admin'],
