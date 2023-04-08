@@ -1,31 +1,45 @@
 <template>
-  <template v-for="(item, index) in items">
-    <v-list-group v-if="item.children" :key="index" :prepend-icon="item.isActive ? 'mdi-folder-open' : 'mdi-folder'">
-      <template v-slot:activator="{ props }">
-        <v-list-item @click="item.isActive = !item.isActive" :title="item.name" v-bind="props"> </v-list-item>
-      </template>
-      <v-list-item-group>
-        <RecursiveListComponent :items="item.children"></RecursiveListComponent>
-      </v-list-item-group>
-    </v-list-group>
-    <v-list-item v-else :key="item" :title="item.name"> </v-list-item>
-  </template>
+  <v-list class="pa-5">
+    <FolderTreeGroups :items="myItems" @setActive="setActive"></FolderTreeGroups>
+  </v-list>
 </template>
-
 <script>
+import FolderTreeGroups from './FolderTreeGroups.vue';
+import _ from 'lodash';
 export default {
-  name: 'RecursiveListComponent',
+  name: 'FolderTree',
+  components: {
+    FolderTreeGroups: FolderTreeGroups,
+  },
   props: {
     items: {
       type: Array,
       required: true,
     },
   },
-  components: {
-    RecursiveListComponent: this,
-  },
   data() {
-    return {};
+    return {
+      activeItem: null,
+      myItems: this.items,
+    };
+  },
+  methods: {
+    traverse(itms) {
+      itms.map((i) => {
+        if (_.isEqual({ ...i }, { ...this.activeItem })) {
+          i.isActive = true;
+        } else {
+          i.isActive = false;
+        }
+        if (i?.children?.length) {
+          this.traverse(i.children);
+        }
+      });
+    },
+    setActive(it) {
+      this.activeItem = it;
+      this.traverse(this.myItems);
+    },
   },
 };
 </script>

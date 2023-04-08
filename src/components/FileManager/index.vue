@@ -12,9 +12,7 @@
     <div class="border border-t-0 overflow-hidden">
       <v-row>
         <v-col cols="3">
-          <v-list>
-            <FolderTree :items="items"></FolderTree>
-          </v-list>
+          <FolderTree :items="items"></FolderTree>
         </v-col>
         <v-divider vertical></v-divider>
         <v-col cols="9">
@@ -36,15 +34,15 @@ const items = [
         isActive: false,
         children: [
           {
-            name: 'File 1.1.1',
+            name: 'Folder 1.1.1',
           },
           {
-            name: 'File 1.1.2',
+            name: 'Folder 1.1.2',
           },
         ],
       },
       {
-        name: 'File 1.2',
+        name: 'Folder 1.2',
       },
     ],
   },
@@ -53,15 +51,19 @@ const items = [
     isActive: false,
     children: [
       {
-        name: 'File 2.1',
+        name: 'Folder 2.1',
       },
       {
-        name: 'File 2.2',
+        name: 'Folder 2.2',
       },
     ],
   },
   {
-    name: 'File 3',
+    name: 'Folder 3',
+    isActive: false,
+  },
+  {
+    name: 'Folder 4',
   },
 ];
 const files = [
