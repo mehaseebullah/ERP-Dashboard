@@ -4,4 +4,4 @@ import suppliersModule from './suppliers';
 import inventoryModule from './inventory';
 import homeModule from './home';
 
-export default [authModule, customersModule, suppliersModule, inventoryModule, homeModule];
+export default { authModule, customersModule, suppliersModule, inventoryModule, homeModule };
