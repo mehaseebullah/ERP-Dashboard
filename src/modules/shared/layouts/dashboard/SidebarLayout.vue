@@ -1,4 +1,5 @@
 <script setup>
+import { useMainStore } from '../../store/main';
 const mainStore = useMainStore();
 </script>
 <template>

@@ -1,6 +1,7 @@
 <script setup>
 import HeaderLayout from './HeaderLayout.vue';
 import SidebarLayout from './SidebarLayout.vue';
+import { RouterView } from 'vue-router';
 </script>
 <template>
   <v-layout>

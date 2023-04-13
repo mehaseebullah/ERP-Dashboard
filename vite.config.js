@@ -18,8 +18,8 @@ export default defineConfig({
       autoImport: true,
     }),
     AutoImport({
-      imports: ['vue', 'vue-router'],
-      dirs: ['./src/helpers/**', './src/store/**', './src/composables/**'],
+      imports: ['vue'],
+      dirs: ['./src/core/helpers/**', './src/core/composables/**'],
       eslintrc: {
         enabled: true, // Default `false`
         filepath: './auto-import.json', // Default `./.eslintrc-auto-import.json`
