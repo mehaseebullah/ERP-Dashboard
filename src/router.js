@@ -10,10 +10,8 @@ const router = createRouter({
 export function registerRouter(app) {
   // appModules.forEach((mod) => {
   for (let key in appModules) {
-    const { routes } = appModules[key];
-    routes?.forEach((route) => {
-      router.addRoute(route);
-    });
+    const { initRoutes } = appModules[key];
+    initRoutes(router);
   }
   // });
   app.use(router);

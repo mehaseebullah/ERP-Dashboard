@@ -21,6 +21,7 @@
 
 <script setup>
 import AddProductCategory from './AddProductCategory.vue';
+import { ref } from 'vue';
 
 const showAddCategory = ref(false);
 const itemsPerPage = 5;

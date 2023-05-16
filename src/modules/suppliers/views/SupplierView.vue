@@ -21,6 +21,7 @@
 
 <script setup>
 import AddSupplier from './AddSupplier.vue';
+import { ref } from 'vue';
 
 const showAddSupplier = ref(false);
 const itemsPerPage = 5;

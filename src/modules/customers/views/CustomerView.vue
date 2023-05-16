@@ -21,6 +21,7 @@
 
 <script setup>
 import AddCustomer from './AddCustomer.vue';
+import { ref } from 'vue';
 
 const showAddCustomer = ref(false);
 const itemsPerPage = 5;

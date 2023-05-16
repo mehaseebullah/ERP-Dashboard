@@ -9,4 +9,8 @@ const routes = [
   },
 ];
 
-export default routes;
+export default (router) => {
+  routes?.forEach((route) => {
+    router.addRoute(route);
+  });
+};

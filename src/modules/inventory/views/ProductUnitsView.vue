@@ -21,6 +21,7 @@
 
 <script setup>
 import AddProductUnit from './AddProductUnit.vue';
+import { ref } from 'vue';
 
 const showAddUnit = ref(false);
 const itemsPerPage = 5;
