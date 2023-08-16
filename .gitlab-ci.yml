@@ -7,7 +7,7 @@ deploy:
     - chmod 400 $PHUB_SSH_KEY
   script:
     - ssh -o StrictHostKeyChecking=no -i $PHUB_SSH_KEY $PHUB_SERVER_USER@$PHUB_SERVER_IP "
-        if [ ! -d "/home/www/erp-dashboard" ]; then git clone git@gitlab.com:js.specialist/erp-dashboard.git /home/www/erp-dashboard; fi &&
+        if [ ! -d "/home/www/erp-dashboard" ]; then git clone git@gitlab.com:programmerzhub/erp-dashboard.git /home/www/erp-dashboard; fi &&
         cd /home/www/erp-dashboard &&
         git checkout main &&
         git pull &&
