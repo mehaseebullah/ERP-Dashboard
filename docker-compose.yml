@@ -1,9 +1,9 @@
 version: "3"
 
 services:
-  erp-dashboard-fe:
+  workspace-dashboard-fe:
     build:
-      context: ./apps/erp-dashboard
+      context: ./apps/workspace-dashboard
       dockerfile: Dockerfile
     restart: always
     ports:

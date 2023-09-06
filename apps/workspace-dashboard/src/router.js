@@ -1,10 +1,10 @@
 // Composables
-import { createRouter, createWebHashHistory } from 'vue-router';
+import { createRouter, createWebHistory } from 'vue-router';
 import appModules from './modules';
 
 const router = createRouter({
   routes: [],
-  history: createWebHashHistory(),
+  history: createWebHistory(),
 });
 
 export function registerRouter(app) {
