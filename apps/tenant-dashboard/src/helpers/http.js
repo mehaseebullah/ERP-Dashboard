@@ -1,13 +1,13 @@
 import axios from 'axios';
 import cfg from '../config';
-import useStores from '@/stores';
+import { useAuthStore } from '@/store/auth';
 
 const httpService = axios.create({ baseURL: cfg.apiUrl });
 
 httpService.interceptors.request.use(
   (config) => {
-    const { authStore } = useStores();
-    let token = authStore.token;
+    const { authStore } = useAuthStore();
+    let token = authStore?.token;
     if (token) {
       config.headers.Authorization = token;
       //   config.headers.common['Authorization'] = token;

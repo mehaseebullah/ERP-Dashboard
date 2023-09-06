@@ -1,10 +1,11 @@
 import { defineStore } from 'pinia';
 import http from '@/helpers/http';
+import { useSwal } from '@/composables/useSwal';
 
-const handleError = (err) => {
-  console.log(err);
-  alert(err.message || 'Something wrong');
-};
+function handleError(err) {
+  const swal = useSwal();
+  swal.error(err.message || 'Something went wrong');
+}
 
 export const useAuthStore = defineStore({
   id: 'authStore',
@@ -14,6 +15,14 @@ export const useAuthStore = defineStore({
   }),
   getters: {},
   actions: {
+    async register({ username, email, password }) {
+      try {
+        const { data } = await http.post('/ProgHub/Account/Register', { username, email, password });
+        return data;
+      } catch (err) {
+        handleError(err);
+      }
+    },
     async login({ username, password }) {
       try {
         const { data } = await http.post('/login', { username, password });

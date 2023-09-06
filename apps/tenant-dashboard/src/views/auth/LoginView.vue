@@ -46,7 +46,7 @@ const togglePass = () => {
           </v-row>
           <v-row>
             <v-col cols="6">
-              <v-btn size="small" variant="text">Create new account</v-btn>
+              <v-btn to="/register" size="small" variant="text">Create new account</v-btn>
             </v-col>
             <v-col class="text-right" cols="6">
               <v-btn color="primary">Login</v-btn>
