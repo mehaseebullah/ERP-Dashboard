@@ -11,12 +11,10 @@ import AppCpmponent from './App.vue';
 import { createApp } from 'vue';
 
 // Plugins
-import { registerPlugins } from './core/plugins';
-import { registerRouter } from './router';
+import { registerPlugins } from './plugins';
 
 const app = createApp(AppCpmponent);
 
 registerPlugins(app);
-registerRouter(app);
 
 app.mount('#app');

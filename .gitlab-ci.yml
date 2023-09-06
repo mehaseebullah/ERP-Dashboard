@@ -1,18 +1,18 @@
 stages:
   - deploy
-    
+
 deploy:
   stage: deploy
   before_script:
     - chmod 400 $PHUB_SSH_KEY
   script:
     - ssh -o StrictHostKeyChecking=no -i $PHUB_SSH_KEY $PHUB_SERVER_USER@$PHUB_SERVER_IP "
-        if [ ! -d "/var/www/projects/erp-dashboard" ]; then git clone git@gitlab.com:programmerzhub/erp-dashboard.git /var/www/projects/erp-dashboard; fi &&
-        cd /var/www/projects/erp-dashboard &&
-        git checkout main &&
-        git pull &&
-        docker compose down &&
-        docker compose build &&
-        docker compose up -d"
+      if [ ! -d "/var/www/projects/erp-dashboard" ]; then git clone git@gitlab.com:programmerzhub/erp-dashboard.git /var/www/projects/erp-dashboard; fi &&
+      cd /var/www/projects/erp-dashboard &&
+      git checkout main &&
+      git pull &&
+      docker compose down &&
+      docker compose build &&
+      docker compose up -d"
   only:
-    - main  # Change this to the branch you want to trigger the pipeline on
+    - main # Change this to the branch you want to trigger the pipeline on
