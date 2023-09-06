@@ -4,7 +4,7 @@ ENV MY_PORT=8080
 
 RUN npm install -g http-server
 
-WORKDIR /apps/erp-dashboard
+WORKDIR /apps/workspace-dashboard
 
 COPY package*.json ./
 
