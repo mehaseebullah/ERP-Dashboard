@@ -27,7 +27,6 @@ const doRegister = async () => {
   const { valid } = await form.value.validate();
   if (valid) {
     await authStore.register(formData);
-    swal.success('Account created successfully');
   } else {
     swal.error('Please fill all fields');
   }
