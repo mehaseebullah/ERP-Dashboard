@@ -14,7 +14,7 @@ const routes = [
     },
   },
   {
-    path: '/verify/email/:userId',
+    path: '/email/verify/:userId',
     component: () => import('../views/auth/OtpVerification.vue'),
     meta: {
       title: 'Verification',
@@ -22,7 +22,7 @@ const routes = [
     },
   },
   {
-    path: '/reset/password/otp/:userId',
+    path: '/password/verify/otp/:userId',
     component: () => import('../views/auth/OtpVerification.vue'),
     meta: {
       title: 'Verify OTP to reset password',
@@ -30,14 +30,14 @@ const routes = [
     },
   },
   {
-    path: '/forgetpassword',
+    path: '/password/forget',
     component: () => import('../views/auth/ForgetPassword.vue'),
     meta: {
       title: 'ForgetPassword',
     },
   },
   {
-    path: '/reset/password',
+    path: '/password/reset',
     component: () => import('../views/auth/ResetPassword.vue'),
     meta: {
       title: 'Reset Password',
