@@ -17,6 +17,7 @@ const configStore = useConfigStore();
 
     <v-list color="primary" density="compact" nav>
       <v-list-item exact to="/home" prepend-icon="mdi-home-city" title="Home"></v-list-item>
+      <v-list-item to="/workspace" prepend-icon="mdi-account-group" title="Workspace"></v-list-item>
       <v-list-item to="/customers" prepend-icon="mdi-account-group" title="Customers"></v-list-item>
       <v-list-item to="/suppliers" prepend-icon="mdi-briefcase" title="Suppliers"></v-list-item>
       <v-list-group>
