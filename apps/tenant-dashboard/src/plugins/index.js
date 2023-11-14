@@ -11,6 +11,7 @@ import vuetify from './vuetify';
 import router from '../routes';
 import pinia from '../store';
 import swal from './swal';
+import loader from './loader';
 
 export function registerPlugins(app) {
   loadFonts();
@@ -19,6 +20,7 @@ export function registerPlugins(app) {
   pinia.use(({ store }) => {
     store.$router = markRaw(router);
   });
+  app.use(loader(pinia));
   app.use(pinia);
   app.use(swal);
 }
