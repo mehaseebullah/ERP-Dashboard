@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import { VOtpInput } from 'vuetify/labs/VOtpInput';
+
 onMounted(() => {
   const route = useRoute();
   console.log(route.meta.type);
