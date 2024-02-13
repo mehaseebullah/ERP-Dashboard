@@ -1,8 +1,10 @@
-<template>
-  <v-app>
-    <router-view />
-  </v-app>
-</template>
 <script setup>
 import { RouterView } from 'vue-router';
 </script>
+<template>
+  <v-app>
+    <component :is="$route.meta.layout">
+      <router-view />
+    </component>
+  </v-app>
+</template>

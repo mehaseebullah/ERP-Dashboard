@@ -1,19 +1,14 @@
-import Layout from '../layouts/dashboard/DashboardLayout.vue';
+import DashboardLayout from '@/layouts/DashboardLayout.vue';
 
 const routes = [
   {
     path: '/home',
-    component: Layout,
-    children: [
-      {
-        path: '',
-        component: () => import('../views/HomeView.vue'),
-        meta: {
-          title: 'Customers',
-          role: ['admin'],
-        },
-      },
-    ],
+    component: () => import('../views/HomeView.vue'),
+    meta: {
+      title: 'Customers',
+      role: ['admin'],
+      layout: DashboardLayout,
+    },
   },
 ];
 
