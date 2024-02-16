@@ -1,6 +1,4 @@
 <script setup>
-import DashboardHeader from '@/components/DashboardHeader.vue';
-import PrimaryMenu from '@/components/PrimaryMenu.vue';
 import { RouterView } from 'vue-router';
 </script>
 <template>

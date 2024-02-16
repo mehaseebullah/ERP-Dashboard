@@ -8,3 +8,8 @@ import { RouterView } from 'vue-router';
     </component>
   </v-app>
 </template>
+<style>
+html {
+  overflow-y: hidden;
+}
+</style>

@@ -11,7 +11,7 @@ const routes = [
     },
   },
   {
-    path: '/addworkspace',
+    path: '/workspace/add',
     component: () => import('../views/workspace/AddWorkspaceView.vue'),
     meta: {
       title: 'New Workspace',

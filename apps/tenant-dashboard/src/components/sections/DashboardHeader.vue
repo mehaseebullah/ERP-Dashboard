@@ -1,4 +1,6 @@
 <script setup>
+import { useConfigStore } from '@/store/config';
+
 const configStore = useConfigStore();
 </script>
 <template>
