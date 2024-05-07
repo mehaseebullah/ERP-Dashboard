@@ -2,13 +2,17 @@
 import { useConfigStore } from '@/store/config';
 // import { storeToRefs } from 'pinia';
 import { onMounted, inject, ref, computed } from 'vue';
-
+import { useRoute, useRouter } from 'vue-router';
 const modules = ref([]);
 const configStore = useConfigStore();
 // const { modules } = storeToRefs(configStore);
 
 const sort = computed(() => (m) => m.sort((a, b) => a.position - b.position));
-
+const router = useRouter();
+const logout=()=>{
+localStorage.removeItem('access_token');
+window.location.reload();
+}
 onMounted(() => {
   modules.value = inject('modules');
 });
@@ -38,7 +42,7 @@ onMounted(() => {
     </div>
     <template v-slot:append>
       <div class="pa-2">
-        <v-btn block>
+        <v-btn block @click="logout">
           Logout
         </v-btn>
       </div>
