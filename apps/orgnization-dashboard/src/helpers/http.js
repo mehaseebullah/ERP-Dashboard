@@ -32,8 +32,9 @@ api.interceptors.request.use(
 
 api.interceptors.response.use(
   (response) => {
+    console.log('test')
     const swal = useSwal();
-    if (response?.data?.message && response?.data?.status == 'ok') {
+    if (response?.data?.message && (response?.statusText == 'OK' ||response?.statusText == 'Created')) {
       swal.success(response.data.message);
     } else if (response?.data?.message) {
       swal.error(response.data.message);
@@ -42,7 +43,7 @@ api.interceptors.response.use(
   },
   (error) => {
     const swal = useSwal();
-    if (error?.response?.data?.message && error?.response?.data?.status == 'error') {
+    if (error?.response?.data?.message && error?.response?.status == '404') {
       swal.error(error?.response.data.message);
     }
     return Promise.reject(error);

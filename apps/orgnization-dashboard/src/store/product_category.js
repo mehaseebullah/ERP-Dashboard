@@ -8,22 +8,23 @@ export const useProductCategoryStore = defineStore({
   }),
   actions: {
     async fetchProductCategories() {
-      const { data } = await api.get('/catalog/category/list');
-      this.categories = data?.data;
+      this.categories=[];
+      const { data } = await api.get('/Inventory/Categories/GetAllCategories?PageSize=1000&PageNumber=0');
+      this.categories = data?.data?.data;;
       return this.categories;
     },
     async createProductCategory({ title, description }) {
-      const { data } = await api.post('/catalog/category/create', { title, description });
+      const { data } = await api.post('/Inventory/Categories/Create', { title, description });
       this.fetchProductCategories();
       return data?.data;
     },
     async updateProductCategory({ id, title, description }) {
-      const { data } = await api.post('/catalog/category/update', { id, title, description });
+      const { data } = await api.put('/Inventory/Categories/Update', { id, title, description });
       this.fetchProductCategories();
       return data?.data;
     },
     async deleteProductCategory({ id }) {
-      const { data } = await api.post('/catalog/category/delete', { id });
+      const { data } = await api.delete(`/Inventory/Categories/Delete?Id=${id}`);
       this.fetchProductCategories();
       return data?.data;
     },
