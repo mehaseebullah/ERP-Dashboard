@@ -42,10 +42,21 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
+    console.log('tstes')
     const swal = useSwal();
     if (error?.response?.data?.message && error?.response?.status == '404') {
       swal.error(error?.response.data.message);
     }
+    else if (error?.response?.data?.message && error?.response?.status == '409') {
+      swal.error(error?.response.data.message);
+    }
+    else if (error?.response?.data && error?.response?.status == '400') {
+      let content='';
+      for(let item in error?.response?.data?.errors)
+        content+=`${error?.response?.data.errors[item]}`;
+      swal.error(content);
+    }
+   
     return Promise.reject(error);
   },
 );
