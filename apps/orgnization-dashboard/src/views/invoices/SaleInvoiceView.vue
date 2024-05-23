@@ -3,28 +3,28 @@ import { ref, onMounted, computed, watchEffect } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useSwal } from '@/composables/useSwal';
 import { useProductStore } from '@/store/product';
-import { useInvoiceStore } from '@/store/invoice';
+import { useSaleInvoiceStore } from '@/store/sale_invoice';
 import { useCustomerStore } from '@/store/customer';
 
 const productStore = useProductStore();
 const customerStore = useCustomerStore();
-const invoiceStore = useInvoiceStore();
+const saleInvoiceStore = useSaleInvoiceStore();
 
 const { products } = storeToRefs(productStore);
 const { customers } = storeToRefs(customerStore);
-const { getSaleInvoices } = storeToRefs(invoiceStore);
+const { saleInvoices } = storeToRefs(saleInvoiceStore);
 
 const swal = useSwal();
 
 const headers = [
   {
-    title: 'Ref No',
-    key: 'refNo',
+    title: 'invoice No',
+    key: 'invoiceNo',
     sortable: true,
   },
   {
-    title: 'Supplier',
-    key: 'customerSupplierCode',
+    title: 'customer',
+    key: 'customerName',
     sortable: true,
   },
   {
@@ -48,21 +48,20 @@ const headers = [
   },
 ];
 const formModal = {
-  invoiceType: 'sale',
-  refNo: '',
-  invoiceDate: '',
+  invoiceNo: '',
   description: '',
-  customerSupplierCode: '',
-  total: 0,
-  purchaseTotal: 0,
+  customerId: null,
+  total: 0.0,
+  subTotal:0.0,
+  pTotal: 0,
   discount: 0,
-  details: [
+  siDetails: [
     {
-      productId: '',
+      productId: null,
       quantity: 0,
-      unitPrice: 0,
-      purchasePrice: 0,
-      purchaseTotal: 0,
+      salePrice: 0.0,
+      purchasePrice: 0.0,
+      purchaseTotal: 0.0,
       total: 0,
       discount: 0,
     },
@@ -91,11 +90,11 @@ async function newInvoice() {
 }
 
 async function createInvoice() {
-  const details = formData.value.details.map((entry) => {
+  const details = formData.value.siDetails.map((entry) => {
     return {
       productId: entry.productId,
       quantity: entry.quantity,
-      unitPrice: entry.unitPrice,
+      salePrice: entry.salePrice,
       total: entry.total,
       discount: entry.discount,
     };
@@ -130,12 +129,12 @@ async function deleteInvoice(id) {
 
 function updateEntryPrices(entry) {
   const p = products.value.find((p) => p.id == entry.productId);
-  entry.unitPrice = p?.salePrice;
+  entry.salePrice = p?.salePrice;
   entry.purchasePrice = p?.purchasePrice;
 }
 
 function updateEntryTotal(entry) {
-  entry.total = entry.unitPrice * entry.quantity;
+  entry.total = entry.salePrice * entry.quantity;
   entry.purchaseTotal = entry.purchasePrice * entry.quantity;
 }
 
@@ -152,9 +151,9 @@ onMounted(async () => {
         <v-spacer></v-spacer>
         <v-btn @click="newInvoice()">Create Invoice</v-btn>
       </v-toolbar>
-      <v-data-table :loading="$loading('fetchPurchaseInvoiceList')" :headers="headers" :items="getSaleInvoices">
+      <v-data-table :loading="$loading('fetchPurchaseInvoiceList')" :headers="headers" :items="saleInvoices">
         <template v-slot:item.supplierId="{ item }">
-          {{ suppliers.find((s) => s.id == item.supplierId)?.name }}
+          {{ suppliers.find((s) => s.id == item.supplierId)?.fullName }}
         </template>
         <template v-slot:item.actions="{ item }">
           <v-icon class="me-2" size="small" @click="editInvoice(item)"> mdi-pencil </v-icon>
@@ -201,7 +200,7 @@ onMounted(async () => {
               <v-text-field
                 type="number"
                 density="compact"
-                v-model.number="entry.unitPrice"
+                v-model.number="entry.salePrice"
                 label="Unit Price"
                 variant="outlined"
               ></v-text-field>
@@ -227,7 +226,7 @@ onMounted(async () => {
               ></v-text-field>
             </v-col>
             <v-col v-if="index > 0" cols="1">
-              <v-btn variant="text" size="small" icon="mdi-delete" @click="formData.details.splice(index, 1)"></v-btn>
+              <v-btn variant="text" size="small" icon="mdi-delete" @click="formData.siDetails.splice(index, 1)"></v-btn>
             </v-col>
           </v-row>
         </template>
@@ -235,11 +234,12 @@ onMounted(async () => {
           <v-btn
             variant="text"
             @click="
-              formData.details.push({
-                productId: '',
+              formData.siDetails.push({
+                productId: null,
+                purchasePrice:0.0,
                 quantity: 0,
-                unitPrice: 0,
-                total: 0,
+                salePrice: 0.0,
+                total: 0.0,
               })
             "
             >Add Entry</v-btn
