@@ -13,28 +13,28 @@ export const useChartOfAccounts = defineStore({
       const { data } = await api.get('/accounting/account/types');
       this.accountTypes = data?.data;
     },
-    async fetchAccountGroups() {
-      const { data } = await api.get('/accounting/account/groups');
-      this.accountGroups = data?.data;
+    async fetchAllAccountGroups() {
+      const { data } = await api.get('/Finance/AccountGroups/GetAllAccountGroups');
+      this.accountGroups = data?.data?.data;
     },
-    async fetchAccounts() {
-      const { data } = await api.get('/accounting/account/list');
-      this.accounts = data?.data;
+    async fetchAllChartOfAccounts() {
+      const { data } = await api.get('/Finance/ChartOfAccounts/GetAllChartOfAccounts?PageSize=10000&PageNumber=0');
+      this.accounts = data?.data?.data;
     },
-    async createAccount({ name, email, phone, address }) {
-      const { data } = await api.post('/accounting/account/create', { name, email, phone, address });
+    async createAccount({ title, code, accountGroupId }) {
+      const { data } = await api.post('/Finance/ChartOfAccounts/Create', { title, code, accountGroupId });
       this.fetchAccounts();
-      return data?.data;
+      return data?.data?.data;
     },
-    async updateAccount({ id, name, email, phone, address }) {
-      const { data } = await api.post('/accounting/account/update', { id, name, email, phone, address });
+    async updateAccount({ id, title, code, accountGroupId }) {
+      const { data } = await api.put('/Finance/ChartOfAccounts/Update', { id, title, code, accountGroupId  });
       this.fetchAccounts();
-      return data?.data;
+      return data?.data?.data;
     },
     async deleteAccount({ id }) {
-      const { data } = await api.post('/accounting/account/delete', { id });
+      const { data } = await api.delete(`/Finance/ChartOfAccounts/Delete/${id}`);
       this.fetchAccounts();
-      return data?.data;
+      return data?.data?.data;
     },
   },
 });

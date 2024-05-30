@@ -89,7 +89,7 @@ async function deleteVoucher(id) {
 onMounted(async () => {
   voucherStore.fetchVoucherList();
   voucherStore.fetchVoucherTypes();
-  coaStore.fetchAccounts();
+  coaStore.fetchAllChartOfAccounts();
 });
 </script>
 <template>
