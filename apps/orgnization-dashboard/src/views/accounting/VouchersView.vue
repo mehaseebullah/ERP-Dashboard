@@ -35,15 +35,16 @@ const headers = [
   },
 ];
 const formModal = {
+  voucherNo: '',
+  voucherTypeId: '',
   voucherDate: '',
-  refNo: '',
-  voucherType: '',
   description: '',
-  details: [
+  ledgerDetailDTO: [
     {
       accountId: '',
       debit: 0,
       credit: 0,
+      remarks:''
     },
   ],
 };
@@ -106,7 +107,7 @@ onMounted(async () => {
           <v-btn
             size="small"
             variant="text"
-            :disabled="item.is_system"
+            :disabled="item.isSystem"
             @click="deleteVoucher(item.id)"
             icon="mdi-delete"
           >
@@ -167,7 +168,7 @@ onMounted(async () => {
           </v-row>
         </template>
         <div class="d-flex justify-end mb-5">
-          <v-btn variant="text" @click="formData.details.push({ accountId: '', debit: 0, credit: 0 })">Add Entry</v-btn>
+          <v-btn variant="text" @click="formData.details.push({ accountId: '', debit: 0.0, credit: 0.0 })">Add Entry</v-btn>
         </div>
         <div class="d-flex justify-end">
           <v-btn v-if="isEdit" :loading="$loading('updateVoucher')" type="submit" color="primary">Update</v-btn>
