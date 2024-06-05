@@ -14,20 +14,20 @@ const swal = useSwal();
 
 const headers = [
   {
-    title: 'Title',
-    key: 'title',
+    title: 'Voucher Type',
+    key: 'voucherType',
   },
   {
-    title: 'Code',
-    key: 'code',
+    title: 'Description',
+    key: 'description',
   },
   {
-    title: 'Type',
-    key: 'type',
+    title: 'Voucher Date',
+    key: 'voucherDate',
   },
   {
-    title: 'Category',
-    key: 'category',
+    title: 'Voucher No',
+    key: 'voucherNo',
   },
   {
     title: 'Actions',
@@ -35,9 +35,9 @@ const headers = [
   },
 ];
 const formModal = {
-  voucherNo: '',
-  voucherTypeId: '',
-  voucherDate: '',
+  voucherNo: null,
+  voucherTypeId: null,
+  voucherDate: null,
   description: '',
   ledgerDetailDTO: [
     {
@@ -118,19 +118,19 @@ onMounted(async () => {
     <main-drawer v-model="showDrawer" width="800" title="CREATE VOUCHER" :toolbar="{ color: 'primary' }">
       <v-form class="pa-5" @submit.prevent="isEdit ? updateVoucher() : createVoucher()">
         <v-text-field v-model="formData.voucherDate" label="Date" type="date" variant="outlined"></v-text-field>
-        <v-text-field v-model="formData.refNo" label="Voucher No" variant="outlined"></v-text-field>
+        <v-text-field v-model="formData.voucherNo" label="Voucher No" variant="outlined"></v-text-field>
         <v-select
-          :items="Object.values(voucherTypes).map(parseTitle) || []"
+          :items="voucherTypes"
           item-title="title"
           item-value="id"
-          v-model="formData.voucherType"
+          v-model="formData.voucherTypeId"
           :loading="$loading('fetchVoucherTypes')"
           label="Type"
           variant="outlined"
         >
         </v-select>
         <v-textarea v-model="formData.description" label="Description" variant="outlined" rows="2"></v-textarea>
-        <template v-for="(entry, index) in formData.details" :key="index">
+        <template v-for="(entry, index) in formData.ledgerDetailDTO" :key="index">
           <v-row>
             <v-col>
               <v-select
@@ -168,7 +168,7 @@ onMounted(async () => {
           </v-row>
         </template>
         <div class="d-flex justify-end mb-5">
-          <v-btn variant="text" @click="formData.details.push({ accountId: '', debit: 0.0, credit: 0.0 })">Add Entry</v-btn>
+          <v-btn variant="text" @click="formData.ledgerDetailDTO.push({ accountId: '', debit: 0.0, credit: 0.0 })">Add Entry</v-btn>
         </div>
         <div class="d-flex justify-end">
           <v-btn v-if="isEdit" :loading="$loading('updateVoucher')" type="submit" color="primary">Update</v-btn>

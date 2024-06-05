@@ -10,12 +10,13 @@ export const useChartOfAccounts = defineStore({
   }),
   actions: {
     async fetchAccountTypes() {
-      const { data } = await api.get('/accounting/account/types');
-      this.accountTypes = data?.data;
+      // const { data } = await api.get('/accounting/account/types');
+      // this.accountTypes = data?.data;
     },
     async fetchAllAccountGroups() {
       const { data } = await api.get('/Finance/AccountGroups/GetAllAccountGroups');
-      this.accountGroups = data?.data?.data;
+      console.log(data)
+      this.accountGroups = data?.data;
     },
     async fetchAllChartOfAccounts() {
       const { data } = await api.get('/Finance/ChartOfAccounts/GetAllChartOfAccounts?PageSize=10000&PageNumber=0');

@@ -52,7 +52,7 @@ const formModal = {
   description: '',
   customerId: null,
   total: 0.0,
-  subTotal:0.0,
+  subTotal: 0.0,
   pTotal: 0,
   discount: 0,
   siDetails: [
@@ -75,12 +75,16 @@ const showDrawer = ref(false);
 watchEffect(() => {
   let total = 0;
   let purchaseTotal = 0;
-  formData.value.details.forEach((entry) => {
-    total += entry.total || 0;
-    purchaseTotal += entry.purchaseTotal || 0;
-  });
-  formData.value.total = total;
-  formData.value.purchaseTotal = purchaseTotal;
+  if (formData.value.siDetails) {
+    formData.value.siDetails.forEach((entry) => {
+      total += entry.total || 0;
+      purchaseTotal += entry.purchaseTotal || 0;
+    });
+    formData.value.total = total;
+    formData.value.subTotal = total;
+
+    formData.value.pTotal = purchaseTotal;
+  }
 });
 
 async function newInvoice() {
@@ -99,7 +103,7 @@ async function createInvoice() {
       discount: entry.discount,
     };
   });
-  await invoiceStore.createInvoice({ ...formData.value, details });
+  await saleInvoiceStore.createInvoice({ ...formData.value, details });
   showDrawer.value = false;
   formData.value = { ...formModal };
   isEdit.value = false;
@@ -112,7 +116,7 @@ async function editInvoice(item) {
 }
 
 async function updateInvoice() {
-  await invoiceStore.updateInvoice(formData.value);
+  await saleInvoiceStore.updateInvoice(formData.value);
   showDrawer.value = false;
   formData.value = { ...formModal };
   isEdit.value = false;
@@ -141,7 +145,7 @@ function updateEntryTotal(entry) {
 onMounted(async () => {
   customerStore.fetchCustomers();
   productStore.fetchProducts();
-  invoiceStore.fetchInvoiceList();
+  saleInvoiceStore.fetchSaleInvoiceList();
 });
 </script>
 <template>
@@ -171,59 +175,27 @@ onMounted(async () => {
             <v-text-field v-model="formData.refNo" label="Ref No" variant="outlined"></v-text-field>
           </v-col>
         </v-row>
-        <v-select
-          :items="customers"
-          item-title="name"
-          item-value="code"
-          v-model="formData.customerSupplierCode"
-          :loading="$loading('fetchSuppliers')"
-          label="Customer"
-          variant="outlined"
-        ></v-select>
+        <v-select :items="customers" item-title="fullName" item-value="id" v-model="formData.customerId"
+          :loading="$loading('fetchSuppliers')" label="Customer" variant="outlined"></v-select>
         <v-textarea v-model="formData.description" label="Description" variant="outlined" rows="2"></v-textarea>
-        <template v-for="(entry, index) in formData.details" :key="index">
+        <template v-for="(entry, index) in formData.siDetails" :key="index">
           <v-row>
             <v-col>
-              <v-select
-                :items="products"
-                item-title="title"
-                item-value="id"
-                v-model="entry.productId"
-                :loading="$loading('fetchProducts')"
-                label="Product"
-                variant="outlined"
-                density="compact"
-                @update:model-value="updateEntryPrices(entry)"
-              ></v-select>
+              <v-select :items="products" item-title="title" item-value="id" v-model="entry.productId"
+                :loading="$loading('fetchProducts')" label="Product" variant="outlined" density="compact"
+                @update:model-value="updateEntryPrices(entry)"></v-select>
             </v-col>
             <v-col>
-              <v-text-field
-                type="number"
-                density="compact"
-                v-model.number="entry.salePrice"
-                label="Unit Price"
-                variant="outlined"
-              ></v-text-field>
+              <v-text-field type="number" density="compact" v-model.number="entry.salePrice" label="Unit Price"
+                @keyup="updateEntryTotal(entry)" variant="outlined"></v-text-field>
             </v-col>
             <v-col>
-              <v-text-field
-                type="number"
-                density="compact"
-                v-model.number="entry.quantity"
-                label="Quantity"
-                variant="outlined"
-                @keyup="updateEntryTotal(entry)"
-              ></v-text-field>
+              <v-text-field type="number" density="compact" v-model.number="entry.quantity" label="Quantity"
+                variant="outlined" @keyup="updateEntryTotal(entry)"></v-text-field>
             </v-col>
             <v-col>
-              <v-text-field
-                readonly
-                type="number"
-                density="compact"
-                v-model.number="entry.total"
-                label="Total"
-                variant="outlined"
-              ></v-text-field>
+              <v-text-field readonly type="number" density="compact" v-model.number="entry.total" label="Total"
+                variant="outlined"></v-text-field>
             </v-col>
             <v-col v-if="index > 0" cols="1">
               <v-btn variant="text" size="small" icon="mdi-delete" @click="formData.siDetails.splice(index, 1)"></v-btn>
@@ -231,27 +203,19 @@ onMounted(async () => {
           </v-row>
         </template>
         <div class="d-flex justify-end mb-5">
-          <v-btn
-            variant="text"
-            @click="
-              formData.siDetails.push({
-                productId: null,
-                purchasePrice:0.0,
-                quantity: 0,
-                salePrice: 0.0,
-                total: 0.0,
-              })
-            "
-            >Add Entry</v-btn
-          >
+          <v-btn variant="text" @click="
+            formData.siDetails.push({
+              productId: null,
+              purchasePrice: 0.0,
+              quantity: 0,
+              salePrice: 0.0,
+              total: 0.0,
+            })
+            ">Add Entry</v-btn>
         </div>
         <div class="d-flex justify-end">
-          <v-text-field
-            v-model.number="formData.total"
-            type="number"
-            label="Total Amount"
-            variant="outlined"
-          ></v-text-field>
+          <v-text-field v-model.number="formData.total" type="number" label="Total Amount"
+            variant="outlined"></v-text-field>
         </div>
 
         <div class="d-flex justify-end mt-5">

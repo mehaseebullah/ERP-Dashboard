@@ -75,11 +75,13 @@ const showDrawer = ref(false);
 
 watchEffect(() => {
   let total = 0;
-  formData.value.piDetails.forEach((entry) => {
-    total += entry.total || 0;
-  });
-  formData.value.subTotal = total;
-  formData.value.total = total;
+  if (formData.value.piDetails) {
+    formData.value.piDetails.forEach((entry) => {
+      total += entry.total || 0;
+    });
+    formData.value.subTotal = total;
+    formData.value.total = total;
+  }
 });
 
 async function newInvoice() {

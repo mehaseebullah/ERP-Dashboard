@@ -28,6 +28,34 @@ export async function registerPlugins(app) {
     //const response = await api.get('/setting/bootstrap');
     const modules = [
       {
+        "id": "6fc58c4d-609a-4bb2-a9ad-a142492b1a66",
+        "name": "Accounting",
+        "code": "accounting",
+        "icon": "mdi-cash",
+        "menu": {
+            "title": "Accounting",
+            "children": [
+                {
+                    "title": "Chart of Accounts",
+                    "code": "chart_of_accounts",
+                    "icon": "mdi-account",
+                    "url": "/accounting/chart-of-accounts",
+                    "component": "accounting/ChartOfAccountsView"
+                },
+                {
+                    "title": "Vouchers",
+                    "code": "vouchers",
+                    "icon": "mdi-book",
+                    "url": "/accounting/vouchers",
+                    "component": "accounting/VouchersView"
+                }
+            ]
+        },
+        "position": 13,
+        "createdAt": "2024-05-02T10:48:07.576Z",
+        "updatedAt": "2024-05-02T10:48:07.576Z"
+    },
+      {
         "id": "408702f1-43aa-47a8-b172-eb6c4c514d80",
         "name": "Customer",
         "code": "customer",

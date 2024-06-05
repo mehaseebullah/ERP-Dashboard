@@ -10,7 +10,7 @@ export const useVoucherStore = defineStore({
   actions: {
     async fetchVoucherTypes() {
       const { data } = await api.get('/Finance/VoucherTypes/GetAllVoucherTypes');
-      this.voucherTypes = data?.data?.data;
+      this.voucherTypes = data?.data;
     },
     async fetchVoucherList() {
       const { data } = await api.get('/Finance/Voucher/GetAllVoucher?PageSize=1000&PageNumber=0');

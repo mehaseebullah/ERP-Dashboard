@@ -7,7 +7,7 @@ export const useSaleInvoiceStore = defineStore({
     saleInvoices: [],
   }),
   actions: {
-    async fetchInvoiceList() {
+    async fetchSaleInvoiceList() {
       this.saleInvoices=[];
       const { data } = await api.get('/Sale/SaleInvoice/GetAllSaleInvoiceOrders?PageSize=1000&PageNumber=0');
       this.saleInvoices = data?.data?.data;
@@ -15,17 +15,17 @@ export const useSaleInvoiceStore = defineStore({
     },
     async createInvoice(d) {
       const { data } = await api.post('/Sale/SaleInvoice/Create', d);
-      this.fetchInvoices();
+      this.fetchSaleInvoiceList();
       return data?.data?.data;
     },
     async updateInvoice({ id, title, description }) {
       const { data } = await api.put('/Sale/SaleInvoice/Update', { id, title, description });
-      this.fetchInvoices();
+      this.fetchSaleInvoiceList();
       return data?.data?.data;
     },
     async deleteInvoice({ id }) {
       const { data } = await api.delete(`/Sale/SaleInvoice/Delete?Id=${id}`);
-      this.fetchInvoices();
+      this.fetchSaleInvoiceList();
       return data?.data?.data;
     },
   },
