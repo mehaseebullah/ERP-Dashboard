@@ -18,17 +18,17 @@ export const useVoucherStore = defineStore({
     },
     async createVoucher({ voucherNo, voucherTypeId, voucherDate, description, ledgerDetailDTO }) {
       const { data } = await api.post('/Finance/Voucher/AddUpdateVoucher', { voucherNo, voucherTypeId, voucherDate, description, ledgerDetailDTO });
-      this.fetchJvList();
+      this.fetchVoucherList();
       return data?.data?.data;
     },
     async updateVoucher({ id,voucherNo, voucherTypeId, voucherDate, description, ledgerDetailDTO }) {
       const { data } = await api.post('/Finance/Voucher/AddUpdateVoucher', { id,voucherNo, voucherTypeId, voucherDate, description, ledgerDetailDTO });
-      this.fetchJvList();
+      this.fetchVoucherList();
       return data?.data?.data;
     },
     async deleteVoucher({ id }) {
       const { data } = await api.post(`/Finance/Voucher/GetVoucherById/${id}`);
-      this.fetchJvList();
+      this.fetchVoucherList();
       return data?.data?.data;
     },
   },
