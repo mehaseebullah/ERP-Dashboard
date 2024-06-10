@@ -28,6 +28,20 @@ export async function registerPlugins(app) {
     //const response = await api.get('/setting/bootstrap');
     const modules = [
       {
+        "id": "3f03b1bd-5044-4235-bda4-1b3dabea1451",
+        "name": "Dashboard",
+        "code": "dashboard",
+        "icon": "mdi-view-dashboard",
+        "menu": {
+            "title": "Dashboard",
+            "url": "/dashboard",
+            "component": "HomeView"
+        },
+        "position": 1,
+        "createdAt": "2024-05-02T10:48:07.576Z",
+        "updatedAt": "2024-05-02T10:48:07.576Z"
+    },
+      {
         "id": "6fc58c4d-609a-4bb2-a9ad-a142492b1a66",
         "name": "Accounting",
         "code": "accounting",
