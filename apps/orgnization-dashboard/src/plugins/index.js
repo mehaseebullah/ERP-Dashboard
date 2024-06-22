@@ -156,6 +156,15 @@ export async function registerPlugins(app) {
               "component": "catalog/ProductsView"
             },
             {
+              "title": "Stocks",
+              "code": "stocks",
+              "icon": "mdi-package",
+              "url": "/catalog/stocks",
+              "position": 1,
+              "component": "catalog/StocksView"
+            },
+            
+            {
               "title": "Manufacturer",
               "code": "manufacturer",
               "icon": "mdi-package",
