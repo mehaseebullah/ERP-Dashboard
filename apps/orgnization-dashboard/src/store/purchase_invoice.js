@@ -8,16 +8,13 @@ export const usePurchaseInvoiceStore = defineStore({
   }),
   actions: {
     async fetchPurchaseInvoiceList() {
-      console.log('fetchPurchaseInvoiceList');
       this.purchaseinvoices=[];
       const { data } = await api.get('/Inventory/PurchaseInvoice/GetAllPurchaseInvoiceOrders?PageSize=1000&PageNumber=0');
-      console.log(data)
       this.purchaseinvoices = data?.data?.data;
       return this.purchaseinvoices;
     },
     async createPurchaseInvoice(d) {
       const { data } = await api.post('/Inventory/PurchaseInvoice/Create', d);
-      this.fetchPurchaseInvoices();
       return data?.data?.data;;
     },
     async updatePurchaseInvoice({ id, title, description }) {

@@ -4,12 +4,13 @@ import { storeToRefs } from 'pinia';
 import { useSwal } from '@/composables/useSwal';
 import { useProductStore } from '@/store/product';
 import { useSupplierStore } from '@/store/supplier';
+import { useGenerateInoiceNumber } from '@/store/generate_invoice_number';
 import { usePurchaseInvoiceStore } from '@/store/purchase_invoice';
 
 const productStore = useProductStore();
 const supplierStore = useSupplierStore();
 const purchaseInvoiceStore = usePurchaseInvoiceStore();
-
+const generateInoiceNumberStore = useGenerateInoiceNumber();
 const { products } = storeToRefs(productStore);
 const { suppliers } = storeToRefs(supplierStore);
 const { purchaseinvoices } = storeToRefs(purchaseInvoiceStore);
@@ -85,9 +86,12 @@ watchEffect(() => {
 });
 
 async function newInvoice() {
-  formData.value = { ...formModal };
+
+  formData.value = JSON.parse(JSON.stringify({ ...formModal }));
+  console.log(formData.value);
   isEdit.value = false;
   showDrawer.value = true;
+  formData.value.invoiceNo = await generateInoiceNumberStore.fetchGenerateInvoiceNumber({ Prefix: 'PI' });
 }
 
 async function createInvoice() {
@@ -95,6 +99,7 @@ async function createInvoice() {
   showDrawer.value = false;
   formData.value = { ...formModal };
   isEdit.value = false;
+  purchaseInvoiceStore.fetchPurchaseInvoiceList();
 }
 
 async function editInvoice(item) {
@@ -158,7 +163,7 @@ onMounted(async () => {
             <v-text-field type="date" v-model="formData.invoiceDate" label="Date" variant="outlined"></v-text-field>
           </v-col>
           <v-col>
-            <v-text-field v-model="formData.refNo" label="Ref No" variant="outlined"></v-text-field>
+            <v-text-field v-model="formData.invoiceNo" label="Ref No" variant="outlined"></v-text-field>
           </v-col>
         </v-row>
         <v-select :items="suppliers" item-title="fullName" item-value="id" v-model="formData.supplierId"
