@@ -5,7 +5,8 @@ import vuetify, { transformAssetUrls } from 'vite-plugin-vuetify';
 // Utilities
 import { defineConfig } from 'vite';
 import { fileURLToPath, URL } from 'node:url';
-import AutoImport from 'unplugin-auto-import/vite';
+import Components from 'unplugin-vue-components/vite';
+import { VuetifyResolver } from 'unplugin-vue-components/resolvers';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -17,14 +18,13 @@ export default defineConfig({
     vuetify({
       autoImport: true,
     }),
-    AutoImport({
+    Components({
       imports: ['vue'],
-      dirs: ['./src/core/helpers/**', './src/core/composables/**'],
-      eslintrc: {
-        enabled: true, // Default `false`
-        filepath: './auto-import.json', // Default `./.eslintrc-auto-import.json`
-        globalsPropValue: true, // Default `true`, (true | false | 'readonly' | 'readable' | 'writable' | 'writeable')
-      },
+      dirs: ['./src/components', './src/components/**'],
+      extensions: ['vue'],
+      deep: true,
+      include: [/\.vue$/, /\.vue\?vue/],
+      resolvers: [VuetifyResolver()],
     }),
   ],
   define: { 'process.env': {} },
