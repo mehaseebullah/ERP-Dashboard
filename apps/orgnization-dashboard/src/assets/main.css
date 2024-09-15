@@ -1,0 +1,25 @@
+html {
+  overflow: hidden !important;
+}
+.custom-scroll::-webkit-scrollbar {
+  width: 6px;
+  transition: width 0.3s ease-in-out;
+}
+
+.custom-scroll:hover::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scroll::-webkit-scrollbar-track {
+  background: transparent;
+  width: 0px;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 10px;
+}
+
+.custom-scroll:hover::-webkit-scrollbar-thumb {
+  background: #9c9c9c57;
+}
