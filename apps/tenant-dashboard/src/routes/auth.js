@@ -1,15 +1,19 @@
+import AuthLayout from '@/layouts/AuthLayout.vue';
+
 const routes = [
   {
-    path: '/login',
+    path: '/',
     component: () => import('../views/auth/LoginView.vue'),
     meta: {
       title: 'Login',
+      layout: AuthLayout,
     },
   },
   {
     path: '/register',
     component: () => import('../views/auth/RegisterView.vue'),
     meta: {
+      layout: AuthLayout,
       title: 'Register',
     },
   },
@@ -17,6 +21,7 @@ const routes = [
     path: '/email/verify/:userId',
     component: () => import('../views/auth/OtpVerification.vue'),
     meta: {
+      layout: AuthLayout,
       title: 'Verification',
       type: 'emailOtp',
     },
@@ -25,6 +30,7 @@ const routes = [
     path: '/password/verify/otp/:userId',
     component: () => import('../views/auth/OtpVerification.vue'),
     meta: {
+      layout: AuthLayout,
       title: 'Verify OTP to reset password',
       type: 'resetPasswordOtp',
     },
@@ -33,6 +39,7 @@ const routes = [
     path: '/password/forget',
     component: () => import('../views/auth/ForgetPassword.vue'),
     meta: {
+      layout: AuthLayout,
       title: 'ForgetPassword',
     },
   },
@@ -40,6 +47,7 @@ const routes = [
     path: '/password/reset',
     component: () => import('../views/auth/ResetPassword.vue'),
     meta: {
+      layout: AuthLayout,
       title: 'Reset Password',
     },
   },

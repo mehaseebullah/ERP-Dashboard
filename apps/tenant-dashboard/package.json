@@ -9,26 +9,26 @@
     "prettier": "prettier --write \"src/**/*.{js,jsx,ts,tsx,vue}\""
   },
   "dependencies": {
-    "@mdi/font": "^7.2.96",
-    "axios": "^1.5.0",
+    "@mdi/font": "^7.4.47",
+    "axios": "^1.6.7",
     "lodash": "^4.17.21",
-    "nanoid": "^4.0.2",
-    "pinia": "^2.1.6",
+    "nanoid": "^5.0.5",
+    "pinia": "^2.1.7",
     "roboto-fontface": "^0.10.0",
-    "sweetalert2": "^11.7.27",
-    "vue": "^3.2.38",
-    "vue-router": "^4.2.4",
-    "vuetify": "^3.3.14",
+    "sweetalert2": "^11.10.5",
+    "vue": "^3.4.18",
+    "vue-router": "^4.2.5",
+    "vuetify": "^3.5.3",
     "webfontloader": "^1.6.28"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^3.2.0",
-    "@vue/eslint-config-prettier": "^7.1.0",
-    "eslint": "^8.48.0",
-    "eslint-plugin-vue": "^9.17.0",
-    "prettier": "^2.8.8",
-    "unplugin-auto-import": "^0.15.3",
-    "vite": "^3.2.7",
-    "vite-plugin-vuetify": "^1.0.2"
+    "@vitejs/plugin-vue": "^5.0.4",
+    "@vue/eslint-config-prettier": "^9.0.0",
+    "eslint": "^8.56.0",
+    "eslint-plugin-vue": "^9.21.1",
+    "prettier": "^3.2.5",
+    "unplugin-vue-components": "^0.26.0",
+    "vite": "^5.1.1",
+    "vite-plugin-vuetify": "^2.0.1"
   }
 }
