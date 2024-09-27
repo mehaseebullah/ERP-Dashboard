@@ -1,3 +1,3 @@
 export default {
-  apiUrl: 'http://phub.pp.ua:8001',
+  apiUrl: 'http://phub.pp.ua:5002',
 };

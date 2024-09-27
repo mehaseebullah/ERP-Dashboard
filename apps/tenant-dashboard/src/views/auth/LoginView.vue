@@ -61,9 +61,9 @@ const doLogin = async () => {
         <v-col cols="6">
           <div class="d-flex flex-column align-start">
             <v-btn to="/register" size="x-small" color="primary" variant="text" class="m-0 p-0"
-              >Create new account</v-btn
+              >Create new acccount</v-btn
             >
-            <v-btn to="/forgetpassword" size="x-small" color="primary" variant="text" class="m-0 p-0"
+            <v-btn to="/password/forget" size="x-small" color="primary" variant="text" class="m-0 p-0"
               >Forget Password</v-btn
             >
           </div>

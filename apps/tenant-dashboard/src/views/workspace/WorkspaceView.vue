@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue';
 
-const hasWorkspace = ref(true);
+const hasWorkspace = ref(false);
 </script>
 <template>
   <v-container class="h-100">

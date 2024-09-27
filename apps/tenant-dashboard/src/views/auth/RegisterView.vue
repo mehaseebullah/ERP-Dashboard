@@ -90,10 +90,11 @@ const doRegister = async () => {
       </v-row>
       <v-row>
         <v-col cols="6">
-          <v-btn prepend-icon="mdi-arrow-left" to="/login" size="small" variant="text">Login</v-btn>
+          <v-btn prepend-icon="mdi-arrow-left" to="/" size="small" variant="text">Login</v-btn>
         </v-col>
         <v-col class="text-right" cols="6">
           <v-btn type="submit" color="primary">Create Account</v-btn>
+          <!-- to="/email/verify/:userId" -->
         </v-col>
       </v-row>
     </v-form>
