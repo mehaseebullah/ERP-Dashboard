@@ -29,11 +29,11 @@ const confirmPassword = (val) => {
   return (!!formData.password && val === formData.password) || 'Password not matched';
 };
 
-const createWorkspace = async ({ subDomain, domain, title, username, password }) => {
+const createWorkspace = async ({ subDomain, domain, title, username, password,email }) => {
   const { valid } = await form.value.validate();
   if (valid) {
     try {
-      const { data } = await http.post('/Tenant/Workspace/Create', { subDomain, domain, title, username, password });
+      const { data } = await http.post('/Tenant/Workspace/Create', { subDomain, domain, title, username, password,moduleFeaturePermission:[],email });
       // const { data } = await http.post('/Tenant/Workspace/Create', formData);
       if (data) {
         swal.success(data);
@@ -83,6 +83,16 @@ const createWorkspace = async ({ subDomain, domain, title, username, password })
                 <v-text-field
                   v-model="formData.username"
                   label="Username"
+                  :rules="[rules.required, rules.minLength(4)]"
+                  required
+                ></v-text-field>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col cols="12" md="12">
+                <v-text-field
+                  v-model="formData.email"
+                  label="Email"
                   :rules="[rules.required, rules.minLength(4)]"
                   required
                 ></v-text-field>

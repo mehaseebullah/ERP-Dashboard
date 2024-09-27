@@ -22,6 +22,7 @@ const verifyOTP = async () => {
   //const { valid } = await otpValue.value.validate();
   if (otpValue.value) {
     await authStore.verifyOTP({ OtpCode: otpValue.value });
+    this.$router.push('/');
   } else {
     swal.error('Please enter the correct OTP');
   }

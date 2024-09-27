@@ -22,8 +22,9 @@ export const useAuthStore = defineStore({
       try {
         const { data } = await http.post('/ProgHub/Account/Register', { username, email, password });
         if (data) {
+          debugger
           swal.success('Account created successfully');
-          this.$router.push('/'); ////change
+          this.$router.push('/password/verify/otp');; ////change
         }
         // return data;
       } catch (err) {
@@ -120,7 +121,8 @@ export const useAuthStore = defineStore({
     logout() {
       this.token = null;
       this.user = null;
-      this.$router.push('/login');
+      localStorage.removeItem('access_token', this.token);
+      this.$router.push('/');
     },
   },
 });
