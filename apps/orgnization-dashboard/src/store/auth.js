@@ -17,6 +17,8 @@ export const useAuthStore = defineStore({
     },
     async login({username,password,domain }) {
       const { data } = await http.post('/Tenant/Account/Login', { username,password,domain });
+      console.log(data.data)
+      
       localStorage.setItem('access_token', data?.data);
       window.location.reload();
     },

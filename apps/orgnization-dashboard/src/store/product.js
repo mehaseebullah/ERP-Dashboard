@@ -12,17 +12,38 @@ export const useProductStore = defineStore({
       this.products = data?.data?.data;
       return this.products;
     },
-    async createProduct({ title, sku, description, categoryId, unitId, manufacturerId,salePrice, purchasePrice }) {
-      const { data } = await api.post('/Inventory/Products/Create', {
-        title, sku, description, categoryId, unitId, manufacturerId,salePrice, purchasePrice
+    async createProduct({ title, sku, description, categoryId, unitId, manufacturerId, salePrice, purchasePrice }) {
+      let createProduct = new FormData();
+      createProduct.append('title', title);
+      createProduct.append('sku', sku);
+      createProduct.append('description', description);
+      createProduct.append('categoryId', categoryId);
+      createProduct.append('unitId', unitId);
+      createProduct.append('manufacturerId', manufacturerId);
+      createProduct.append('salePrice', salePrice);
+      createProduct.append('purchasePrice', purchasePrice);
+      const { data } = await api.post('/Inventory/Products/Create', createProduct, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
       });
       this.fetchProducts();
       return data?.data;
     },
-    async updateProduct({ id, title, sku, description, categoryId, unitId, manufacturerId,salePrice, purchasePrice }) {
+    async updateProduct({ id, title, sku, description, categoryId, unitId, manufacturerId, salePrice, purchasePrice }) {
+      let updateProduct = new FormData();
+      updateProduct.append('id', id);
+      updateProduct.append('title', title);
+      updateProduct.append('sku', sku);
+      updateProduct.append('description', description);
+      updateProduct.append('categoryId', categoryId);
+      updateProduct.append('unitId', unitId);
+      updateProduct.append('manufacturerId', manufacturerId);
+      updateProduct.append('salePrice', salePrice);
+      updateProduct.append('purchasePrice', purchasePrice);
       const { data } = await api.put('/Inventory/Products/Update', {
         id,
-        title, sku, description, categoryId, unitId, manufacturerId,salePrice, purchasePrice
+        title, sku, description, categoryId, unitId, manufacturerId, salePrice, purchasePrice
       });
       this.fetchProducts();
       return data?.data;
