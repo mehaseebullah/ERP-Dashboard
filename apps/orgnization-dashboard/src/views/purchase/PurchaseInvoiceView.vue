@@ -65,7 +65,8 @@ const formModal = {
       productId: null,
       quantity: 0,
       purchasePrice: 0,
-      total: 0.0
+      total: 0.0,
+      discount: 0.0,
     },
   ],
 };

@@ -4,22 +4,22 @@ import { storeToRefs } from 'pinia';
 import { useSwal } from '@/composables/useSwal';
 import { useProductStore } from '@/store/product';
 import { usePurchaseInvoiceStore } from '@/store/purchase_invoice';
-import { useCustomerStore } from '@/store/customer';
-
+import { useSupplierStore } from '@/store/supplier';
+import { useGenerateInoiceNumber } from '@/store/generate_invoice_number';
 const productStore = useProductStore();
-const customerStore = useCustomerStore();
+const supplieStore = useSupplierStore();
 const invoiceStore = usePurchaseInvoiceStore();
-
+const generateInoiceNumberStore = useGenerateInoiceNumber();
 const { products } = storeToRefs(productStore);
-const { customers } = storeToRefs(customerStore);
-const { getSaleInvoices } = storeToRefs(invoiceStore);
+const { suppliers } = storeToRefs(supplieStore);
+const { purchaseinvoices } = storeToRefs(invoiceStore);
 
 const swal = useSwal();
 
 const headers = [
   {
     title: 'Product',
-    key: 'product_id',
+    key: 'title',
   },
   {
     title: 'Quantity',
@@ -27,7 +27,11 @@ const headers = [
   },
   {
     title: 'Price',
-    key: 'unit_price',
+    key: 'purchasePrice',
+  },
+  {
+    title: 'Discount',
+    key: 'discount',
   },
   {
     title: 'Total',
@@ -39,15 +43,13 @@ const headers = [
 ];
 
 const formModal = {
-  invoice_type: 'sale',
-  ref_no: '',
-  invoice_date: '',
+  invoiceNo: '',
   description: '',
-  customer_supplier_code: '',
-  total: 0,
-  purchase_total: 0,
-  discount: 0,
-  details: [],
+  supplierId: null,
+  subTotal: 0.0,
+  total: 0.0,
+  discount: 0.0,
+  piDetails: [],
 };
 
 const formData = ref({ ...formModal });
@@ -55,29 +57,35 @@ const pos = ref();
 
 watchEffect(() => {
   let total = 0;
-  formData.value.details.forEach((entry) => {
-    entry.total = entry.unit_price * entry.quantity;
+  formData.value.piDetails.forEach((entry) => {
+    entry.total = entry.purchasePrice * entry.quantity;
     total += entry.total || 0;
   });
   formData.value.total = total;
+  formData.value.subTotal = total;
 });
 
 async function newInvoice() {
   formData.value = { ...formModal };
 }
+async function newInvoiceNum() {
 
+formData.value = JSON.parse(JSON.stringify({ ...formModal }));
+formData.value.invoiceNo = await generateInoiceNumberStore.fetchGenerateInvoiceNumber({ Prefix: 'PI' });
+}
 async function createInvoice() {
-  const details = formData.value.details.map((entry) => {
+  const details = formData.value.piDetails.map((entry) => {
     return {
-      product_id: entry.product_id,
+      productId: entry.id,
       quantity: entry.quantity,
-      unit_price: entry.unit_price,
-      total: entry.total,
+      purchasePrice: entry.purchasePrice,
+      total: entry.purchasePrice,
       discount: entry.discount,
     };
   });
   await invoiceStore.createInvoice({ ...formData.value, details });
   formData.value = { ...formModal };
+  newInvoiceNum();
 }
 
 function requestFullscreen() {
@@ -99,19 +107,21 @@ function addProduct(i) {
   }
   const prod = products.value.find((p) => p.id == i);
 
-  formData.value.details.push({
-    product_id: prod.id,
-    title: prod.title,
-    quantity: 1,
-    unit_price: prod.sale_price,
-    total: prod.sale_price,
-    discount: 0,
-  });
+  formData.value.piDetails.push( {
+      productId: prod.id,
+      title: prod.title,
+      quantity: 1,
+      purchasePrice: prod.purchasePrice,
+      total: prod.purchasePrice,
+      discount: 0.0,
+    });
 }
 
 onMounted(async () => {
-  customerStore.fetchCustomers();
+  newInvoiceNum();
+  supplieStore.fetchSuppliers();
   productStore.fetchProducts();
+  console.log(products,suppliers)
   //   invoiceStore.fetchInvoiceList();
 });
 </script>
@@ -135,9 +145,9 @@ onMounted(async () => {
             @update:model-value="addProduct"
           ></v-autocomplete>
         </div>
-        <v-data-table hide-default-footer :headers="headers" :items="formData.details">
-          <template v-slot:item.product_id="{ item }">
-            {{ products.find((p) => p.id == item.product_id)?.title }}
+        <v-data-table hide-default-footer :headers="headers" :items="formData.piDetails">
+          <template v-slot:item.title="{ item }">
+            {{ item.title }}
           </template>
 
           <template v-slot:item.quantity="{ item }">
@@ -150,6 +160,29 @@ onMounted(async () => {
               v-model.number="item.quantity"
             ></v-text-field>
           </template>
+          <template v-slot:item.purchasePrice="{ item }">
+            <v-text-field
+              class="mt-2"
+              variant="outlined"
+              density="compact"
+              type="number"
+              style="max-width: 100px"
+              v-model.number="item.purchasePrice"
+            ></v-text-field>
+          </template>
+          <template v-slot:item.discount="{ item }">
+            <v-text-field
+              class="mt-2"
+              variant="outlined"
+              density="compact"
+              type="number"
+              style="max-width: 100px"
+              v-model.number="item.discount"
+            ></v-text-field>
+          </template>
+          <template v-slot:item.total="{ item }">
+            {{ item.total }}
+          </template>
           <template v-slot:item.actions="{ item }">
             <v-btn variant="text" size="small" icon="mdi-delete"></v-btn>
           </template>
@@ -158,12 +191,12 @@ onMounted(async () => {
       <v-col cols="4">
         <div class="d-flex align-start justify-center">
           <v-select
-            :items="customers"
-            item-title="name"
-            item-value="code"
-            v-model="formData.customer_supplier_code"
-            :loading="$loading('fetchCustomers')"
-            label="Customer"
+            :items="suppliers"
+            item-title="fullName"
+            item-value="id"
+            v-model="formData.supplierId"
+            :loading="$loading('fetchSuppliers')"
+            label="Supplier"
             variant="outlined"
             density="compact"
             class="mx-2"
