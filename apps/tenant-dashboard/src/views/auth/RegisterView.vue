@@ -94,7 +94,6 @@ const doRegister = async () => {
         </v-col>
         <v-col class="text-right" cols="6">
           <v-btn type="submit" color="primary">Create Account</v-btn>
-          <!-- to="/email/verify/:userId" -->
         </v-col>
       </v-row>
     </v-form>

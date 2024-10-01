@@ -10,23 +10,20 @@ const swal = inject('$swal');
 const authStore = useAuthStore();
 
 const email = ref('');
-const showReset = ref(false);
+const showResetComponent = ref(false);
+const showOtp = ref(false);
 const otpValue = ref('');
-//const userVerified = ref(false);
 
 onMounted(() => {
   const route = useRoute();
   console.log(route.meta.type);
 });
 
-//new addition
 const forgetPassword = async () => {
   if (email.value) {
     try {
-      console.log('here it comes forget pass func', email.value);
       await authStore.forgetPassword({ Email: email.value });
-      //verifyOtp();
-      //resetPassword();
+      showOtp.value = true;
     } catch (error) {
       console.error('An error occurred during the password reset process:', error);
       swal.error('An error occurred. Please try again.');
@@ -37,13 +34,12 @@ const forgetPassword = async () => {
 };
 
 const resetPassword = () => {
-  showReset.value = true; // Show the ResetPassword component
+  showResetComponent.value = true; // Show the ResetPassword component
+  showOtp.value = false;
 };
 const verifyOTP = async () => {
-  console.log('here it comes otp verifi page verify func', otpValue.value);
-
   if (otpValue.value) {
-    await authStore.verifyOTP({ OtpCode: otpValue.value });
+    await authStore.verifyOTP({ OtpCode: otpValue.value, verificationType: '7' });
     resetPassword();
   } else {
     swal.error('Please enter the correct OTP');
@@ -51,8 +47,8 @@ const verifyOTP = async () => {
 };
 </script>
 <template>
-  <ResetPassword v-if="showReset" :email="email" />
-  <v-sheet class="px-16 w-100" v-else>
+  <ResetPassword v-if="showResetComponent == true" :email="email" />
+  <v-sheet class="px-16 w-100" v-else-if="!showOtp">
     <v-row>
       <v-col cols="12">
         <div class="text-center">
@@ -77,11 +73,15 @@ const verifyOTP = async () => {
         <v-btn type="submit" @click="forgetPassword" color="primary">SEND REQUEST</v-btn>
       </v-col>
     </v-row>
-    <!-- <v-row>
-      <v-col class="text-end" cols="12">
-        <v-btn type="submit" color="primary">SEND RESET REQUEST</v-btn>
+  </v-sheet>
+  <v-sheet class="px-16 w-100" v-else>
+    <v-row>
+      <v-col cols="12">
+        <div class="text-center">
+          <h2 class="mb-4">Please verify your Otp to reset your password.</h2>
+        </div>
       </v-col>
-    </v-row> -->
+    </v-row>
     <v-row>
       <v-col class="text-center" cols="12">
         <v-otp-input v-model="otpValue" type="otp" length="6" rounded variant="outlined" width="500"></v-otp-input>
@@ -89,7 +89,7 @@ const verifyOTP = async () => {
     </v-row>
     <v-row>
       <v-col cols="12" class="text-center">
-        <v-btn @click="verifyOTP" class="" color="primary">SEND OTP REQUEST</v-btn>
+        <v-btn @click="verifyOTP" class="" color="primary">Verify OTP</v-btn>
       </v-col>
     </v-row>
   </v-sheet>

@@ -7,21 +7,17 @@ import { useAuthStore } from '@/store/auth';
 
 const swal = inject('$swal');
 const authStore = useAuthStore();
-
 const otpValue = ref('');
+const verificationType = '6';
 
 onMounted(() => {
   const route = useRoute();
   console.log(route.meta.type);
 });
 
-//new addition
 const verifyOTP = async () => {
-  console.log('here it comes otp verifi page verify func', otpValue.value);
-
-  //const { valid } = await otpValue.value.validate();
   if (otpValue.value) {
-    await authStore.verifyOTP({ OtpCode: otpValue.value });
+    await authStore.verifyOTP({ OtpCode: otpValue.value, verificationType: verificationType });
     this.$router.push('/');
   } else {
     swal.error('Please enter the correct OTP');
@@ -43,13 +39,8 @@ const verifyOTP = async () => {
     </v-row>
     <v-row>
       <v-col cols="12" class="text-center">
-        <v-btn type="submit" class="" color="primary">SEND OTP REQUEST</v-btn>
-      </v-col>
-    </v-row>
-    <v-row>
-      <v-col cols="12" class="text-center">
-        <v-btn @click="verifyOTP" size="x-small" variant="text">Verify</v-btn>
-        <!-- resend -->
+        <v-btn @click="verifyOTP" size="x-small" variant="text" color="primary">Verify</v-btn>
+        <!-- <v-btn type="submit" class="" color="primary">SEND OTP REQUEST</v-btn> -->
       </v-col>
     </v-row>
   </v-sheet>

@@ -2,10 +2,11 @@
 import { reactive, ref, inject } from 'vue';
 import rules from '@/helpers/rules';
 import { onMounted } from 'vue';
-import http from '@/helpers/http';
-import { useRoute } from 'vue-router';
+import { progHubHttpService, tenantAuthHttpService } from '@/helpers/http';
+import { useRouter } from 'vue-router';
 
 import { useAuthStore } from '@/store/auth';
+const router = useRouter();
 
 const swal = inject('$swal');
 const authStore = useAuthStore();
@@ -22,6 +23,7 @@ const formData = reactive({
   domain: null,
   title: null,
   username: null,
+  email: null,
   password: null,
 });
 
@@ -29,22 +31,27 @@ const confirmPassword = (val) => {
   return (!!formData.password && val === formData.password) || 'Password not matched';
 };
 
-const createWorkspace = async ({ subDomain, domain, title, username, password,email }) => {
+const createWorkspace = async ({ subDomain, domain, title, username, password, email }) => {
   const { valid } = await form.value.validate();
   if (valid) {
     try {
-      const { data } = await http.post('/Tenant/Workspace/Create', { subDomain, domain, title, username, password,moduleFeaturePermission:[],email });
-      // const { data } = await http.post('/Tenant/Workspace/Create', formData);
+      const { data } = await progHubHttpService.post('/Tenant/Workspace/Create', {
+        subDomain,
+        domain,
+        title,
+        username,
+        password,
+        moduleFeaturePermission: [],
+        email,
+      });
+
       if (data) {
         swal.success(data);
-        console.log('in createworkspace try', subDomain, domain, title, username, password);
-        //this.$router.push('/workspace');
+        router.push('/workspace');
       }
     } catch (err) {
-      console.log('in createworkspace catch', subDomain, domain, title, username, password);
       swal.error(err.response.data);
       swal.error(err.message || 'Something went wrong');
-      //this.$router.push('/workspace');
     }
   } else {
     swal.error('Please fill all fields');
@@ -60,17 +67,17 @@ const createWorkspace = async ({ subDomain, domain, title, username, password,em
           <div class="pa-5">
             <v-row>
               <v-col cols="12" md="12">
+                <v-text-field v-model="formData.domain" label="Domain" required></v-text-field>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col cols="12" md="12">
                 <v-text-field v-model="formData.subDomain" label="Subdomain" required></v-text-field>
               </v-col>
             </v-row>
             <v-row>
               <v-col cols="12" md="12">
-                <v-text-field v-model="formData.title" label="Workspace Name/title" required></v-text-field>
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col cols="12" md="12">
-                <v-text-field v-model="formData.domain" label="Domain" required></v-text-field>
+                <v-text-field v-model="formData.title" label="Title" required></v-text-field>
               </v-col>
             </v-row>
           </div>
@@ -98,11 +105,6 @@ const createWorkspace = async ({ subDomain, domain, title, username, password,em
                 ></v-text-field>
               </v-col>
             </v-row>
-            <!-- <v-row>
-              <v-col cols="12" md="12">
-                <v-text-field v-model="formData.email" label="Email" :rules="[rules.email]" required></v-text-field>
-              </v-col>
-            </v-row> -->
             <v-row>
               <v-col cols="12" md="12">
                 <v-text-field

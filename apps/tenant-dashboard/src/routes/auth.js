@@ -27,7 +27,6 @@ const routes = [
     },
   },
   {
-    //path: '/password/verify/otp/:userId',
     path: '/password/verify/otp',
     component: () => import('../views/auth/OtpVerification.vue'),
     meta: {

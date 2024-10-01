@@ -27,7 +27,6 @@ const props = defineProps({
 const resetPassword = async () => {
   if (password.value && confirmPassword.value) {
     try {
-      console.log('here it comes reset pass func', password.value, confirmPassword.value);
       await authStore.resetPassword({ email: props.email, password: password.value });
     } catch (error) {
       console.error('An error occurred during the password reset process:', error);
