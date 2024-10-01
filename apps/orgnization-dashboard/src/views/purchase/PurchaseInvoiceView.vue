@@ -6,7 +6,7 @@ import { useProductStore } from '@/store/product';
 import { useSupplierStore } from '@/store/supplier';
 import { useGenerateInoiceNumber } from '@/store/generate_invoice_number';
 import { usePurchaseInvoiceStore } from '@/store/purchase_invoice';
-
+import { useRouter } from 'vue-router';
 const productStore = useProductStore();
 const supplierStore = useSupplierStore();
 const purchaseInvoiceStore = usePurchaseInvoiceStore();
@@ -16,7 +16,7 @@ const { suppliers } = storeToRefs(supplierStore);
 const { purchaseinvoices } = storeToRefs(purchaseInvoiceStore);
 
 const swal = useSwal();
-
+const router = useRouter();
 const headers = [
   {
     title: 'invoice No',
@@ -87,12 +87,12 @@ watchEffect(() => {
 });
 
 async function newInvoice() {
-
-  formData.value = JSON.parse(JSON.stringify({ ...formModal }));
-  console.log(formData.value);
-  isEdit.value = false;
-  showDrawer.value = true;
-  formData.value.invoiceNo = await generateInoiceNumberStore.fetchGenerateInvoiceNumber({ Prefix: 'PI' });
+  router.push('add-purchase-invoice');
+  // formData.value = JSON.parse(JSON.stringify({ ...formModal }));
+  // console.log(formData.value);
+  // isEdit.value = false;
+  // showDrawer.value = true;
+  // formData.value.invoiceNo = await generateInoiceNumberStore.fetchGenerateInvoiceNumber({ Prefix: 'PI' });
 }
 
 async function createInvoice() {

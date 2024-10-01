@@ -299,7 +299,33 @@ export async function registerPlugins(app) {
         }
       }),
     );
-
+    router.addRoute({
+      path: '/add-purchase-invoice',
+      name: 'add-purchase-invoice',
+      component: comps[`../views/purchase/AddPurchaseInvoiceView.vue`],
+      meta: {
+        requiresAuth: true,
+        layout: 'DashboardLayout',
+      },
+    });
+    router.addRoute({
+      path: '/add-purchase-order',
+      name: 'add-purchase-order',
+      component: comps[`../views/purchase/AddPurchaseOrderView.vue`],
+      meta: {
+        requiresAuth: true,
+        layout: 'DashboardLayout',
+      },
+    });
+    router.addRoute({
+      path: '/add-purchase-return-invoice',
+      name: 'add-purchase-return-invoice',
+      component: comps[`../views/purchase/AddPurchaseReturnInvoiceView.vue`],
+      meta: {
+        requiresAuth: true,
+        layout: 'DashboardLayout',
+      },
+    });
     app.provide('modules', modules);
   }
 
