@@ -59,6 +59,10 @@ const headers = [
     sortable: true,
   },
   {
+    title: 'Image',
+    key: 'file',
+  },
+  {
     title: 'Actions',
     key: 'actions',
   },
@@ -69,14 +73,29 @@ const formModal = {
   description: '',
   categoryId: null,
   unitId: null,
-  manufacturerId:null,
+  manufacturerId: null,
   purchasePrice: 0.0,
   salePrice: 0.0,
+  image: null,
 };
 
 const formData = ref({ ...formModal });
 const isEdit = ref(false);
 const showDrawer = ref(false);
+
+const imagePreview = ref(null);
+
+const handleImageUpload = (event) => {
+  console.log('in handle');
+
+  const file = event.target.files[0];
+  if (file) {
+    console.log('file found');
+    formData.value.image = file;
+
+    imagePreview.value = URL.createObjectURL(file);
+  }
+};
 
 async function newProduct() {
   formData.value = { ...formModal };
@@ -185,6 +204,15 @@ onMounted(async () => {
           </v-col>
         </v-row>
 
+        <!-- Image Selection -->
+        <input type="file" @change="handleImageUpload" />
+
+        <!-- Display Selected Image -->
+        <!-- v-if="imagePreview" -->
+
+        <div>
+          <img :src="imagePreview" alt="Selected Image" width="200" />
+        </div>
         <div class="d-flex justify-end mt-5">
           <v-btn v-if="isEdit" :loading="$loading('updateProduct')" type="submit" color="primary">Update</v-btn>
           <v-btn v-else :loading="$loading('createProduct')" type="submit" color="primary">Create</v-btn>

@@ -12,7 +12,17 @@ export const useProductStore = defineStore({
       this.products = data?.data?.data;
       return this.products;
     },
-    async createProduct({ title, sku, description, categoryId, unitId, manufacturerId, salePrice, purchasePrice }) {
+    async createProduct({
+      title,
+      sku,
+      description,
+      categoryId,
+      unitId,
+      manufacturerId,
+      salePrice,
+      purchasePrice,
+      image,
+    }) {
       let createProduct = new FormData();
       createProduct.append('title', title);
       createProduct.append('sku', sku);
@@ -22,10 +32,13 @@ export const useProductStore = defineStore({
       createProduct.append('manufacturerId', manufacturerId);
       createProduct.append('salePrice', salePrice);
       createProduct.append('purchasePrice', purchasePrice);
+      if (this.file) {
+        createProduct.append('file', image);
+      }
       const { data } = await api.post('/Inventory/Products/Create', createProduct, {
         headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+          'Content-Type': 'multipart/form-data',
+        },
       });
       this.fetchProducts();
       return data?.data;
@@ -43,7 +56,14 @@ export const useProductStore = defineStore({
       updateProduct.append('purchasePrice', purchasePrice);
       const { data } = await api.put('/Inventory/Products/Update', {
         id,
-        title, sku, description, categoryId, unitId, manufacturerId, salePrice, purchasePrice
+        title,
+        sku,
+        description,
+        categoryId,
+        unitId,
+        manufacturerId,
+        salePrice,
+        purchasePrice,
       });
       this.fetchProducts();
       return data?.data;
