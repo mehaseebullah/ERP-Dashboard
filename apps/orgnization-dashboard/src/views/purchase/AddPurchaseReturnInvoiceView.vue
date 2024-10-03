@@ -4,12 +4,14 @@ import { storeToRefs } from 'pinia';
 import { useSwal } from '@/composables/useSwal';
 import { useProductStore } from '@/store/product';
 import { usePurchaseReturnInvoiceStore } from '@/store/purchase_return_invoice';
+import { usePurchaseInvoiceStore } from '@/store/purchase_invoice';
 import { useSupplierStore } from '@/store/supplier';
 import { useGenerateInoiceNumber } from '@/store/generate_invoice_number';
 
 const productStore = useProductStore();
 const supplieStore = useSupplierStore();
 const purchaseReturnInvoiceStore = usePurchaseReturnInvoiceStore();
+const PurchaseInvoiceStore = usePurchaseInvoiceStore();
 const generateInoiceNumberStore = useGenerateInoiceNumber();
 const { products } = storeToRefs(productStore);
 const { suppliers } = storeToRefs(supplieStore);
@@ -51,8 +53,11 @@ const formModal = {
   total: 0.0,
   discount: 0.0,
   rpiDetails: [],
+  paid: 0.0,
+  remainingAmount: 0.0,
+  returnAmount: 0.0
 };
-
+const piNumber = ref("");
 const formData = ref({ ...formModal });
 const pos = ref();
 
@@ -65,7 +70,15 @@ watchEffect(() => {
   });
   formData.value.total = total;
   formData.value.subTotal = total;
-  formData.value.discount = totalDiscount
+  formData.value.discount = totalDiscount;
+  if (formData.value.paid >= formData.value.total) {
+    formData.value.remainingAmount = 0.0;
+    formData.value.returnAmount = formData.value.paid - formData.value.total;
+  }
+  else {
+    formData.value.returnAmount = 0.0;
+    formData.value.remainingAmount = formData.value.total - formData.value.paid;
+  }
 });
 
 async function newInvoice() {
@@ -77,7 +90,10 @@ async function newInvoiceNum() {
   formData.value.invoiceNo = await generateInoiceNumberStore.fetchGenerateInvoiceNumber({ Prefix: 'PRI' });
 }
 async function createInvoice() {
-
+  if (formData.value.remainingAmount > 0 && !formData.value.supplierId) {
+    swal.info('please pay full amount or select a supplier');
+    return;
+  }
   await purchaseReturnInvoiceStore.createPurchaseReturnInvoice(formData.value)
   await newInvoice()
   await newInvoiceNum();
@@ -120,7 +136,33 @@ function addProduct(productId) {
     formData.value.rpiDetails[currentIndex]['quantity'] += 1;
   }
 }
+async function getPurchaseInvoiceByPINumber(piNumber) {
+  console.log('getPurchaseOrderByPONumber')
+  try {
+    if (!piNumber)
+      return;
+    const { data } = await PurchaseInvoiceStore.fetchPurchaseInvoiceByPINumber(piNumber);
+    if (data) {
+      let pi = data[0];
+      await newInvoice();
+      await newInvoiceNum()
+      formData.value.supplierId = pi.supplierId;
+      formData.value.subTotal = pi.subTotal;
+      formData.value.total = pi.total;
+      formData.value.discount = pi.discount;
+      formData.value.piId = pi.id;
+      formData.value.rpiDetails = JSON.parse(pi.poDetails)
+    } else {
+      let invoiceNo = formData.value.invoiceNo;
+      await newInvoiceNum();
+      formData.value.invoiceNo = invoiceNo;
+      
+    }
+  } catch (e) {
+    console.error(e)
+  }
 
+}
 onMounted(async () => {
   newInvoiceNum();
   supplieStore.fetchSuppliers();
@@ -133,11 +175,17 @@ onMounted(async () => {
   <v-container class="bg-white" ref="pos">
     <v-row>
       <v-col cols="8" class="bg-grey-lighten-5">
-        <div>
-          <v-autocomplete :items="products" class="mx-auto" density="comfortable" menu-icon=""
+        <v-row>
+          <v-col cols="9" class="bg-grey-lighten-5">
+            <v-autocomplete :items="products" class="mx-auto" density="comfortable" menu-icon=""
             placeholder="Enter product name / SKU" prepend-inner-icon="mdi-magnify" theme="light" auto-select-first
             item-title="title" item-value="id" item-props @update:model-value="addProduct"></v-autocomplete>
-        </div>
+          </v-col>
+          <v-col cols="3" class="bg-grey-lighten-5">
+            <v-text-field @keyup.enter="getPurchaseInvoiceByPINumber(piNumber)" placeholder="PI Number" class="mx-auto"
+              variant="outlined" density="comfortable" theme="light" type="text" v-model="piNumber"></v-text-field>
+          </v-col>
+        </v-row>
         <v-data-table hide-default-footer :headers="headers" :items="formData.rpiDetails">
           <template v-slot:item.title="{ item }">
             {{ item.title }}
@@ -195,6 +243,19 @@ onMounted(async () => {
             <tr>
               <td>Total</td>
               <td>{{ formData.total }}</td>
+            </tr>
+            <tr>
+              <td>Paid</td>
+              <td> <v-text-field type="number" v-model.number="formData.paid" variant="outlined" density="compact"
+                  class="mt-2"></v-text-field></td>
+            </tr>
+            <tr>
+              <td>Remaining Amount</td>
+              <td>{{ formData.remainingAmount }}</td>
+            </tr>
+            <tr>
+              <td>Return Amount</td>
+              <td>{{ formData.returnAmount }}</td>
             </tr>
           </tbody>
         </v-table>

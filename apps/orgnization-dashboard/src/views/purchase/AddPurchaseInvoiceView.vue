@@ -4,12 +4,14 @@ import { storeToRefs } from 'pinia';
 import { useSwal } from '@/composables/useSwal';
 import { useProductStore } from '@/store/product';
 import { usePurchaseInvoiceStore } from '@/store/purchase_invoice';
+import { usePurchaseOrderStore } from '@/store/purchase_order';
 import { useSupplierStore } from '@/store/supplier';
 import { useGenerateInoiceNumber } from '@/store/generate_invoice_number';
 
 const productStore = useProductStore();
 const supplieStore = useSupplierStore();
 const purchaseInvoiceStore = usePurchaseInvoiceStore();
+const purchaseOrderStore = usePurchaseOrderStore();
 const generateInoiceNumberStore = useGenerateInoiceNumber();
 const { products } = storeToRefs(productStore);
 const { suppliers } = storeToRefs(supplieStore);
@@ -50,8 +52,12 @@ const formModal = {
   total: 0.0,
   discount: 0.0,
   piDetails: [],
+  poId: null,
+  paid: 0.0,
+  remainingAmount: 0.0,
+  returnAmount: 0.0
 };
-
+const poNumber = ref("");
 const formData = ref({ ...formModal });
 const pos = ref();
 
@@ -65,6 +71,14 @@ watchEffect(() => {
   formData.value.total = total;
   formData.value.subTotal = total;
   formData.value.discount = totalDiscount
+  if (formData.value.paid >= formData.value.total) {
+    formData.value.remainingAmount = 0.0;
+    formData.value.returnAmount = formData.value.paid - formData.value.total;
+  }
+  else {
+    formData.value.returnAmount = 0.0;
+    formData.value.remainingAmount = formData.value.total - formData.value.paid;
+  }
 });
 
 async function newInvoice() {
@@ -76,10 +90,14 @@ async function newInvoiceNum() {
   formData.value.invoiceNo = await generateInoiceNumberStore.fetchGenerateInvoiceNumber({ Prefix: 'PI' });
 }
 async function createInvoice() {
-
+  if (formData.value.remainingAmount > 0 && !formData.value.supplierId) {
+    swal.info('please pay full amount or select a supplier');
+    return;
+  }
   await purchaseInvoiceStore.createPurchaseInvoice(formData.value)
   await newInvoice()
   await newInvoiceNum();
+
 }
 
 function requestFullscreen() {
@@ -94,7 +112,34 @@ function requestFullscreen() {
     elem.msRequestFullscreen();
   }
 }
+async function getPurchaseOrderByPONumber(poNumber) {
+  console.log('getPurchaseOrderByPONumber')
+  try {
+    if (!poNumber)
+      return;
+    const { data } = await purchaseOrderStore.fetchPurchaseOrderByPONumber(poNumber);
+    if (data) {
+      let po = data[0];
+      await newInvoice();
+      await newInvoiceNum()
+      formData.value.supplierId = po.supplierId;
+      formData.value.subTotal = po.subTotal;
+      formData.value.total = po.total;
+      formData.value.discount = po.discount;
+      formData.value.poId = po.id;
+      formData.value.piDetails = JSON.parse(po.poDetails);
 
+    } else {
+      let invoiceNo = formData.value.invoiceNo;
+      await newInvoiceNum();
+      formData.value.invoiceNo = invoiceNo;
+
+    }
+  } catch (e) {
+    console.error(e)
+  }
+
+}
 function addProduct(productId) {
   if (!productId) {
     return;
@@ -132,11 +177,17 @@ onMounted(async () => {
   <v-container class="bg-white" ref="pos">
     <v-row>
       <v-col cols="8" class="bg-grey-lighten-5">
-        <div>
-          <v-autocomplete :items="products" class="mx-auto" density="comfortable" menu-icon=""
-            placeholder="Enter product name / SKU" prepend-inner-icon="mdi-magnify" theme="light" auto-select-first
-            item-title="title" item-value="id" item-props @update:model-value="addProduct"></v-autocomplete>
-        </div>
+        <v-row>
+          <v-col cols="9" class="bg-grey-lighten-5">
+            <v-autocomplete :items="products" class="mx-auto" density="comfortable" menu-icon=""
+              placeholder="Enter product name / SKU" prepend-inner-icon="mdi-magnify" theme="light" auto-select-first
+              item-title="title" item-value="id" item-props @update:model-value="addProduct"></v-autocomplete>
+          </v-col>
+          <v-col cols="3" class="bg-grey-lighten-5">
+            <v-text-field @keyup.enter="getPurchaseOrderByPONumber(poNumber)" placeholder="PO Number" class="mx-auto"
+              variant="outlined" density="comfortable" theme="light" type="text" v-model="poNumber"></v-text-field>
+          </v-col>
+        </v-row>
         <v-data-table hide-default-footer :headers="headers" :items="formData.piDetails">
           <template v-slot:item.title="{ item }">
             {{ item.title }}
@@ -187,13 +238,26 @@ onMounted(async () => {
             <tr>
               <td>Discount</td>
               <td>
-                <v-text-field type="number" v-model.number="formData.discount" variant="outlined" density="compact"
-                  class="mt-2"></v-text-field>
+                {{ formData.discount }}
+
               </td>
             </tr>
             <tr>
               <td>Total</td>
               <td>{{ formData.total }}</td>
+            </tr>
+            <tr>
+              <td>Paid</td>
+              <td> <v-text-field type="number" v-model.number="formData.paid" variant="outlined" density="compact"
+                  class="mt-2"></v-text-field></td>
+            </tr>
+            <tr>
+              <td>Remaining Amount</td>
+              <td>{{ formData.remainingAmount }}</td>
+            </tr>
+            <tr>
+              <td>Return Amount</td>
+              <td>{{ formData.returnAmount }}</td>
             </tr>
           </tbody>
         </v-table>

@@ -58,6 +58,7 @@ async function deletePurchaseReturnInvoice(id) {
 
 }
 
+
 onMounted(async () => {
   purchaseReturnInvoiceStore.fetchPurchaseReturnInvoiceList();
 });

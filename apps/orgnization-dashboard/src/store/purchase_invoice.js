@@ -13,6 +13,10 @@ export const usePurchaseInvoiceStore = defineStore({
       this.purchaseinvoices = data?.data?.data;
       return this.purchaseinvoices;
     },
+    async fetchPurchaseInvoiceByPINumber(piNumber) {
+      const { data } = await api.get(`/Inventory/PurchaseInvoice/GetPurchaseInvoiceWithDetailsByPINumber/${piNumber}`);
+      return data;
+    },
     async createPurchaseInvoice(d) {
       const { data } = await api.post('/Inventory/PurchaseInvoice/Create', d);
       return data?.data?.data;;

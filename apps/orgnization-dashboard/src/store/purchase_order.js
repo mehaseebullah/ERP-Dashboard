@@ -13,6 +13,10 @@ export const usePurchaseOrderStore = defineStore({
       this.purchaseOrders = data?.data?.data;
       return this.purchaseOrders;
     },
+    async fetchPurchaseOrderByPONumber(poNumber) {
+      const { data } = await api.get(`/Inventory/PurchaseOrder/GetPurchaseOrderWithDetailsByPONumber/${poNumber}`);
+      return data;
+    },
     async createPurchaseOrder(d) {
       const { data } = await api.post('/Inventory/PurchaseOrder/Create', d);
       return data?.data?.data;;
