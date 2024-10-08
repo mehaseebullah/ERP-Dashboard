@@ -13,6 +13,10 @@ export const useSaleInvoiceStore = defineStore({
       this.saleInvoices = data?.data?.data;
       return this.saleInvoices;
     },
+    async fetchSaleInvoiceBySINumber(siNumber) {
+      const { data } = await api.get(`/Sale/SaleInvoice/GetSaleInvoiceWithDetailsBySINumber/${siNumber}`);
+      return data;
+    },
     async createInvoice(d) {
       const { data } = await api.post('/Sale/SaleInvoice/Create', d);
       this.fetchSaleInvoiceList();

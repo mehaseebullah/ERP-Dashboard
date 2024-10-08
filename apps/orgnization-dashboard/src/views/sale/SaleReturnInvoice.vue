@@ -1,39 +1,77 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted, computed, watchEffect } from 'vue';
+import { storeToRefs } from 'pinia';
+import { useSwal } from '@/composables/useSwal';
+import { useReturnSaleInvoiceStore } from '@/store/sale_return_invoice';
 
-const showDrawer = ref(false);
 
-const items = [
+const returnSaleInvoiceStore = useReturnSaleInvoiceStore();
+const { saleReturnInvoices } = storeToRefs(returnSaleInvoiceStore);
+
+const swal = useSwal();
+
+const headers = [
   {
-    name: 'African Elephant',
-    species: 'Loxodonta africana',
-    diet: 'Herbivore',
-    habitat: 'Savanna, Forests',
+    title: 'Invoice No',
+    key: 'invoiceNo',
+    sortable: true,
   },
-  // ... more items
+  {
+    title: 'Customer',
+    key: 'customerName',
+    sortable: true,
+  },
+  {
+    title: 'Date',
+    key: 'invoiceDate',
+    sortable: true,
+  },
+  {
+    title: 'sub Total Amount',
+    key: 'subTotal',
+    sortable: true,
+  },
+  {
+    title: 'Total Amount',
+    key: 'total',
+    sortable: true,
+  },
+  {
+    title: 'Description',
+    key: 'description',
+    sortable: true,
+  },
+  {
+    title: 'Actions',
+    key: 'actions',
+  },
 ];
+
+
+async function createInvoice() {
+  router.push('add-sale-return-invoice');
+}
+
+
+onMounted(async () => {
+  returnSaleInvoiceStore.fetchReturnSaleInvoiceList();
+});
 </script>
 <template>
   <v-container>
     <v-card>
-      <v-toolbar color="secondary" density="compact">
+      <v-toolbar title="SALE Order" color="secondary" density="compact">
         <v-spacer></v-spacer>
-        <v-btn @click="showDrawer = !showDrawer">Create User</v-btn>
+        <v-btn @click="createInvoice()">Create Sale Return</v-btn>
       </v-toolbar>
-      <v-table>
-        <v-data-table :items="items"></v-data-table>
-      </v-table>
+      <v-data-table :loading="$loading('fetchReturnSaleList')" :headers="headers" :items="saleReturnInvoices">
+        <template v-slot:item.actions="{ item }">
+          <v-icon class="me-2" size="small" @click="editInvoice(item)"> mdi-pencil </v-icon>
+          <v-icon size="small" @click="deleteInvoice(item.id)"> mdi-delete </v-icon>
+        </template>
+      </v-data-table>
     </v-card>
-    <main-drawer v-model="showDrawer" width="800" title="CREATE USER" :toolbar="{ color: 'primary' }">
-      <v-form class="pa-5">
-        <v-text-field label="Name" variant="outlined"></v-text-field>
-        <v-text-field label="Email" variant="outlined"></v-text-field>
-        <v-text-field label="Password" variant="outlined"></v-text-field>
-        <v-text-field label="Confirm Password" variant="outlined"></v-text-field>
-        <div class="d-flex justify-end">
-          <v-btn type="submit" color="primary">Create</v-btn>
-        </div>
-      </v-form>
-    </main-drawer>
+  
   </v-container>
 </template>
+<!-- <file-upload title="Upload Files" v-model="state.files" multiple></file-upload> -->

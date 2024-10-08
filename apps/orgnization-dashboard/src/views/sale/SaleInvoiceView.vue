@@ -94,19 +94,20 @@ async function newInvoice() {
 }
 
 async function createInvoice() {
-  const details = formData.value.siDetails.map((entry) => {
-    return {
-      productId: entry.productId,
-      quantity: entry.quantity,
-      salePrice: entry.salePrice,
-      total: entry.total,
-      discount: entry.discount,
-    };
-  });
-  await saleInvoiceStore.createInvoice({ ...formData.value, details });
-  showDrawer.value = false;
-  formData.value = { ...formModal };
-  isEdit.value = false;
+  router.push('add-sale-invoice');
+  // const details = formData.value.siDetails.map((entry) => {
+  //   return {
+  //     productId: entry.productId,
+  //     quantity: entry.quantity,
+  //     salePrice: entry.salePrice,
+  //     total: entry.total,
+  //     discount: entry.discount,
+  //   };
+  // });
+  // await saleInvoiceStore.createInvoice({ ...formData.value, details });
+  // showDrawer.value = false;
+  // formData.value = { ...formModal };
+  // isEdit.value = false;
 }
 
 async function editInvoice(item) {

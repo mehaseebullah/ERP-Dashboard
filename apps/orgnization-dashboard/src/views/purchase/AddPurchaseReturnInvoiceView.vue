@@ -62,14 +62,16 @@ const formData = ref({ ...formModal });
 const pos = ref();
 
 watchEffect(() => {
-  let total = 0, totalDiscount = 0;
+  let total = 0, totalDiscount = 0,subTotal=0;
   formData.value.rpiDetails.forEach((entry) => {
-    entry.total = (entry.purchasePrice * entry.quantity) - entry.discount;
+    let perItemAmount=entry.purchasePrice * entry.quantity;
+    entry.total = perItemAmount - entry.discount;
     total += entry.total || 0;
+    subTotal+=perItemAmount||0;
     totalDiscount += entry.discount || 0;
   });
   formData.value.total = total;
-  formData.value.subTotal = total;
+  formData.value.subTotal = subTotal;
   formData.value.discount = totalDiscount;
   if (formData.value.paid >= formData.value.total) {
     formData.value.remainingAmount = 0.0;
@@ -227,7 +229,7 @@ onMounted(async () => {
           <tbody>
             <tr>
               <td>Sub Total</td>
-              <td>{{ formData.total }}</td>
+              <td>{{ formData.subTotal }}</td>
             </tr>
             <tr>
               <td>Tax</td>

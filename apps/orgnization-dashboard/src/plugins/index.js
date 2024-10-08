@@ -326,6 +326,33 @@ export async function registerPlugins(app) {
         layout: 'DashboardLayout',
       },
     });
+    router.addRoute({
+      path: '/add-sale-order',
+      name: 'add-sale-order',
+      component: comps[`../views/sale/AddSaleOrderView.vue`],
+      meta: {
+        requiresAuth: true,
+        layout: 'DashboardLayout',
+      },
+    });
+    router.addRoute({
+      path: '/add-sale-invoice',
+      name: 'add-sale-invoice',
+      component: comps[`../views/sale/AddSaleInvoiceView.vue`],
+      meta: {
+        requiresAuth: true,
+        layout: 'DashboardLayout',
+      },
+    });
+    router.addRoute({
+      path: '/add-sale-return-invoice',
+      name: 'add-sale-return-invoice',
+      component: comps[`../views/sale/AddReturnSaleInvoice.vue`],
+      meta: {
+        requiresAuth: true,
+        layout: 'DashboardLayout',
+      },
+    });
     app.provide('modules', modules);
   }
 
