@@ -3,13 +3,13 @@ import { ref, onMounted, computed, watchEffect } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useSwal } from '@/composables/useSwal';
 import { useReturnSaleInvoiceStore } from '@/store/sale_return_invoice';
-
+import { useRouter } from 'vue-router';
 
 const returnSaleInvoiceStore = useReturnSaleInvoiceStore();
 const { saleReturnInvoices } = storeToRefs(returnSaleInvoiceStore);
 
 const swal = useSwal();
-
+const router = useRouter();
 const headers = [
   {
     title: 'Invoice No',

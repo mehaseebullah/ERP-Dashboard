@@ -19,17 +19,17 @@ export const useSaleOrderStore = defineStore({
     },
     async createSaleOrder(d) {
       const { data } = await api.post('/Sale/SaleOrder/Create', d);
-      this.fetchSaleInvoiceList();
+      // this.fetchSaleOrderList();
       return data?.data?.data;
     },
     async updateSaleOrder({ id, title, description }) {
       const { data } = await api.put('/Sale/SaleOrder/Update', { id, title, description });
-      this.fetchSaleInvoiceList();
+      // this.fetchSaleOrderList();
       return data?.data?.data;
     },
     async deleteSaleOrder({ id }) {
       const { data } = await api.delete(`/Sale/SaleOrder/Delete?Id=${id}`);
-      this.fetchSaleInvoiceList();
+      this.fetchSaleOrderList();
       return data?.data?.data;
     },
   },

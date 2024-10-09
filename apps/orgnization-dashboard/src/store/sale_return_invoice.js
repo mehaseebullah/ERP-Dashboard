@@ -15,17 +15,15 @@ export const useReturnSaleInvoiceStore = defineStore({
     },
     async createReturnSaleInvoice(d) {
       const { data } = await api.post('/Sale/ReturnSaleInvoice/Create', d);
-      this.fetchSaleInvoiceList();
       return data?.data?.data;
     },
     async updateReturnSale({ id, title, description }) {
       const { data } = await api.put('/Sale/ReturnSaleInvoice/Update', { id, title, description });
-      this.fetchSaleInvoiceList();
       return data?.data?.data;
     },
     async deleteReturnSale({ id }) {
       const { data } = await api.delete(`/Sale/ReturnSaleInvoice/Delete?Id=${id}`);
-      this.fetchSaleInvoiceList();
+      this.fetchReturnSaleInvoiceList();
       return data?.data?.data;
     },
   },

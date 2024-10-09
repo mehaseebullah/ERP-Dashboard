@@ -63,6 +63,7 @@ watchEffect(() => {
     total += entry.total || 0;
     subTotal+=perItemAmount||0;
     totalDiscount += entry.discount || 0;
+    entry.purchaseTotal=entry.purchasePrice * entry.quantity || 0;
   });
   formData.value.total = total;
   formData.value.subTotal = subTotal;
@@ -125,7 +126,7 @@ function addProduct(productId) {
 
 onMounted(async () => {
   newInvoiceNum();
-  customerStore.fetchSuppliers();
+  customerStore.fetchCustomers();
   productStore.fetchProducts();
 });
 </script>

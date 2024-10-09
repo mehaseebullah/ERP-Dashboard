@@ -3,17 +3,17 @@ import { ref, onMounted, computed, watchEffect } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useSwal } from '@/composables/useSwal';
 import { useSaleOrderStore } from '@/store/sale_order';
-
+import { useRouter } from 'vue-router';
 
 const saleOrderStore = useSaleOrderStore();
 const { saleOrders } = storeToRefs(saleOrderStore);
 
 const swal = useSwal();
-
+const router = useRouter();
 const headers = [
   {
     title: 'Sale Order No',
-    key: 'soDate',
+    key: 'soNo',
     sortable: true,
   },
   {

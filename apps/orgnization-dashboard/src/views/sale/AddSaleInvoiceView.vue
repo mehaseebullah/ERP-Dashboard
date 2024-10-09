@@ -58,7 +58,7 @@ const formModal = {
   remainingAmount: 0.0,
   returnAmount: 0.0
 };
-const poNumber = ref("");
+const soNumber = ref("");
 const formData = ref({ ...formModal });
 const pos = ref();
 
@@ -118,22 +118,22 @@ function requestFullscreen() {
     elem.msRequestFullscreen();
   }
 }
-async function getPurchaseOrderByPONumber(soNumber) {
-  console.log('getPurchaseOrderByPONumber')
+async function getSaleOrderBySONumber(soNumber) {
+  console.log('getSaleOrderBySONumber')
   try {
-    if (!poNumber)
+    if (!soNumber)
       return;
     const { data } = await saleOrderStore.fetchSaleOrderBySONumber(soNumber);
     if (data) {
-      let po = data[0];
+      let so = data[0];
       await newInvoice();
       await newInvoiceNum()
-      formData.value.customerId = po.customerId;
-      formData.value.subTotal = po.subTotal;
-      formData.value.total = po.total;
-      formData.value.discount = po.discount;
-      formData.value.soId = po.id;
-      formData.value.siDetails = JSON.parse(po.soDetails);
+      formData.value.customerId = so.customerId;
+      formData.value.subTotal = so.subTotal;
+      formData.value.total = so.total;
+      formData.value.discount = so.discount;
+      formData.value.soId = so.id;
+      formData.value.siDetails = JSON.parse(so.soDetails);
 
     } else {
       let invoiceNo = formData.value.invoiceNo;
@@ -162,7 +162,6 @@ function addProduct(productId) {
       title: prod.title,
       quantity: 1,
       purchasePrice: prod.purchasePrice,
-      purchaseTotal:prod.purchasePrice,
       salePrice:prod.salePrice,
       total: prod.purchasePrice,
       discount: 0.0,
@@ -176,7 +175,7 @@ function addProduct(productId) {
 
 onMounted(async () => {
   newInvoiceNum();
-  customerStore.fetchSuppliers();
+  customerStore.fetchCustomers();
   productStore.fetchProducts();
   console.log(products, customers)
   //   invoiceStore.fetchInvoiceList();
@@ -193,8 +192,8 @@ onMounted(async () => {
               item-title="title" item-value="id" item-props @update:model-value="addProduct"></v-autocomplete>
           </v-col>
           <v-col cols="3" class="bg-grey-lighten-5">
-            <v-text-field @keyup.enter="getPurchaseOrderByPONumber(poNumber)" placeholder="PO Number" class="mx-auto"
-              variant="outlined" density="comfortable" theme="light" type="text" v-model="poNumber"></v-text-field>
+            <v-text-field @keyup.enter="getSaleOrderBySONumber(soNumber)" placeholder="SO Number" class="mx-auto"
+              variant="outlined" density="comfortable" theme="light" type="text" v-model="soNumber"></v-text-field>
           </v-col>
         </v-row>
         <v-data-table hide-default-footer :headers="headers" :items="formData.siDetails">

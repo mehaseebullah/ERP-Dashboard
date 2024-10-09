@@ -58,7 +58,7 @@ const formModal = {
   remainingAmount: 0.0,
   returnAmount: 0.0
 };
-const piNumber = ref("");
+const siNumber = ref("");
 const formData = ref({ ...formModal });
 const pos = ref();
 
@@ -71,6 +71,7 @@ watchEffect(() => {
     subTotal+=perItemAmount||0;
     totalDiscount += entry.discount || 0;
     purchaseTotal += entry.purchasePrice * entry.quantity || 0;
+    entry.purchaseTotal=entry.purchasePrice * entry.quantity || 0;
   });
   formData.value.total = total;
   formData.value.subTotal = subTotal;
@@ -95,8 +96,12 @@ async function newInvoiceNum() {
   formData.value.invoiceNo = await generateInoiceNumberStore.fetchGenerateInvoiceNumber({ Prefix: 'RSI' });
 }
 async function createInvoice() {
-  if (formData.value.remainingAmount > 0 && !formData.value.customerId) {
+  if ((formData.value.remainingAmount > 0 && !formData.value.customerId)) {
     swal.info('please pay full amount or select a supplier');
+    return;
+  }
+  if (!formData.value.siId) {
+    swal.info('please put sale invoice number');
     return;
   }
   await returnSaleInvoiceStore.createReturnSaleInvoice(formData.value)
@@ -142,22 +147,22 @@ function addProduct(productId) {
     formData.value.rsiDetails[currentIndex]['quantity'] += 1;
   }
 }
-async function getPurchaseInvoiceByPINumber(piNumber) {
-  console.log('getPurchaseOrderByPONumber')
+async function getSaleReturnnvoiceBySINumber(siNumber) {
+  console.log('getSaleReturnnvoiceBySINumber')
   try {
-    if (!piNumber)
+    if (!siNumber)
       return;
-    const { data } = await saleInvoiceStore.fetchSaleInvoiceBySINumber(piNumber);
+    const { data } = await saleInvoiceStore.fetchSaleInvoiceBySINumber(siNumber);
     if (data) {
-      let pi = data[0];
+      let si = data[0];
       await newInvoice();
       await newInvoiceNum()
-      formData.value.customerId = pi.customerId;
-      formData.value.subTotal = pi.subTotal;
-      formData.value.total = pi.total;
-      formData.value.discount = pi.discount;
-      formData.value.siId = pi.id;
-      formData.value.rsiDetails = JSON.parse(pi.siDetails)
+      formData.value.customerId = si.customerId;
+      formData.value.subTotal = si.subTotal;
+      formData.value.total = si.total;
+      formData.value.discount = si.discount;
+      formData.value.siId = si.id;
+      formData.value.rsiDetails = JSON.parse(si.siDetails)
     } else {
       let invoiceNo = formData.value.invoiceNo;
       await newInvoiceNum();
@@ -188,8 +193,8 @@ onMounted(async () => {
             item-title="title" item-value="id" item-props @update:model-value="addProduct"></v-autocomplete>
           </v-col>
           <v-col cols="3" class="bg-grey-lighten-5">
-            <v-text-field @keyup.enter="getPurchaseInvoiceByPINumber(piNumber)" placeholder="SI Number" class="mx-auto"
-              variant="outlined" density="comfortable" theme="light" type="text" v-model="piNumber"></v-text-field>
+            <v-text-field @keyup.enter="getSaleReturnnvoiceBySINumber(siNumber)" placeholder="SI Number" class="mx-auto"
+              variant="outlined" density="comfortable" theme="light" type="text" v-model="siNumber"></v-text-field>
           </v-col>
         </v-row>
         <v-data-table hide-default-footer :headers="headers" :items="formData.rsiDetails">

@@ -96,6 +96,10 @@ async function createInvoice() {
     swal.info('please pay full amount or select a supplier');
     return;
   }
+  if (!formData.value.piId) {
+    swal.info('please put purchase invoice number');
+    return;
+  }
   await purchaseReturnInvoiceStore.createPurchaseReturnInvoice(formData.value)
   await newInvoice()
   await newInvoiceNum();

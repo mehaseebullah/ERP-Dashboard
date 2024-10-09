@@ -5,7 +5,7 @@ import { useSwal } from '@/composables/useSwal';
 import { useProductStore } from '@/store/product';
 import { useSaleInvoiceStore } from '@/store/sale_invoice';
 import { useCustomerStore } from '@/store/customer';
-
+import { useRouter } from 'vue-router';
 const productStore = useProductStore();
 const customerStore = useCustomerStore();
 const saleInvoiceStore = useSaleInvoiceStore();
@@ -15,7 +15,7 @@ const { customers } = storeToRefs(customerStore);
 const { saleInvoices } = storeToRefs(saleInvoiceStore);
 
 const swal = useSwal();
-
+const router = useRouter();
 const headers = [
   {
     title: 'invoice No',
@@ -88,9 +88,10 @@ watchEffect(() => {
 });
 
 async function newInvoice() {
-  formData.value = { ...formModal };
-  isEdit.value = false;
-  showDrawer.value = true;
+  router.push('add-sale-invoice');
+  // formData.value = { ...formModal };
+  // isEdit.value = false;
+  // showDrawer.value = true;
 }
 
 async function createInvoice() {
