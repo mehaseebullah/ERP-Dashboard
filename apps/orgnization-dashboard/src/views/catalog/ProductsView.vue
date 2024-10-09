@@ -5,15 +5,16 @@ import { useUnitStore } from '@/store/unit';
 import { useSwal } from '@/composables/useSwal';
 import { useProductCategoryStore } from '@/store/product_category';
 import { useProductStore } from '@/store/product';
+import { useManufacturerStore } from '@/store/manufacturer';
 
 const unitStore = useUnitStore();
 const categoryStore = useProductCategoryStore();
 const productStore = useProductStore();
-
+const manufacturerStore = useManufacturerStore();
 const { units } = storeToRefs(unitStore);
 const { categories } = storeToRefs(categoryStore);
 const { products } = storeToRefs(productStore);
-
+const { manufacturers } = storeToRefs(manufacturerStore);
 const swal = useSwal();
 
 const headers = [
@@ -28,8 +29,13 @@ const headers = [
     sortable: true,
   },
   {
+    title: 'Manufacturer',
+    key: 'manufacturer',
+    sortable: true,
+  },
+  {
     title: 'Category',
-    key: 'categoryId',
+    key: 'category',
     sortable: true,
   },
   {
@@ -53,6 +59,10 @@ const headers = [
     sortable: true,
   },
   {
+    title: 'Image',
+    key: 'file',
+  },
+  {
     title: 'Actions',
     key: 'actions',
   },
@@ -61,15 +71,31 @@ const formModal = {
   title: '',
   sku: '',
   description: '',
-  categoryId: '',
-  unit: '',
-  purchasePrice: '',
-  salePrice: '',
+  categoryId: null,
+  unitId: null,
+  manufacturerId: null,
+  purchasePrice: 0.0,
+  salePrice: 0.0,
+  image: null,
 };
 
 const formData = ref({ ...formModal });
 const isEdit = ref(false);
 const showDrawer = ref(false);
+
+const imagePreview = ref(null);
+
+const handleImageUpload = (event) => {
+  console.log('in handle');
+
+  const file = event.target.files[0];
+  if (file) {
+    console.log('file found');
+    formData.value.image = file;
+
+    imagePreview.value = URL.createObjectURL(file);
+  }
+};
 
 async function newProduct() {
   formData.value = { ...formModal };
@@ -110,6 +136,7 @@ onMounted(async () => {
   unitStore.fetchUnits();
   categoryStore.fetchProductCategories();
   productStore.fetchProducts();
+  manufacturerStore.fetchManufacturers();
 });
 </script>
 <template>
@@ -120,9 +147,6 @@ onMounted(async () => {
         <v-btn @click="newProduct()">Create Product</v-btn>
       </v-toolbar>
       <v-data-table :loading="$loading('fetchProducts')" :headers="headers" :items="products">
-        <template v-slot:item.categoryId="{ item }">
-          {{ categories.find((c) => c.id == item.categoryId)?.title }}
-        </template>
         <template v-slot:item.actions="{ item }">
           <v-icon class="me-2" size="small" @click="editProduct(item)"> mdi-pencil </v-icon>
           <v-icon size="small" @click="deleteProduct(item.id)"> mdi-delete </v-icon>
@@ -133,6 +157,15 @@ onMounted(async () => {
       <v-form class="pa-5" @submit.prevent="isEdit ? updateProduct() : createProduct()">
         <v-text-field v-model="formData.title" label="Title" variant="outlined"></v-text-field>
         <v-text-field v-model="formData.sku" label="SKU" variant="outlined"></v-text-field>
+        <v-select
+          :items="manufacturers"
+          item-title="title"
+          item-value="id"
+          v-model="formData.manufacturerId"
+          :loading="$loading('fetchManufacturers')"
+          label="Manufacturer"
+          variant="outlined"
+        ></v-select>
         <v-select
           :items="categories"
           item-title="title"
@@ -145,7 +178,8 @@ onMounted(async () => {
         <v-select
           :items="units"
           item-title="title"
-          v-model="formData.unit"
+          item-value="id"
+          v-model="formData.unitId"
           :loading="$loading('fetchUnits')"
           label="Unit"
           variant="outlined"
@@ -170,6 +204,15 @@ onMounted(async () => {
           </v-col>
         </v-row>
 
+        <!-- Image Selection -->
+        <input type="file" @change="handleImageUpload" />
+
+        <!-- Display Selected Image -->
+        <!-- v-if="imagePreview" -->
+
+        <div>
+          <img :src="imagePreview" alt="Selected Image" width="200" />
+        </div>
         <div class="d-flex justify-end mt-5">
           <v-btn v-if="isEdit" :loading="$loading('updateProduct')" type="submit" color="primary">Update</v-btn>
           <v-btn v-else :loading="$loading('createProduct')" type="submit" color="primary">Create</v-btn>

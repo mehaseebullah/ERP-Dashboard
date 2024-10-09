@@ -8,21 +8,25 @@ export const useCustomerStore = defineStore({
   }),
   actions: {
     async fetchCustomers() {
-      const { data } = await api.get('/customer/list');
-      this.customers = data?.data;
+      this.customers=[];
+      const { data } = await api.get('/Sale/Customers/GetAllCustomers?PageSize=10000&PageNumber=0');
+      this.customers = data?.data?.data;
       return this.customers;
     },
-    async createCustomer({ name, email, phone, address }) {
-      const { data } = await api.post('/customer/create', { name, email, phone, address });
-      return data?.data;
+    async createCustomer({ firstName, lastName, emailAddress, contactNumber,address }) {
+      const { data } = await api.post('/Sale/Customers/Create', { firstName, lastName, emailAddress, contactNumber,address });
+     this.fetchCustomers();
+      return data?.data?.data;
     },
-    async updateCustomer({ id, name, email, phone, address }) {
-      const { data } = await api.post('/customer/update', { id, name, email, phone, address });
+    async updateCustomer({ id, firstName, lastName, emailAddress, contactNumber,address }) {
+      const { data } = await api.put('/Sale/Customers/Update', { firstName, lastName, emailAddress, contactNumber,address });
+      this.fetchCustomers();
       return data?.data;
     },
     async deleteCustomer({ id }) {
-      const { data } = await api.post('/customer/delete', { id });
-      return data?.data;
+      const { data } = await api.delete(`/Sale/Customers/Delete?Id=${id}`);
+      this.fetchCustomers();
+      return data?.data?.data;
     },
   },
 });

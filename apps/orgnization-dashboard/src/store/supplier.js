@@ -8,22 +8,23 @@ export const useSupplierStore = defineStore({
   }),
   actions: {
     async fetchSuppliers() {
-      const { data } = await api.get('/supplier/list');
-      this.suppliers = data?.data;
+      this.suppliers=[];
+      const { data } = await api.get('/Inventory/Suppliers/GetAllSuppliers?PageSize=10000&PageNumber=0');
+      this.suppliers = data?.data?.data;
       return this.suppliers;
     },
-    async createSupplier({ name, email, phone, address }) {
-      const { data } = await api.post('/supplier/create', { name, email, phone, address });
+    async createSupplier({ firstName, lastName, emailAddress, contactNumber,address }) {
+      const { data } = await api.post('/Inventory/Suppliers/Create', { firstName, lastName, emailAddress, contactNumber,address});
       this.fetchSuppliers();
       return data?.data;
     },
-    async updateSupplier({ id, name, email, phone, address }) {
-      const { data } = await api.post('/supplier/update', { id, name, email, phone, address });
+    async updateSupplier({ id, firstName, lastName, emailAddress, contactNumber,address }) {
+      const { data } = await api.put('/Inventory/Suppliers/Update', { id, firstName, lastName, emailAddress, contactNumber,address });
       this.fetchSuppliers();
       return data?.data;
     },
     async deleteSupplier({ id }) {
-      const { data } = await api.post('/supplier/delete', { id });
+      const { data } = await api.delete(`/Inventory/Suppliers/Delete?Id=${id}`);
       this.fetchSuppliers();
       return data?.data;
     },

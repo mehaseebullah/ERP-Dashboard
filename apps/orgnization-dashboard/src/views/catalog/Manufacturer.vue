@@ -1,0 +1,102 @@
+<script setup>
+import { onMounted, ref } from 'vue';
+import { useManufacturerStore } from '@/store/manufacturer';
+import { useSwal } from '@/composables/useSwal';
+import { storeToRefs } from 'pinia';
+
+const manufacturerStore = useManufacturerStore();
+const { manufacturers } = storeToRefs(manufacturerStore);
+
+const swal = useSwal();
+
+const headers = [
+  {
+    title: 'Title',
+    key: 'title',
+    sortable: true,
+  },
+  {
+    title: 'Description',
+    key: 'description',
+    sortable: true,
+  },
+  {
+    title: 'Actions',
+    key: 'actions',
+  },
+];
+const formModal = {
+  title: '',
+  description: '',
+};
+
+const formData = ref({ ...formModal });
+const isEdit = ref(false);
+const showDrawer = ref(false);
+
+async function newManufacturer() {
+  formData.value = { ...formModal };
+  isEdit.value = false;
+  showDrawer.value = true;
+}
+
+async function createManufacturer() {
+  await manufacturerStore.createManufacturer(formData.value);
+  console.log('manu')
+  showDrawer.value = false;
+  formData.value = { ...formModal };
+  isEdit.value = false;
+}
+
+async function editManufacturer(item) {
+  formData.value = { ...item };
+  isEdit.value = true;
+  showDrawer.value = true;
+}
+
+async function updateManufacturer() {
+  await manufacturerStore.updateManufacturer(formData.value);
+  showDrawer.value = false;
+  formData.value = { ...formModal };
+  isEdit.value = false;
+}
+
+async function deleteManufacturer(id) {
+  swal.confirm('Are you sure you want to delete this Manufacturer?').then(async (result) => {
+    if (result.isConfirmed) {
+      await manufacturerStore.deleteManufacturer({ id });
+      showDrawer.value = false;
+    }
+  });
+}
+
+onMounted(() => {
+    manufacturerStore.fetchManufacturers();
+});
+</script>
+<template>
+  <v-container>
+    <v-card>
+      <v-toolbar color="secondary" density="compact">
+        <v-spacer></v-spacer>
+        <v-btn @click="newManufacturer()">Create Manufacturer</v-btn>
+      </v-toolbar>
+      <v-data-table :loading="$loading('fetchManufacturers')" :headers="headers" :items="manufacturers">
+        <template v-slot:item.actions="{ item }">
+          <v-icon class="me-2" size="small" @click="editManufacturer(item)"> mdi-pencil </v-icon>
+          <v-icon size="small" @click="deleteManufacturer(item.id)"> mdi-delete </v-icon>
+        </template>
+      </v-data-table>
+    </v-card>
+    <main-drawer v-model="showDrawer" width="800" title="CREATE Manufacturer" :toolbar="{ color: 'primary' }">
+      <v-form class="pa-5" @submit.prevent="isEdit ? updateManufacturer() : createManufacturer()">
+        <v-text-field v-model="formData.title" label="Title" variant="outlined"></v-text-field>
+        <v-textarea v-model="formData.description" label="Description" variant="outlined"></v-textarea>
+        <div class="d-flex justify-end">
+          <v-btn v-if="isEdit" :loading="$loading('updateManufacturer')" type="submit" color="primary">Update</v-btn>
+          <v-btn v-else :loading="$loading('createManufacturer')" type="submit" color="primary">Create</v-btn>
+        </div>
+      </v-form>
+    </main-drawer>
+  </v-container>
+</template>

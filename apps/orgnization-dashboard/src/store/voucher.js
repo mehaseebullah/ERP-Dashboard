@@ -9,33 +9,27 @@ export const useVoucherStore = defineStore({
   }),
   actions: {
     async fetchVoucherTypes() {
-      const { data } = await api.get('/accounting/voucher/types');
+      const { data } = await api.get('/Finance/VoucherTypes/GetAllVoucherTypes');
       this.voucherTypes = data?.data;
     },
     async fetchVoucherList() {
-      const { data } = await api.get('/accounting/voucher/list');
-      this.vouchers = data?.data;
+      const { data } = await api.get('/Finance/Voucher/GetAllVoucher?PageSize=1000&PageNumber=0');
+      this.vouchers = data?.data?.data;
     },
-    async createVoucher({ voucherDate, refNo, voucherType, description, details }) {
-      const { data } = await api.post('/accounting/voucher/create', {
-        voucherDate,
-        refNo,
-        voucherType,
-        description,
-        details,
-      });
-      this.fetchJvList();
-      return data?.data;
+    async createVoucher({ voucherNo, voucherTypeId, voucherDate, description, ledgerDetailDTO }) {
+      const { data } = await api.post('/Finance/Voucher/AddUpdateVoucher', { voucherNo, voucherTypeId, voucherDate, description, ledgerDetailDTO });
+      this.fetchVoucherList();
+      return data?.data?.data;
     },
-    async updateVoucher({ id, name, email, phone, address }) {
-      const { data } = await api.post('/accounting/voucher/update', { id, name, email, phone, address });
-      this.fetchJvList();
-      return data?.data;
+    async updateVoucher({ id,voucherNo, voucherTypeId, voucherDate, description, ledgerDetailDTO }) {
+      const { data } = await api.post('/Finance/Voucher/AddUpdateVoucher', { id,voucherNo, voucherTypeId, voucherDate, description, ledgerDetailDTO });
+      this.fetchVoucherList();
+      return data?.data?.data;
     },
     async deleteVoucher({ id }) {
-      const { data } = await api.post('/accounting/voucher/delete', { id });
-      this.fetchJvList();
-      return data?.data;
+      const { data } = await api.post(`/Finance/Voucher/GetVoucherById/${id}`);
+      this.fetchVoucherList();
+      return data?.data?.data;
     },
   },
 });
