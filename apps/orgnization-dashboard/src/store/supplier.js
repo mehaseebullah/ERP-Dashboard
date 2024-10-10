@@ -9,10 +9,17 @@ export const useSupplierStore = defineStore({
   actions: {
     async fetchSuppliers() {
       this.suppliers=[];
-      const { data } = await api.get('/Inventory/Suppliers/GetAllSuppliers?PageSize=10000&PageNumber=0');
+      const { data } = await api.get('/Inventory/Suppliers/GetAllSuppliers');
+      this.suppliers = data?.data;
+      return this.suppliers;
+    },
+    async fetchPaginatedSuppliers() {
+      this.suppliers=[];
+      const { data } = await api.get('/Inventory/Suppliers/GetPaginatedSuppliers?PageSize=10000&PageNumber=0');
       this.suppliers = data?.data?.data;
       return this.suppliers;
     },
+    
     async createSupplier({ firstName, lastName, emailAddress, contactNumber,address }) {
       const { data } = await api.post('/Inventory/Suppliers/Create', { firstName, lastName, emailAddress, contactNumber,address});
       this.fetchSuppliers();

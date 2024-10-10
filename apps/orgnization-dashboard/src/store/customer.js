@@ -9,10 +9,17 @@ export const useCustomerStore = defineStore({
   actions: {
     async fetchCustomers() {
       this.customers=[];
-      const { data } = await api.get('/Sale/Customers/GetAllCustomers?PageSize=10000&PageNumber=0');
+      const { data } = await api.get('/Sale/Customers/GetAllCustomers');
+      this.customers = data?.data;
+      return this.customers;
+    },
+    async fetchPaginatedCustomers() {
+      this.customers=[];
+      const { data } = await api.get('/Sale/Customers/GetPaginatedCustomers?PageSize=10000&PageNumber=0');
       this.customers = data?.data?.data;
       return this.customers;
     },
+    
     async createCustomer({ firstName, lastName, emailAddress, contactNumber,address }) {
       const { data } = await api.post('/Sale/Customers/Create', { firstName, lastName, emailAddress, contactNumber,address });
      this.fetchCustomers();
