@@ -1,9 +1,9 @@
 version: "3"
 
 services:
-  workspace-dashboard-fe:
+  orgnization-dashboard-fe:
     build:
-      context: ./apps/workspace-dashboard
+      context: ./apps/orgnization-dashboard
       dockerfile: Dockerfile
     restart: always
     ports:
