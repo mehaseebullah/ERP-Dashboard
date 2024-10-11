@@ -27,7 +27,7 @@ export const useProductStore = defineStore({
       manufacturerId,
       salePrice,
       purchasePrice,
-      image,
+      file,
     }) {
       let createProduct = new FormData();
       createProduct.append('title', title);
@@ -38,8 +38,10 @@ export const useProductStore = defineStore({
       createProduct.append('manufacturerId', manufacturerId);
       createProduct.append('salePrice', salePrice);
       createProduct.append('purchasePrice', purchasePrice);
-      if (this.file) {
-        createProduct.append('file', image);
+
+      if (file) {
+        createProduct.append('file', file);
+        console.log('filepath after append', createProduct.get('file'));
       }
       const { data } = await api.post('/Inventory/Products/Create', createProduct, {
         headers: {

@@ -26,9 +26,15 @@ export async function registerPlugins(app) {
 
   if (localStorage.getItem('access_token')) {
     const response = await api.get('/Tenant/Account/GetUserMenus');
-    console.log(response)
+    console.log(response);
     const menus = response.data.data.reduce((finalResult, item) => {
-      finalResult[item.module] = finalResult[item.module] || { isMenu:item.mIsMenu,name: item.module, icon: item.mIcon, menu: { title: item.module }, position: item.mPosition };
+      finalResult[item.module] = finalResult[item.module] || {
+        isMenu: item.mIsMenu,
+        name: item.module,
+        icon: item.mIcon,
+        menu: { title: item.module },
+        position: item.mPosition,
+      };
       if (item.mComponent) {
         finalResult[item.module]['menu']['component'] = item.mComponent;
       }
@@ -36,21 +42,26 @@ export async function registerPlugins(app) {
         finalResult[item.module]['menu']['url'] = item.mUrl;
       }
       if (item.fUrl) {
-
         finalResult[item.module]['menu']['children'] = finalResult[item.module]['menu']['children'] || [];
-        let findIndex = finalResult[item.module]['menu']['children'].findIndex(x => x.title == item.feature);
+        let findIndex = finalResult[item.module]['menu']['children'].findIndex((x) => x.title == item.feature);
 
         if (findIndex == -1)
-          finalResult[item.module]['menu']['children'].push({isMenu:item.fIsMenu, title: item.feature, codes: [item.code], icon: item.fIcon, url: item.fUrl, component: item.fComponent, position: item.fPosition });
-        else
-          finalResult[item.module]['menu']['children'][findIndex]['codes'].push(item.code);
+          finalResult[item.module]['menu']['children'].push({
+            isMenu: item.fIsMenu,
+            title: item.feature,
+            codes: [item.code],
+            icon: item.fIcon,
+            url: item.fUrl,
+            component: item.fComponent,
+            position: item.fPosition,
+          });
+        else finalResult[item.module]['menu']['children'][findIndex]['codes'].push(item.code);
       }
-
 
       return finalResult;
     }, {});
 
-    console.log('menus',menus)
+    console.log('menus', menus);
     const modules = [];
 
     // {
@@ -67,8 +78,7 @@ export async function registerPlugins(app) {
     //   "createdAt": "2024-05-02T10:48:07.576Z",
     //   "updatedAt": "2024-05-02T10:48:07.576Z"
     // }
-    for (let key in menus)
-      modules.push(menus[key]);
+    for (let key in menus) modules.push(menus[key]);
     // const modules = [
     //   {
     //     "id": "3f03b1bd-5044-4235-bda4-1b3dabea1451",

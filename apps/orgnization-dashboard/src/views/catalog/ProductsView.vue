@@ -60,7 +60,7 @@ const headers = [
   },
   {
     title: 'Image',
-    key: 'file',
+    key: 'filePath',
   },
   {
     title: 'Actions',
@@ -76,7 +76,7 @@ const formModal = {
   manufacturerId: null,
   purchasePrice: 0.0,
   salePrice: 0.0,
-  image: null,
+  file: '',
 };
 
 const formData = ref({ ...formModal });
@@ -91,7 +91,8 @@ const handleImageUpload = (event) => {
   const file = event.target.files[0];
   if (file) {
     console.log('file found');
-    formData.value.image = file;
+    formData.value.file = file;
+    console.log(formData.value.file);
 
     imagePreview.value = URL.createObjectURL(file);
   }
@@ -147,6 +148,11 @@ onMounted(async () => {
         <v-btn @click="newProduct()">Create Product</v-btn>
       </v-toolbar>
       <v-data-table :loading="$loading('fetchProducts')" :headers="headers" :items="products">
+        <template v-slot:item.filePath="{ item }">
+          <v-img :src="item.filePath" alt="Product Image" max-width="100" max-height="100" contain />
+
+          <!-- <img :src="item.filePath" alt="Product Image" width="100" height="100" /> -->
+        </template>
         <template v-slot:item.actions="{ item }">
           <v-icon class="me-2" size="small" @click="editProduct(item)"> mdi-pencil </v-icon>
           <v-icon size="small" @click="deleteProduct(item.id)"> mdi-delete </v-icon>
