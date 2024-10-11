@@ -13,7 +13,7 @@ export const useProductCategoryStore = defineStore({
       this.categories = data?.data;
       return this.categories;
     },
-    async fetchPaginatedCategories() {
+    async fetchPaginatedProductCategories() {
       this.categories=[];
       const { data } = await api.get('/Inventory/Categories/GetPaginatedCategories?PageSize=1000&PageNumber=0');
       this.categories = data?.data?.data;;

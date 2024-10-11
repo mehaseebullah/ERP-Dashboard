@@ -12,7 +12,7 @@ export const useProductStore = defineStore({
       this.products = data?.data;
       return this.products;
     },
-    async fetchProducts() {
+    async fetchPaginatedProducts() {
       const { data } = await api.get('/Inventory/Products/GetPaginatedProducts?PageSize=1000&PageNumber=0');
       this.products = data?.data?.data;
       return this.products;
