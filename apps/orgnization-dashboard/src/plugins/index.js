@@ -28,7 +28,7 @@ export async function registerPlugins(app) {
     const response = await api.get('/Tenant/Account/GetUserMenus');
     console.log(response)
     const menus = response.data.data.reduce((finalResult, item) => {
-      finalResult[item.module] = finalResult[item.module] || { name: item.module, icon: item.mIcon, menu: { title: item.module }, position: item.mPosition };
+      finalResult[item.module] = finalResult[item.module] || { isMenu:item.mIsMenu,name: item.module, icon: item.mIcon, menu: { title: item.module }, position: item.mPosition };
       if (item.mComponent) {
         finalResult[item.module]['menu']['component'] = item.mComponent;
       }
@@ -41,7 +41,7 @@ export async function registerPlugins(app) {
         let findIndex = finalResult[item.module]['menu']['children'].findIndex(x => x.title == item.feature);
 
         if (findIndex == -1)
-          finalResult[item.module]['menu']['children'].push({ title: item.feature, codes: [item.code], icon: item.fIcon, url: item.fUrl, component: item.fComponent, position: item.fPosition });
+          finalResult[item.module]['menu']['children'].push({isMenu:item.fIsMenu, title: item.feature, codes: [item.code], icon: item.fIcon, url: item.fUrl, component: item.fComponent, position: item.fPosition });
         else
           finalResult[item.module]['menu']['children'][findIndex]['codes'].push(item.code);
       }
@@ -49,22 +49,24 @@ export async function registerPlugins(app) {
 
       return finalResult;
     }, {});
-    const modules = [{
-      "id": "3f03b1bd-5044-4235-bda4-1b3dabea1451",
-      "name": "Dashboard",
-      "code": "dashboard",
-      "icon": "mdi-view-dashboard",
-      "menu": {
-        "title": "Dashboard",
-        "url": "/dashboard",
-        "component": "HomeView"
-      },
-      "position": 1,
-      "createdAt": "2024-05-02T10:48:07.576Z",
-      "updatedAt": "2024-05-02T10:48:07.576Z"
-    }];
 
+    console.log('menus',menus)
+    const modules = [];
 
+    // {
+    //   "id": "3f03b1bd-5044-4235-bda4-1b3dabea1451",
+    //   "name": "Dashboard",
+    //   "code": "dashboard",
+    //   "icon": "mdi-view-dashboard",
+    //   "menu": {
+    //     "title": "Dashboard",
+    //     "url": "/dashboard",
+    //     "component": "HomeView"
+    //   },
+    //   "position": 1,
+    //   "createdAt": "2024-05-02T10:48:07.576Z",
+    //   "updatedAt": "2024-05-02T10:48:07.576Z"
+    // }
     for (let key in menus)
       modules.push(menus[key]);
     // const modules = [
@@ -299,60 +301,60 @@ export async function registerPlugins(app) {
         }
       }),
     );
-    router.addRoute({
-      path: '/add-purchase-invoice',
-      name: 'add-purchase-invoice',
-      component: comps[`../views/purchase/AddPurchaseInvoiceView.vue`],
-      meta: {
-        requiresAuth: true,
-        layout: 'DashboardLayout',
-      },
-    });
-    router.addRoute({
-      path: '/add-purchase-order',
-      name: 'add-purchase-order',
-      component: comps[`../views/purchase/AddPurchaseOrderView.vue`],
-      meta: {
-        requiresAuth: true,
-        layout: 'DashboardLayout',
-      },
-    });
-    router.addRoute({
-      path: '/add-purchase-return-invoice',
-      name: 'add-purchase-return-invoice',
-      component: comps[`../views/purchase/AddPurchaseReturnInvoiceView.vue`],
-      meta: {
-        requiresAuth: true,
-        layout: 'DashboardLayout',
-      },
-    });
-    router.addRoute({
-      path: '/add-sale-order',
-      name: 'add-sale-order',
-      component: comps[`../views/sale/AddSaleOrderView.vue`],
-      meta: {
-        requiresAuth: true,
-        layout: 'DashboardLayout',
-      },
-    });
-    router.addRoute({
-      path: '/add-sale-invoice',
-      name: 'add-sale-invoice',
-      component: comps[`../views/sale/AddSaleInvoiceView.vue`],
-      meta: {
-        requiresAuth: true,
-        layout: 'DashboardLayout',
-      },
-    });
-    router.addRoute({
-      path: '/add-sale-return-invoice',
-      name: 'add-sale-return-invoice',
-      component: comps[`../views/sale/AddReturnSaleInvoice.vue`],
-      meta: {
-        requiresAuth: true,
-        layout: 'DashboardLayout',
-      },
-    });
+    // router.addRoute({
+    //   path: '/add-purchase-invoice',
+    //   name: 'add-purchase-invoice',
+    //   component: comps[`../views/purchase/AddPurchaseInvoiceView.vue`],
+    //   meta: {
+    //     requiresAuth: true,
+    //     layout: 'DashboardLayout',
+    //   },
+    // });
+    // router.addRoute({
+    //   path: '/add-purchase-order',
+    //   name: 'add-purchase-order',
+    //   component: comps[`../views/purchase/AddPurchaseOrderView.vue`],
+    //   meta: {
+    //     requiresAuth: true,
+    //     layout: 'DashboardLayout',
+    //   },
+    // });
+    // router.addRoute({
+    //   path: '/add-purchase-return-invoice',
+    //   name: 'add-purchase-return-invoice',
+    //   component: comps[`../views/purchase/AddPurchaseReturnInvoiceView.vue`],
+    //   meta: {
+    //     requiresAuth: true,
+    //     layout: 'DashboardLayout',
+    //   },
+    // });
+    // router.addRoute({
+    //   path: '/add-sale-order',
+    //   name: 'add-sale-order',
+    //   component: comps[`../views/sale/AddSaleOrderView.vue`],
+    //   meta: {
+    //     requiresAuth: true,
+    //     layout: 'DashboardLayout',
+    //   },
+    // });
+    // router.addRoute({
+    //   path: '/add-sale-invoice',
+    //   name: 'add-sale-invoice',
+    //   component: comps[`../views/sale/AddSaleInvoiceView.vue`],
+    //   meta: {
+    //     requiresAuth: true,
+    //     layout: 'DashboardLayout',
+    //   },
+    // });
+    // router.addRoute({
+    //   path: '/add-sale-return-invoice',
+    //   name: 'add-sale-return-invoice',
+    //   component: comps[`../views/sale/AddReturnSaleInvoice.vue`],
+    //   meta: {
+    //     requiresAuth: true,
+    //     layout: 'DashboardLayout',
+    //   },
+    // });
     app.provide('modules', modules);
   }
 

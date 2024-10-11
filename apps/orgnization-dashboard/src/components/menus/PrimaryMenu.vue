@@ -26,12 +26,12 @@ onMounted(() => {
     </template>
     <div class="h-100 custom-scroll" style="overflow-y: auto">
       <v-list>
-        <template v-for="module in sort(modules)" :key="module.title">
+        <template v-for="module in sort(modules.filter(x=>x.isMenu==true))" :key="module.title">
           <v-list-group v-if="module?.menu?.children?.length">
             <template v-slot:activator="{ props }">
               <v-list-item :prepend-icon="module?.icon" v-bind="props" :title="module?.menu?.title"></v-list-item>
             </template>
-            <template v-for="child in sort(module.menu.children)" :key="child">
+            <template v-for="child in sort(module.menu.children.filter(x=>x.isMenu==true))" :key="child">
               <v-list-item :prepend-icon="child?.icon" :to="child?.url" :title="child?.title"></v-list-item>
             </template>
           </v-list-group>
