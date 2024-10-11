@@ -9,10 +9,17 @@ export const useManufacturerStore = defineStore({
   actions: {
     async fetchManufacturers() {
       this.manufacturers=[];
-      const { data } = await api.get('/Inventory/Manufacturers/GetAllManufacturers?PageSize=1000&PageNumber=0');
+      const { data } = await api.get('/Inventory/Manufacturers/GetAllManufacturers');
+      this.manufacturers = data?.data;
+      return this.manufacturers;
+    },
+    async fetchPaginatedManufacturers() {
+      this.manufacturers=[];
+      const { data } = await api.get('/Inventory/Manufacturers/GetPaginatedManufacturers?PageSize=1000&PageNumber=0');
       this.manufacturers = data?.data?.data;
       return this.manufacturers;
     },
+    
     async createManufacturer({ title, description }) {
       const { data } = await api.post('/Inventory/Manufacturers/Create', { title, description });
       this.fetchManufacturers();
