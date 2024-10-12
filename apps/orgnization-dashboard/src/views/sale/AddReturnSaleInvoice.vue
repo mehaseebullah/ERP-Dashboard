@@ -29,7 +29,7 @@ const headers = [
   },
   {
     title: 'Price',
-    key: 'purchasePrice',
+    key: 'salePrice',
   },
   {
     title: 'Discount',
@@ -206,9 +206,9 @@ onMounted(async () => {
             <v-text-field class="mt-2" variant="outlined" density="compact" type="number" style="max-width: 100px"
               v-model.number="item.quantity"></v-text-field>
           </template>
-          <template v-slot:item.purchasePrice="{ item }">
+          <template v-slot:item.salePrice="{ item }">
             <v-text-field class="mt-2" variant="outlined" density="compact" type="number" style="max-width: 100px"
-              v-model.number="item.purchasePrice"></v-text-field>
+              v-model.number="item.salePrice"></v-text-field>
           </template>
           <template v-slot:item.discount="{ item }">
             <v-text-field class="mt-2" variant="outlined" density="compact" type="number" style="max-width: 100px"

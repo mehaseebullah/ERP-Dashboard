@@ -32,6 +32,8 @@ const getWorkspace = async () => {
 
     workspaceData.domain = workspaceDetails.data.data[0].domain;
     workspaceData.subDomain = workspaceDetails.data.data[0].subDomain;
+    if (workspaceDetails.data?.data?.length > 0)
+      hasWorkspace.value = true;
     try {
       const userDetails = await tenantAuthHttpService.get('/Tenant/User/GetAdministratorUserDetail');
       swal.success(userDetails.data.message);
@@ -41,7 +43,7 @@ const getWorkspace = async () => {
       workspaceData.title = userDetails.data.data[0].title;
       workspaceData.description = userDetails.data.data[0].description;
 
-      hasWorkspace.value = true;
+
     } catch (error) {
       swal.error(error.response2.data);
     }
@@ -60,8 +62,8 @@ const getWorkspace = async () => {
       <template #title>
         <p class="text-h5 mt-10">No Workspace</p>
       </template>
-      <template #subtitle
-        ><p class="mt-2">You have not yet created any workspace. Please create one to continue</p>
+      <template #subtitle>
+        <p class="mt-2">You have not yet created any workspace. Please create one to continue</p>
       </template>
       <template #actions>
         <v-btn class="mt-10" size="large" dense flat color="primary" to="/workspace/add">Create Workspace</v-btn>

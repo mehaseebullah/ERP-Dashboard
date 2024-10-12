@@ -20,7 +20,7 @@ export const useSaleInvoiceStore = defineStore({
     async createInvoice(d) {
       const { data } = await api.post('/Sale/SaleInvoice/Create', d);
       // this.fetchSaleInvoiceList();
-      return data?.data?.data;
+      return data;
     },
     async updateInvoice({ id, title, description }) {
       const { data } = await api.put('/Sale/SaleInvoice/Update', { id, title, description });
