@@ -15,9 +15,11 @@ export const useAuthStore = defineStore({
         this.$router.push('/login');
       }
     },
-    async login({ email, password }) {
-      const { data } = await http.post('/auth/Login', { email, password });
-      localStorage.setItem('access_token', data?.token);
+    async login({username,password,domain }) {
+      const { data } = await http.post('/Tenant/Account/Login', { username,password,domain });
+      console.log(data.data)
+      
+      localStorage.setItem('access_token', data?.data);
       window.location.reload();
     },
     async fetchUserInfo() {

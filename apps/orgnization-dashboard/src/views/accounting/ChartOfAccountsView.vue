@@ -20,7 +20,7 @@ const headers = [
   },
   {
     title: 'Group',
-    key: 'groupCode',
+    key: 'accountGroupTitle',
   },
   {
     title: 'Actions',
@@ -30,8 +30,7 @@ const headers = [
 const formModal = {
   title: '',
   code: '',
-  typeId: '',
-  groupId: '',
+  accountGroupId: null
 };
 
 const formData = ref({ ...formModal });
@@ -73,8 +72,8 @@ async function deleteAccount(id) {
 }
 
 onMounted(async () => {
-  accountStore.fetchAccounts();
-  accountStore.fetchAccountGroups();
+  accountStore.fetchAllChartOfAccounts();
+  accountStore.fetchAllAccountGroups();
   accountStore.fetchAccountTypes();
 });
 </script>
@@ -86,17 +85,14 @@ onMounted(async () => {
         <v-btn @click="newAccount()">Create Account</v-btn>
       </v-toolbar>
       <v-data-table :loading="$loading('fetchAccounts')" :headers="headers" :items="accounts">
-        <template v-slot:item.groupCode="{ item }">
-          {{ parseTitle(item.groupCode) }}
-        </template>
         <template v-slot:item.actions="{ item }">
           <div v-if="!item.isSystem">
-            <v-btn size="small" variant="text" :disabled="item.is_system" @click="editAccount(item)" icon="mdi-pencil">
+            <v-btn size="small" variant="text" :disabled="item.isSystem" @click="editAccount(item)" icon="mdi-pencil">
             </v-btn>
             <v-btn
               size="small"
               variant="text"
-              :disabled="item.is_system"
+              :disabled="item.isSystem"
               @click="deleteAccount(item.id)"
               icon="mdi-delete"
             >
@@ -112,9 +108,9 @@ onMounted(async () => {
         <v-text-field v-model="formData.code" label="Code" variant="outlined"></v-text-field>
         <v-select
           :items="accountGroups"
-          item-title="name"
-          item-value="code"
-          v-model="formData.groupId"
+          item-title="title"
+          item-value="id"
+          v-model="formData.accountGroupId"
           :loading="$loading('fetchAccountGroups')"
           label="Group"
           variant="outlined"

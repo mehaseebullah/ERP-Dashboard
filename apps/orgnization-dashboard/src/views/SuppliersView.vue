@@ -2,23 +2,28 @@
 import { onMounted, ref } from 'vue';
 import { useSupplierStore } from '@/store/supplier';
 import { useSwal } from '@/composables/useSwal';
-
+import { storeToRefs } from 'pinia';
 const supplierStore = useSupplierStore();
+const { suppliers } = storeToRefs(supplierStore);
 const swal = useSwal();
 
 const headers = [
   {
-    title: 'Name',
-    key: 'name',
+    title: 'First Name',
+    key: 'firstName',
     sortable: true,
   },
   {
+    title: 'Last Name',
+    key: 'lastName',
+  },
+  {
     title: 'Email',
-    key: 'email',
+    key: 'emailAddress',
   },
   {
     title: 'Phone',
-    key: 'phone',
+    key: 'contactNumber',
   },
   {
     title: 'Address',
@@ -30,20 +35,16 @@ const headers = [
   },
 ];
 const formModal = {
-  name: '',
-  email: '',
-  phone: '',
-  address: '',
+  firstName: '',
+  lastName: '',
+  emailAddress: '',
+  contactNumber: '',
+  address: ''
 };
 
 const formData = ref({ ...formModal });
 const isEdit = ref(false);
 const showDrawer = ref(false);
-const suppliers = ref([]);
-
-async function loadSuppliers() {
-  suppliers.value = await supplierStore.fetchSuppliers();
-}
 
 async function newSupplier() {
   formData.value = { ...formModal };
@@ -56,7 +57,6 @@ async function createSupplier() {
   showDrawer.value = false;
   formData.value = { ...formModal };
   isEdit.value = false;
-  loadSuppliers();
 }
 
 async function editSupplier(item) {
@@ -70,7 +70,6 @@ async function updateSupplier() {
   showDrawer.value = false;
   formData.value = { ...formModal };
   isEdit.value = false;
-  loadSuppliers();
 }
 
 async function deleteSupplier(id) {
@@ -78,13 +77,12 @@ async function deleteSupplier(id) {
     if (result.isConfirmed) {
       await supplierStore.deleteSupplier({ id });
       showDrawer.value = false;
-      loadSuppliers();
     }
   });
 }
 
 onMounted(() => {
-  loadSuppliers();
+  supplierStore.fetchSuppliers();
 });
 </script>
 <template>
@@ -103,9 +101,10 @@ onMounted(() => {
     </v-card>
     <main-drawer v-model="showDrawer" width="800" title="CREATE SUPPLIER" :toolbar="{ color: 'primary' }">
       <v-form class="pa-5" @submit.prevent="isEdit ? updateSupplier() : createSupplier()">
-        <v-text-field v-model="formData.name" label="Name" variant="outlined"></v-text-field>
-        <v-text-field v-model="formData.email" label="Email" variant="outlined"></v-text-field>
-        <v-text-field v-model="formData.phone" label="Phone" variant="outlined"></v-text-field>
+        <v-text-field v-model="formData.firstName" label="First Name" variant="outlined"></v-text-field>
+        <v-text-field v-model="formData.lastName" label="Last Name" variant="outlined"></v-text-field>
+        <v-text-field v-model="formData.emailAddress" label="Email" variant="outlined"></v-text-field>
+        <v-text-field v-model="formData.contactNumber" label="Phone" variant="outlined"></v-text-field>
         <v-textarea v-model="formData.address" label="Address" variant="outlined"></v-textarea>
         <div class="d-flex justify-end">
           <v-btn v-if="isEdit" :loading="$loading('updateSupplier')" type="submit" color="primary">Update</v-btn>

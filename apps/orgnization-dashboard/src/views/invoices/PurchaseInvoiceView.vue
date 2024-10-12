@@ -4,32 +4,38 @@ import { storeToRefs } from 'pinia';
 import { useSwal } from '@/composables/useSwal';
 import { useProductStore } from '@/store/product';
 import { useSupplierStore } from '@/store/supplier';
-import { useInvoiceStore } from '@/store/invoice';
+import { useGenerateInoiceNumber } from '@/store/generate_invoice_number';
+import { usePurchaseInvoiceStore } from '@/store/purchase_invoice';
 
 const productStore = useProductStore();
 const supplierStore = useSupplierStore();
-const invoiceStore = useInvoiceStore();
-
+const purchaseInvoiceStore = usePurchaseInvoiceStore();
+const generateInoiceNumberStore = useGenerateInoiceNumber();
 const { products } = storeToRefs(productStore);
 const { suppliers } = storeToRefs(supplierStore);
-const { getPurchaseInvoices } = storeToRefs(invoiceStore);
+const { purchaseinvoices } = storeToRefs(purchaseInvoiceStore);
 
 const swal = useSwal();
 
 const headers = [
   {
-    title: 'Ref No',
-    key: 'refNo',
+    title: 'invoice No',
+    key: 'invoiceNo',
     sortable: true,
   },
   {
-    title: 'Supplier',
-    key: 'customerSupplierCode',
+    title: 'supplier Name',
+    key: 'supplierName',
     sortable: true,
   },
   {
     title: 'Date',
     key: 'invoiceDate',
+    sortable: true,
+  },
+  {
+    title: 'Sub Total Amount',
+    key: 'subTotal',
     sortable: true,
   },
   {
@@ -48,20 +54,18 @@ const headers = [
   },
 ];
 const formModal = {
-  invoiceType: 'purchase',
-  refNo: '',
-  invoiceDate: '',
+  invoiceNo: '',
   description: '',
-  customerSupplierCode: '',
-  total: 0,
-  discount: 0,
-  details: [
+  supplierId: null,
+  subTotal: 0.0,
+  total: 0.0,
+  discount: 0.0,
+  piDetails: [
     {
-      productId: '',
+      productId: null,
       quantity: 0,
-      unitPrice: 0,
-      total: 0,
-      discount: 0,
+      purchasePrice: 0,
+      total: 0.0
     },
   ],
 };
@@ -72,23 +76,30 @@ const showDrawer = ref(false);
 
 watchEffect(() => {
   let total = 0;
-  formData.value.details.forEach((entry) => {
-    total += entry.total || 0;
-  });
-  formData.value.total = total;
+  if (formData.value.piDetails) {
+    formData.value.piDetails.forEach((entry) => {
+      total += entry.total || 0;
+    });
+    formData.value.subTotal = total;
+    formData.value.total = total;
+  }
 });
 
 async function newInvoice() {
-  formData.value = { ...formModal };
+
+  formData.value = JSON.parse(JSON.stringify({ ...formModal }));
+  console.log(formData.value);
   isEdit.value = false;
   showDrawer.value = true;
+  formData.value.invoiceNo = await generateInoiceNumberStore.fetchGenerateInvoiceNumber({ Prefix: 'PI' });
 }
 
 async function createInvoice() {
-  await invoiceStore.createInvoice(formData.value);
+  await purchaseInvoiceStore.createPurchaseInvoice(formData.value);
   showDrawer.value = false;
   formData.value = { ...formModal };
   isEdit.value = false;
+  purchaseInvoiceStore.fetchPurchaseInvoiceList();
 }
 
 async function editInvoice(item) {
@@ -98,7 +109,7 @@ async function editInvoice(item) {
 }
 
 async function updateInvoice() {
-  await invoiceStore.updateInvoice(formData.value);
+  await purchaseInvoiceStore.updatePurchaseInvoice(formData.value);
   showDrawer.value = false;
   formData.value = { ...formModal };
   isEdit.value = false;
@@ -107,16 +118,25 @@ async function updateInvoice() {
 async function deleteInvoice(id) {
   swal.confirm('Are you sure you want to delete this unit?').then(async (result) => {
     if (result.isConfirmed) {
-      await invoiceStore.deletePurchaseInvoice({ id });
+      await purchaseInvoiceStore.deletePurchaseInvoice({ id });
       showDrawer.value = false;
     }
   });
-}
 
+}
+async function addMoreProduct() {
+
+  formData.piDetails.push({
+    productId: null,
+    quantity: 0,
+    purchasePrice: 0,
+    total: 0,
+  })
+}
 onMounted(async () => {
   supplierStore.fetchSuppliers();
   productStore.fetchProducts();
-  invoiceStore.fetchInvoiceList();
+  purchaseInvoiceStore.fetchPurchaseInvoiceList();
 });
 </script>
 <template>
@@ -126,9 +146,9 @@ onMounted(async () => {
         <v-spacer></v-spacer>
         <v-btn @click="newInvoice()">Create Invoice</v-btn>
       </v-toolbar>
-      <v-data-table :loading="$loading('fetchPurchaseInvoiceList')" :headers="headers" :items="getPurchaseInvoices">
+      <v-data-table :loading="$loading('fetchPurchaseInvoiceList')" :headers="headers" :items="purchaseinvoices">
         <template v-slot:item.supplierId="{ item }">
-          {{ suppliers.find((s) => s.id == item.supplierId)?.name }}
+          {{ suppliers.find((s) => s.id == item.supplierId)?.fullName }}
         </template>
         <template v-slot:item.actions="{ item }">
           <v-icon class="me-2" size="small" @click="editInvoice(item)"> mdi-pencil </v-icon>
@@ -143,91 +163,48 @@ onMounted(async () => {
             <v-text-field type="date" v-model="formData.invoiceDate" label="Date" variant="outlined"></v-text-field>
           </v-col>
           <v-col>
-            <v-text-field v-model="formData.refNo" label="Ref No" variant="outlined"></v-text-field>
+            <v-text-field v-model="formData.invoiceNo" label="Ref No" variant="outlined"></v-text-field>
           </v-col>
         </v-row>
-        <v-select
-          :items="suppliers"
-          item-title="name"
-          item-value="code"
-          v-model="formData.customerSupplierCode"
-          :loading="$loading('fetchSuppliers')"
-          label="Supplier"
-          variant="outlined"
-        ></v-select>
+        <v-select :items="suppliers" item-title="fullName" item-value="id" v-model="formData.supplierId"
+          :loading="$loading('fetchSuppliers')" label="Supplier" variant="outlined"></v-select>
         <v-textarea v-model="formData.description" label="Description" variant="outlined" rows="2"></v-textarea>
-        <template v-for="(entry, index) in formData.details" :key="index">
+        <template v-for="(entry, index) in formData.piDetails" :key="index">
           <v-row>
             <v-col>
-              <v-select
-                :items="products"
-                item-title="title"
-                item-value="id"
-                v-model="entry.productId"
-                :loading="$loading('fetchProducts')"
-                label="Product"
-                variant="outlined"
-                density="compact"
-                @update:model-value="
-                  () => (entry.unitPrice = products.find((p) => p.id == entry.productId)?.purchasePrice)
-                "
-              ></v-select>
+              <v-select :items="products" item-title="title" item-value="id" v-model="entry.productId"
+                :loading="$loading('fetchProducts')" label="Product" variant="outlined" density="compact"
+                @update:model-value="() => (entry.purchasePrice = products.find((p) => p.id == entry.productId)?.purchasePrice)
+                  "></v-select>
             </v-col>
             <v-col>
-              <v-text-field
-                type="number"
-                density="compact"
-                v-model.number="entry.unitPrice"
-                label="Unit Price"
-                variant="outlined"
-              ></v-text-field>
+              <v-text-field type="number" density="compact" v-model.number="entry.purchasePrice" label="Unit Price"
+                variant="outlined"></v-text-field>
             </v-col>
             <v-col>
-              <v-text-field
-                type="number"
-                density="compact"
-                v-model.number="entry.quantity"
-                label="Quantity"
-                variant="outlined"
-                @keyup="entry.total = entry.unitPrice * entry.quantity"
-              ></v-text-field>
+              <v-text-field type="number" density="compact" v-model.number="entry.quantity" label="Quantity"
+                variant="outlined" @keyup="entry.total = entry.purchasePrice * entry.quantity"></v-text-field>
             </v-col>
             <v-col>
-              <v-text-field
-                readonly
-                type="number"
-                density="compact"
-                v-model.number="entry.total"
-                label="Total"
-                variant="outlined"
-              ></v-text-field>
+              <v-text-field readonly type="number" density="compact" v-model.number="entry.total" label="Total"
+                variant="outlined"></v-text-field>
             </v-col>
             <v-col v-if="index > 0" cols="1">
-              <v-btn variant="text" size="small" icon="mdi-delete" @click="formData.details.splice(index, 1)"></v-btn>
+              <v-btn variant="text" size="small" icon="mdi-delete" @click="formData.piDetails.splice(index, 1)"></v-btn>
             </v-col>
           </v-row>
         </template>
         <div class="d-flex justify-end mb-5">
-          <v-btn
-            variant="text"
-            @click="
-              formData.details.push({
-                productId: '',
-                quantity: 0,
-                unitPrice: 0,
-                total: 0,
-              })
-            "
-            >Add Entry</v-btn
-          >
+          <v-btn variant="text" @click="formData.piDetails.push({
+            productId: null,
+            quantity: 0,
+            purchasePrice: 0,
+            total: 0,
+          })">Add Entry</v-btn>
         </div>
         <div class="d-flex justify-end">
-          <v-text-field
-            v-model.number="formData.total"
-            type="number"
-            label="Total Amount"
-            variant="outlined"
-          ></v-text-field>
+          <v-text-field v-model.number="formData.total" type="number" label="Total Amount"
+            variant="outlined"></v-text-field>
         </div>
 
         <div class="d-flex justify-end mt-5">

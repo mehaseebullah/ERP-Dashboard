@@ -4,28 +4,32 @@ import { api } from '@/helpers/http';
 export const usePurchaseInvoiceStore = defineStore({
   id: 'purchaseInvoiceStore',
   state: () => ({
-    invoices: [],
+    purchaseinvoices: [],
   }),
   actions: {
     async fetchPurchaseInvoiceList() {
-      const { data } = await api.get('/invoice/list');
-      this.invoices = data?.data;
-      return this.invoices;
+      this.purchaseinvoices=[];
+      const { data } = await api.get('/Inventory/PurchaseInvoice/GetAllPurchaseInvoiceOrders?PageSize=1000&PageNumber=0');
+      this.purchaseinvoices = data?.data?.data;
+      return this.purchaseinvoices;
+    },
+    async fetchPurchaseInvoiceByPINumber(piNumber) {
+      const { data } = await api.get(`/Inventory/PurchaseInvoice/GetPurchaseInvoiceWithDetailsByPINumber/${piNumber}`);
+      return data;
     },
     async createPurchaseInvoice(d) {
-      const { data } = await api.post('/invoice/create', d);
-      this.fetchPurchaseInvoices();
-      return data?.data;
+      const { data } = await api.post('/Inventory/PurchaseInvoice/Create', d);
+      return data?.data?.data;;
     },
     async updatePurchaseInvoice({ id, title, description }) {
-      const { data } = await api.post('/invoice/purchase/update', { id, title, description });
+      const { data } = await api.put('/Inventory/PurchaseInvoice/Update', { id, title, description });
       this.fetchPurchaseInvoices();
-      return data?.data;
+      return data?.data?.data;;
     },
     async deletePurchaseInvoice({ id }) {
-      const { data } = await api.post('/invoice/purchase/delete', { id });
+      const { data } = await api.delete(`/Inventory/PurchaseInvoice/Delete?Id=${id}`);
       this.fetchPurchaseInvoices();
-      return data?.data;
+      return data?.data?.data;;
     },
   },
 });

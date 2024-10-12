@@ -2,23 +2,28 @@
 import { onMounted, ref } from 'vue';
 import { useCustomerStore } from '@/store/customer';
 import { useSwal } from '@/composables/useSwal';
-
+import { storeToRefs } from 'pinia';
 const customerStore = useCustomerStore();
+const { customers } = storeToRefs(customerStore);
 const swal = useSwal();
 
 const headers = [
-  {
-    title: 'Name',
-    key: 'name',
+{
+    title: 'First Name',
+    key: 'firstName',
     sortable: true,
   },
   {
+    title: 'Last Name',
+    key: 'lastName',
+  },
+  {
     title: 'Email',
-    key: 'email',
+    key: 'emailAddress',
   },
   {
     title: 'Phone',
-    key: 'phone',
+    key: 'contactNumber',
   },
   {
     title: 'Address',
@@ -30,20 +35,18 @@ const headers = [
   },
 ];
 const formModal = {
-  name: '',
-  email: '',
-  phone: '',
-  address: '',
+  firstName: '',
+  lastName: '',
+  emailAddress: '',
+  contactNumber: '',
+  address: ''
 };
 
 const formData = ref({ ...formModal });
 const isEdit = ref(false);
 const showDrawer = ref(false);
-const customers = ref([]);
 
-async function loadCustomers() {
-  customers.value = await customerStore.fetchCustomers();
-}
+
 
 async function newCustomer() {
   formData.value = { ...formModal };
@@ -56,7 +59,6 @@ async function createCustomer() {
   showDrawer.value = false;
   formData.value = { ...formModal };
   isEdit.value = false;
-  loadCustomers();
 }
 
 async function editCustomer(item) {
@@ -70,7 +72,6 @@ async function updateCustomer() {
   showDrawer.value = false;
   formData.value = { ...formModal };
   isEdit.value = false;
-  loadCustomers();
 }
 
 async function deleteCustomer(id) {
@@ -78,13 +79,12 @@ async function deleteCustomer(id) {
     if (result.isConfirmed) {
       await customerStore.deleteCustomer({ id });
       showDrawer.value = false;
-      loadCustomers();
     }
   });
 }
 
 onMounted(() => {
-  loadCustomers();
+  customerStore.fetchCustomers();
 });
 </script>
 <template>
@@ -103,9 +103,10 @@ onMounted(() => {
     </v-card>
     <main-drawer v-model="showDrawer" width="800" title="CREATE CUSTOMER" :toolbar="{ color: 'primary' }">
       <v-form class="pa-5" @submit.prevent="isEdit ? updateCustomer() : createCustomer()">
-        <v-text-field v-model="formData.name" label="Name" variant="outlined"></v-text-field>
-        <v-text-field v-model="formData.email" label="Email" variant="outlined"></v-text-field>
-        <v-text-field v-model="formData.phone" label="Phone" variant="outlined"></v-text-field>
+        <v-text-field v-model="formData.firstName" label="First Name" variant="outlined"></v-text-field>
+        <v-text-field v-model="formData.lastName" label="Last Name" variant="outlined"></v-text-field>
+        <v-text-field v-model="formData.emailAddress" label="Email" variant="outlined"></v-text-field>
+        <v-text-field v-model="formData.contactNumber" label="Phone" variant="outlined"></v-text-field>
         <v-textarea v-model="formData.address" label="Address" variant="outlined"></v-textarea>
         <div class="d-flex justify-end">
           <v-btn v-if="isEdit" :loading="$loading('updateCustomer')" type="submit" color="primary">Update</v-btn>

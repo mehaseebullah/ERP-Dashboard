@@ -1,3 +1,4 @@
 export default {
-  apiUrl: 'http://phub.pp.ua:8001',
+  progHubApiUrl: 'http://localhost:5002',
+  tenantAuthApiUrl: 'http://localhost:5003',
 };
