@@ -1,0 +1,25 @@
+version: "3"
+
+services:
+  workspace-dashboard-fe:
+    build:
+      context: ./apps/workspace-dashboard
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "9090:8080"
+    networks:
+      - vue-network
+
+  tenant-dashboard-fe:
+    build:
+      context: ./apps/tenant-dashboard
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "9091:8081"
+    networks:
+      - vue-network
+networks:
+  vue-network:
+    driver: bridge
