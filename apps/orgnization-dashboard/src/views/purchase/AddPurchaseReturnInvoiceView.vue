@@ -48,7 +48,7 @@ const formModal = {
   invoiceNo: '',
   description: '',
   supplierId: null,
-  piId:1,
+  piId: 1,
   subTotal: 0.0,
   total: 0.0,
   discount: 0.0,
@@ -62,12 +62,12 @@ const formData = ref({ ...formModal });
 const pos = ref();
 
 watchEffect(() => {
-  let total = 0, totalDiscount = 0,subTotal=0;
+  let total = 0, totalDiscount = 0, subTotal = 0;
   formData.value.rpiDetails.forEach((entry) => {
-    let perItemAmount=entry.purchasePrice * entry.quantity;
+    let perItemAmount = entry.purchasePrice * entry.quantity;
     entry.total = perItemAmount - entry.discount;
     total += entry.total || 0;
-    subTotal+=perItemAmount||0;
+    subTotal += perItemAmount || 0;
     totalDiscount += entry.discount || 0;
   });
   formData.value.total = total;
@@ -100,7 +100,10 @@ async function createInvoice() {
     swal.info('please put purchase invoice number');
     return;
   }
-  await purchaseReturnInvoiceStore.createPurchaseReturnInvoice(formData.value)
+
+  const data = await purchaseReturnInvoiceStore.createPurchaseReturnInvoice(formData.value);
+  if (data.statusCode == 404)
+    return;
   await newInvoice()
   await newInvoiceNum();
 }
@@ -162,7 +165,7 @@ async function getPurchaseInvoiceByPINumber(piNumber) {
       let invoiceNo = formData.value.invoiceNo;
       await newInvoiceNum();
       formData.value.invoiceNo = invoiceNo;
-      
+
     }
   } catch (e) {
     console.error(e)
@@ -184,8 +187,8 @@ onMounted(async () => {
         <v-row>
           <v-col cols="9" class="bg-grey-lighten-5">
             <v-autocomplete :items="products" class="mx-auto" density="comfortable" menu-icon=""
-            placeholder="Enter product name / SKU" prepend-inner-icon="mdi-magnify" theme="light" auto-select-first
-            item-title="title" item-value="id" item-props @update:model-value="addProduct"></v-autocomplete>
+              placeholder="Enter product name / SKU" prepend-inner-icon="mdi-magnify" theme="light" auto-select-first
+              item-title="title" item-value="id" item-props @update:model-value="addProduct"></v-autocomplete>
           </v-col>
           <v-col cols="3" class="bg-grey-lighten-5">
             <v-text-field @keyup.enter="getPurchaseInvoiceByPINumber(piNumber)" placeholder="PI Number" class="mx-auto"

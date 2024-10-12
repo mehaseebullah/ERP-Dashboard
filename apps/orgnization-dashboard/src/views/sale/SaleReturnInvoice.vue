@@ -60,7 +60,7 @@ onMounted(async () => {
 <template>
   <v-container>
     <v-card>
-      <v-toolbar title="SALE Order" color="secondary" density="compact">
+      <v-toolbar title="SALE RETURN INVOICE" color="secondary" density="compact">
         <v-spacer></v-spacer>
         <v-btn @click="createInvoice()">Create Sale Return</v-btn>
       </v-toolbar>

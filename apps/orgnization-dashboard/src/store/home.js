@@ -21,6 +21,33 @@ export const useHomeStore = defineStore({
             this.balanceSheet=[]
             const { data } = await api.get('/Finance/Ledgers/GetTrialBalance');
             this.accountGroups = data?.data;
+            console.log('tet')
+            if(!this.accountGroups)
+            {
+                this.accountGroups=[
+                    {
+                        "accountType": "Asset",
+                        "accountGroup": "Cash",
+                        "debit": 0,
+                        "credit": 0,
+                        "balance": 0
+                    },
+                    {
+                        "accountType": "Asset",
+                        "accountGroup": "Inventory",
+                        "debit": 0,
+                        "credit": 0,
+                        "balance": 0
+                    },
+                    {
+                        "accountType": "Liability",
+                        "accountGroup": "Account Payables",
+                        "debit": 0,
+                        "credit": 0,
+                        "balance": 0
+                    }
+                ]
+            }
             this.balanceSheetPerAccountType=[];
             await this.CalcProfileLoss();
         },
