@@ -15,7 +15,7 @@ export const usePurchaseReturnInvoiceStore = defineStore({
     },
     async createPurchaseReturnInvoice(d) {
       const { data } = await api.post('/Inventory/ReturnPurchaseInvoice/Create', d);
-      return data?.data?.data;;
+      return data;;
     },
     async updatePurchaseReturnInvoice({ id, title, description }) {
       const { data } = await api.put('/Inventory/ReturnPurchaseInvoice/Update', { id, title, description });

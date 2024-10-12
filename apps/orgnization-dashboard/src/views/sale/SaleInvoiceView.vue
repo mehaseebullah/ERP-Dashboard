@@ -153,7 +153,7 @@ onMounted(async () => {
 <template>
   <v-container>
     <v-card>
-      <v-toolbar title="SALE INVOICES" color="secondary" density="compact">
+      <v-toolbar title="SALE INVOICE" color="secondary" density="compact">
         <v-spacer></v-spacer>
         <v-btn @click="newInvoice()">Create Invoice</v-btn>
       </v-toolbar>
