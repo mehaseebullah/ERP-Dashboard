@@ -2,7 +2,7 @@ FROM node:lts-alpine
 
 ENV MY_PORT=8080
 
-WORKDIR /frontend
+WORKDIR /apps/orgnization-dashboard
 
 COPY package*.json ./
 
