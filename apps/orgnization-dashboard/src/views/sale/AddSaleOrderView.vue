@@ -159,8 +159,10 @@ onMounted(async () => {
           <template v-slot:item.total="{ item }">
             {{ item.total }}
           </template>
-          <template v-slot:item.actions="{ item }">
-            <v-btn variant="text" size="small" icon="mdi-delete"></v-btn>
+          <template v-slot:item.actions="{ item, index }">
+            <v-col  cols="1">
+              <v-btn variant="text" size="small" icon="mdi-delete" @click="formData.soDetails.splice(index, 1)"></v-btn>
+            </v-col>
           </template>
         </v-data-table>
       </v-col>
