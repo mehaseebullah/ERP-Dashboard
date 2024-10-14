@@ -18,7 +18,7 @@ const routes = [
     },
   },
   {
-    path: '/email/verify/:userId',
+    path: '/otpVerify',
     component: () => import('../views/auth/OtpVerification.vue'),
     meta: {
       layout: AuthLayout,
@@ -27,7 +27,7 @@ const routes = [
     },
   },
   {
-    path: '/password/verify/otp/:userId',
+    path: '/password/verify/otp',
     component: () => import('../views/auth/OtpVerification.vue'),
     meta: {
       layout: AuthLayout,

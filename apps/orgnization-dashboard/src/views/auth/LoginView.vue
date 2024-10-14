@@ -13,8 +13,9 @@ const state = reactive({
 const form = ref();
 
 const formData = reactive({
-  email: null,
+  username: null,
   password: null,
+  domain: null,
 });
 
 const doLogin = async () => {
@@ -33,9 +34,9 @@ const doLogin = async () => {
         <v-col cols="12">
           <v-text-field
             prepend-inner-icon="mdi-account"
-            v-model="formData.email"
+            v-model="formData.username"
             color="primary"
-            label="Email"
+            label="Username"
             variant="outlined"
             :rules="[rules.required]"
           ></v-text-field>
@@ -52,6 +53,16 @@ const doLogin = async () => {
             :append-inner-icon="state.showPass ? 'mdi-eye-off' : 'mdi-eye'"
             @click:append-inner="() => (state.showPass = !state.showPass)"
             :type="state.showPass ? 'text' : 'password'"
+            :rules="[rules.required]"
+          ></v-text-field>
+        </v-col>
+        <v-col cols="12">
+          <v-text-field
+            prepend-inner-icon="mdi-account"
+            v-model="formData.domain"
+            color="primary"
+            label="domain"
+            variant="outlined"
             :rules="[rules.required]"
           ></v-text-field>
         </v-col>

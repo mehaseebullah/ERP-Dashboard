@@ -1,16 +1,19 @@
 import axios from 'axios';
 import cfg from '../config';
-import { useAuthStore } from '@/store/auth';
+import { useAuthStore } from '../store/auth';
+import { storeToRefs } from 'pinia';
 
-const httpService = axios.create({ baseURL: cfg.apiUrl });
+const progHubHttpService = axios.create({ baseURL: cfg.progHubApiUrl }); //prog hub api
+const tenantAuthHttpService = axios.create({ baseURL: cfg.tenantAuthApiUrl }); //tenant auth api
 
-httpService.interceptors.request.use(
+progHubHttpService.interceptors.request.use(
   (config) => {
-    const { authStore } = useAuthStore();
-    let token = authStore?.token;
+    const authStore = useAuthStore();
+    let token = localStorage.getItem('access_token');
+
     if (token) {
-      config.headers.Authorization = token;
-      //   config.headers.common['Authorization'] = token;
+      config.headers.Authorization = `Bearer ${token}`;
+      // config.headers.common['Authorization'] = `Bearer ${token}`;
     }
     return config;
   },
@@ -19,4 +22,21 @@ httpService.interceptors.request.use(
   },
 );
 
-export default httpService;
+tenantAuthHttpService.interceptors.request.use(
+  (config) => {
+    const authStore = useAuthStore();
+
+    let token = localStorage.getItem('access_token');
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+      // config.headers.common['Authorization'] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  },
+);
+
+export { progHubHttpService, tenantAuthHttpService };
