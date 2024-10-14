@@ -1,6 +1,6 @@
 FROM node:lts-alpine
 
-ENV MY_PORT=3006
+ENV MY_PORT=8080
 
 WORKDIR /frontend
 
