@@ -8,6 +8,7 @@ const features = ref([]);
 const selectedCodes = ref([]);
 const users = ref([]);
 const userRoles = ref([]);
+const pRoleUsers = ref([]);
 const userCountries = ref([]);
 const userGender = ref([]);
 const userStates = ref([]);
@@ -140,7 +141,6 @@ async function createUser() {
 
 async function openEditUserDialog(user) {
   profileData.value = { ...user }; //to populate user data
-  profileData.value.countryId = user.reportToId;
   showUserDialog.value = true; // Show the UserProfileUpdate dialog
   showEdit.value = true;
 }
@@ -195,6 +195,12 @@ async function fetchUser() {
     isLoading.value = true;
     const { data } = await api.get('/Tenant/User/GetAllUsers');
     users.value = data?.data || []; // assign fetched data to the users array
+    if (users.value.length > 0) {
+      if (users.value.stateId)
+        fetchStateByCountryId();
+      if (users.value.cityId)
+        fetchCitiesByStateId();
+    }
   } catch (error) {
     swal.error('Error fetching users:', error);
   } finally {
@@ -252,7 +258,7 @@ async function fetchUserGender() {
     swal.error('Error fetching users Gender:', error);
   }
 }
-const handleSelectStateClick = (id) => {
+const fetchStateByCountryId = (id) => {
   if (id) {
     fetchUserStates(id);
     profileData.value.cityId = null;
@@ -260,7 +266,7 @@ const handleSelectStateClick = (id) => {
     swal.error('Plz select Country first');
   }
 };
-const handleSelectCityClick = (id) => {
+const fetchCitiesByStateId = (id) => {
   if (id) {
     fetchUserCity(id);
   } else {
@@ -277,13 +283,21 @@ async function fetchPermissions() {
     swal.error('Error fetching permissions:', error);
   }
 }
-
+async function GetUserByParentRoleId(roleId) {
+  let pRoleId = userRoles.value.find(x => x.roleId == roleId).pRoleId;
+  try {
+    const response = await api.get(`/Tenant/User/GetUsersByRoleId?RoleId=${pRoleId}`);
+    pRoleUsers.value = response?.data?.data;
+  } catch (error) {
+    swal.error('Error fetching users Roles:', error);
+  }
+}
 onMounted(async () => {
-  fetchUser();
-  fetchUserRoles();
-  fetchUserCountries();
-  fetchUserGender();
-  fetchPermissions();
+  await fetchUser();
+  await fetchUserRoles();
+  await fetchUserCountries();
+  await fetchUserGender();
+  await fetchPermissions();
 });
 </script>
 <template>
@@ -323,31 +337,15 @@ onMounted(async () => {
           <v-form class="pa-5" @submit.prevent="createUser()">
             <v-text-field v-model="formData.username" label="Name" variant="outlined"></v-text-field>
             <v-text-field v-model="formData.email" label="Email" variant="outlined"></v-text-field>
-            <v-text-field
-              v-model="formData.password"
-              label="Password"
-              variant="outlined"
-              type="password"
-            ></v-text-field>
+            <v-text-field v-model="formData.password" label="Password" variant="outlined"
+              type="password"></v-text-field>
             <v-text-field label="Confirm Password" variant="outlined" type="password"></v-text-field>
 
-            <v-select
-              v-model="formData.roleId"
-              :items="userRoles"
-              item-title="roleName"
-              item-value="roleId"
-              label="Select Role"
-              placeholder="Select a role"
-            />
+            <v-select v-model="formData.roleId" :items="userRoles" item-title="roleName" item-value="roleId"
+              label="Select Role" placeholder="Select a role" @update:model-value="GetUserByParentRoleId" />
 
-            <v-select
-              v-model="formData.reportToId"
-              :items="userCountries"
-              item-title="title"
-              item-value="id"
-              label="Select Country"
-              placeholder="Select a Country"
-            />
+            <v-select v-model="formData.reportToId" :items="pRoleUsers" item-title="text" item-value="id"
+              label="Report To" placeholder="Please select a user" />
 
             <div class="d-flex justify-end">
               <v-btn type="submit" color="primary">Create</v-btn>
@@ -386,10 +384,7 @@ onMounted(async () => {
                           <v-col cols="12" md="2" class="d-flex flex-column align-items-center position-relative">
                             <v-avatar size="100">
                               <v-img :src="selectedImage || profileData.fileBase64 || '/default_Profile_Img.jpg'" />
-                              <v-icon
-                                @click="triggerFileInput"
-                                class="position-absolute"
-                                style="
+                              <v-icon @click="triggerFileInput" class="position-absolute" style="
                                   top: 0;
                                   right: 0;
                                   bottom: 0;
@@ -397,22 +392,14 @@ onMounted(async () => {
                                   color: white;
                                   background: white;
                                   border-radius: 50%;
-                                "
-                                color="black"
-                                small
-                              >
+                                " color="black" small>
                                 mdi-pencil
                               </v-icon>
                             </v-avatar>
 
                             <!-- Hidden file input -->
-                            <input
-                              ref="fileInput"
-                              type="file"
-                              accept="image/*"
-                              style="display: none"
-                              @change="handleImageUpload"
-                            />
+                            <input ref="fileInput" type="file" accept="image/*" style="display: none"
+                              @change="handleImageUpload" />
                           </v-col>
 
                           <v-col cols="12" md="10">
@@ -430,14 +417,8 @@ onMounted(async () => {
                             <v-text-field v-model="profileData.lastName" label="Last Name" />
                           </v-col>
                           <v-col cols="12" md="6">
-                            <v-select
-                              v-model="profileData.genderId"
-                              :items="userGender"
-                              item-title="title"
-                              item-value="id"
-                              label="Select Gender"
-                              placeholder="Select Gender"
-                            />
+                            <v-select v-model="profileData.genderId" :items="userGender" item-title="title"
+                              item-value="id" label="Select Gender" placeholder="Select Gender" />
                           </v-col>
                           <v-col cols="12" md="6">
                             <v-text-field v-model="profileData.roles" label="Role" readonly />
@@ -476,36 +457,18 @@ onMounted(async () => {
                             <v-text-field v-model="profileData.address" label="Address" />
                           </v-col>
                           <v-col cols="12" md="6">
-                            <v-select
-                              v-model="profileData.reportToId"
-                              :items="userCountries"
-                              item-title="title"
-                              item-value="id"
-                              label="Select Country"
-                              placeholder="Select a Country"
-                            />
+                            <v-select v-model="profileData.countryId" :items="userCountries" item-title="title"
+                              item-value="id" label="Select Country" @update:model-value="fetchStateByCountryId"
+                              placeholder="Select a Country" />
                           </v-col>
                           <v-col cols="12" md="6">
-                            <v-select
-                              v-model="profileData.stateId"
-                              :items="userStates"
-                              item-title="title"
-                              item-value="id"
-                              label="State/province/area"
-                              placeholder="Select a State/province/area"
-                              @click="handleSelectStateClick(profileData.reportToId)"
-                            />
+                            <v-select v-model="profileData.stateId" :items="userStates" item-title="title"
+                              item-value="id" label="State/province/area" placeholder="Select a State/province/area"
+                              @update:model-value="fetchCitiesByStateId" />
                           </v-col>
                           <v-col cols="12" md="6">
-                            <v-select
-                              v-model="profileData.cityId"
-                              :items="userCity"
-                              item-title="title"
-                              item-value="id"
-                              label="City"
-                              placeholder="Select a City"
-                              @click="handleSelectCityClick(profileData.stateId)"
-                            />
+                            <v-select v-model="profileData.cityId" :items="userCity" item-title="title" item-value="id"
+                              label="City" placeholder="Select a City" />
                           </v-col>
 
                           <v-col cols="12" md="6">
@@ -536,11 +499,8 @@ onMounted(async () => {
                           <v-expansion-panel-text>
                             <v-row>
                               <v-col v-for="feature in featureGroup" :key="feature.code" cols="6">
-                                <v-checkbox
-                                  :label="feature.permissionType"
-                                  :value="feature.code"
-                                  v-model="selectedCodes"
-                                />
+                                <v-checkbox :label="feature.permissionType" :value="feature.code"
+                                  v-model="selectedCodes" />
                               </v-col>
                             </v-row>
                           </v-expansion-panel-text>

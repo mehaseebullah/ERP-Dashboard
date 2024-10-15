@@ -37,7 +37,7 @@ export const useAuthStore = defineStore({
         const { data } = await progHubHttpService.post('/ProgHub/Account/Login', { username, password });
 
         this.token = data?.data?.token;
-        localStorage.setItem('access_token', this.token);
+        localStorage.setItem('prog_access_token', this.token);
 
         swal.success('You are successfully logged in.');
         this.$router.push('/home');
@@ -107,7 +107,7 @@ export const useAuthStore = defineStore({
     logout() {
       this.token = null;
       this.user = null;
-      localStorage.removeItem('access_token', this.token);
+      localStorage.removeItem('prog_access_token');
       this.$router.push('/');
     },
   },
