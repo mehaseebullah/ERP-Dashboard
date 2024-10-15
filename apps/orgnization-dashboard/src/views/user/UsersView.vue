@@ -1,42 +1,42 @@
 <script setup>
-import { ref, onMounted } from 'vue';
-
+import { ref, onMounted, computed, watch } from 'vue';
 import { useSwal } from '@/composables/useSwal';
 import { api } from '@/helpers/http';
 
-const features = ref([
-  { title: 'Product', codes: ['pro-edit', 'pro-add'] },
-  { title: 'Category', codes: ['cat-read', 'cat-delete'] },
-]);
-
-const selectedPermissions = ref([]);
-const isChangePasswordPopupVisible = ref(false);
-
 const swal = useSwal();
-const showEdit = ref(false);
+const features = ref([]);
+const selectedCodes = ref([]);
 const users = ref([]);
 const userRoles = ref([]);
 const userCountries = ref([]);
 const userGender = ref([]);
 const userStates = ref([]);
 const userCity = ref([]);
-const selectedRole = ref(null);
-const selectedCountryId = ref(null);
-const selectedStateId = ref(null);
-const selectedCity = ref(null);
-const country = '';
-
 const showUserDialog = ref(false);
-const selectedUser = ref(null);
 const tab = ref(null);
+const showEdit = ref(false);
 const isEdit = ref(false);
 const showDrawer = ref(false);
 const isLoading = ref(false);
 
+// Group permissions by feature
+const groupedFeatures = computed(() => {
+  const groups = features.value.reduce((acc, perm) => {
+    const featureGroup = acc.find((group) => group[0].feature === perm.feature);
+    if (featureGroup) {
+      featureGroup.push(perm);
+    } else {
+      acc.push([perm]);
+    }
+    return acc;
+  }, []);
+  return groups;
+});
+
 const headers = ref([
   {
     title: 'Profile Picture',
-    key: 'profilePicturePath',
+    key: 'fileBase64',
   },
   {
     title: 'Username',
@@ -77,7 +77,7 @@ const profileData = ref({
   email: '',
   roles: null,
   reportToId: null,
-  profilePicturePath: '/default_Profile_Img.jpg',
+  profilePicturePath: '',
   firstName: '',
   lastName: '',
   phoneNumber: '',
@@ -92,10 +92,42 @@ const profileData = ref({
   preferences: '',
 });
 
+const imgUploadData = ref({
+  Id: null,
+  ProfilePicturePath: null,
+  File: '',
+});
+
+const selectedImage = ref(null); // Temporary variable to store selected image
+const fileInput = ref(null);
+const triggerFileInput = () => {
+  fileInput.value.click();
+};
+
+// Function to handle the image upload and display selected image temporarily
+const handleImageUpload = (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    selectedImage.value = URL.createObjectURL(file);
+    imgUploadData.value.File = file;
+  }
+};
+
+const cancelEdit = () => {
+  selectedImage.value = null; // Reset selected image
+  showEdit.value = false; // Hide edit mode
+};
+
+// Watch for changes in the drawer's visibility (v-model="showEdit")
+watch(showEdit, (newValue) => {
+  if (!newValue) {
+    cancelEdit(); // Call cancelEdit when drawer is closed (cross icon clicked)
+  }
+});
+
 async function createUser() {
   try {
     const newUser = { ...formData.value };
-
     const { data } = await api.post('/Tenant/User/Create', newUser);
     users.value.push(data.data);
     swal.success('User created successfully!');
@@ -103,29 +135,12 @@ async function createUser() {
     fetchUser();
   } catch (error) {
     swal.error('Error creating user!');
-    console.error('Error creating user:', error);
   }
 }
 
 async function openEditUserDialog(user) {
-  //only to populate user update form
-  profileData.value.id = user.id;
-  profileData.value.email = user.email;
-  profileData.value.username = user.username;
-  profileData.value.firstName = user.firstName;
-  profileData.value.lastName = user.lastName;
-  profileData.value.address = user.address;
-  profileData.value.bio = user.bio;
-  profileData.value.preferences = user.preferences;
-  profileData.value.roles = user.roles;
-  profileData.value.reportToId = user.reportToId;
+  profileData.value = { ...user }; //to populate user data
   profileData.value.countryId = user.reportToId;
-  // profileData.value.stateId = user.stateId;
-  // profileData.value.cityId = user.cityId;
-  profileData.value.genderId = user.genderId;
-  profileData.value.phoneNumber = user.phoneNumber;
-  profileData.value.zipCode = user.zipCode;
-
   showUserDialog.value = true; // Show the UserProfileUpdate dialog
   showEdit.value = true;
 }
@@ -135,29 +150,37 @@ async function updateUser() {
     showEdit.value = false;
     const updatedUser = { ...profileData.value };
 
-    console.log(updatedUser);
+    if (imgUploadData.value.File) {
+      imgUploadData.value.Id = updatedUser.id;
+      imgUploadData.value.ProfilePicturePath = updatedUser.profilePicturePath;
 
-    const response = await api.put('/Tenant/User/Update', updatedUser); // Update API endpoint
+      const formData = new FormData();
+      formData.append('Id', imgUploadData.value.Id);
+      formData.append('File', imgUploadData.value.File);
+      formData.append('ProfilePicturePath', imgUploadData.value.ProfilePicturePath);
+      const imgUpload = await api.put('/Tenant/User/UploadFile', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+    }
+
+    const userDataUpdate = await api.put('/Tenant/User/Update', updatedUser);
     swal.success('User updated successfully!');
     showDrawer.value = false;
     fetchUser();
   } catch (error) {
     swal.error('Error updating user!');
-    console.error('Error updating user:', error);
   }
 }
 
 async function deleteUser(UserId) {
   try {
-    console.log(UserId);
     const response = await api.delete(`/Tenant/User/Delete/${UserId}`);
-
-    // users.value = users.value.filter((user) => user.id !== UserId);
     fetchUser();
     swal.success('User deleted successfully!');
   } catch (error) {
     swal.error('Error deleting user!');
-    console.error('Error deleting user:', error);
   }
 }
 
@@ -173,7 +196,7 @@ async function fetchUser() {
     const { data } = await api.get('/Tenant/User/GetAllUsers');
     users.value = data?.data || []; // assign fetched data to the users array
   } catch (error) {
-    console.error('Error fetching users:', error);
+    swal.error('Error fetching users:', error);
   } finally {
     isLoading.value = false;
   }
@@ -185,7 +208,6 @@ async function fetchUserRoles() {
     userRoles.value = response?.data?.data;
   } catch (error) {
     swal.error('Error fetching users Roles:', error);
-    console.error('Error fetching users Roles:', error);
   }
 }
 
@@ -198,35 +220,29 @@ async function fetchUserCountries() {
     userCountries.value = response?.data?.data;
   } catch (error) {
     swal.error('Error fetching users Countries:', error);
-    console.error('Error fetching users Countries:', error);
   }
 }
 
 async function fetchUserStates(Id) {
   try {
     const response = await api.get(`/Tenant/TenantDefinitions/GetDefinitionByParentDefinitionId/${Id}`);
-
     userStates.value = response?.data?.data;
   } catch (error) {
     swal.error('Error fetching users States:', error);
-    console.error('Error fetching users States:', error);
   }
 }
 
 async function fetchUserCity(Id) {
   try {
     const response = await api.get(`/Tenant/TenantDefinitions/GetDefinitionByParentDefinitionId/${Id}`);
-
     userCity.value = response?.data?.data;
   } catch (error) {
     swal.error('Error fetching users City:', error);
-    console.error('Error fetching users City:', error);
   }
 }
 async function fetchUserGender() {
   try {
     const DefinitionTypeKeyCode = 'GENDER';
-
     const response = await api.get(
       `/Tenant/TenantDefinitions/GetDefinitionByDefinitionTypeKeyCode/${DefinitionTypeKeyCode}`,
     );
@@ -234,7 +250,6 @@ async function fetchUserGender() {
     userGender.value = response?.data?.data;
   } catch (error) {
     swal.error('Error fetching users Gender:', error);
-    console.error('Error fetching users Gender:', error);
   }
 }
 const handleSelectStateClick = (id) => {
@@ -253,11 +268,22 @@ const handleSelectCityClick = (id) => {
   }
 };
 
+async function fetchPermissions() {
+  try {
+    const UserId = 1;
+    const response = await api.get(`/Tenant/Account/GetUserPermissions/${UserId}`);
+    features.value = response?.data?.data;
+  } catch (error) {
+    swal.error('Error fetching permissions:', error);
+  }
+}
+
 onMounted(async () => {
   fetchUser();
   fetchUserRoles();
   fetchUserCountries();
   fetchUserGender();
+  fetchPermissions();
 });
 </script>
 <template>
@@ -268,17 +294,13 @@ onMounted(async () => {
         <v-btn @click="newUser">Create User</v-btn>
       </v-toolbar>
       <v-table>
-        <!-- <v-data-table :items="items"></v-data-table> -->
         <v-data-table :loading="$loading('fetchUser')" :headers="headers" :items="users">
-          <template v-slot:item.profilePicturePath="{ item }">
-            <v-img
-              :src="item.profilePicturePath || '/default_Profile_Img.jpg'"
-              alt="Profile"
-              max-width="100"
-              max-height="60"
-              class="me-2"
-            />
+          <template v-slot:item.fileBase64="{ item }">
+            <v-avatar size="60">
+              <v-img :src="item.fileBase64 || '/default_Profile_Img.jpg'" />
+            </v-avatar>
           </template>
+
           <template v-slot:item.actions="{ item }">
             <v-icon class="me-2" size="small" @click="openEditUserDialog(item)"> mdi-pencil </v-icon>
             <v-icon size="small" @click="deleteUser(item.id)"> mdi-delete </v-icon>
@@ -288,38 +310,63 @@ onMounted(async () => {
     </v-card>
 
     <main-drawer v-model="showDrawer" width="800" title="CREATE USER" :toolbar="{ color: 'primary' }">
-      <v-form class="pa-5" @submit.prevent="createUser()">
-        <v-text-field v-model="formData.username" label="Name" variant="outlined"></v-text-field>
-        <v-text-field v-model="formData.email" label="Email" variant="outlined"></v-text-field>
-        <v-text-field v-model="formData.password" label="Password" variant="outlined" type="password"></v-text-field>
-        <v-text-field label="Confirm Password" variant="outlined" type="password"></v-text-field>
+      <v-card>
+        <v-toolbar flat dense>
+          <v-toolbar-title>CREATE USER</v-toolbar-title>
+          <v-spacer></v-spacer>
+          <!-- <v-btn icon @click="showDrawer = false">
+            <v-icon>mdi-close</v-icon>
+          </v-btn> -->
+        </v-toolbar>
 
-        <v-select
-          v-model="formData.roleId"
-          :items="userRoles"
-          item-title="roleName"
-          item-value="roleId"
-          label="Select Role"
-          placeholder="Select a role"
-        />
+        <v-card-text>
+          <v-form class="pa-5" @submit.prevent="createUser()">
+            <v-text-field v-model="formData.username" label="Name" variant="outlined"></v-text-field>
+            <v-text-field v-model="formData.email" label="Email" variant="outlined"></v-text-field>
+            <v-text-field
+              v-model="formData.password"
+              label="Password"
+              variant="outlined"
+              type="password"
+            ></v-text-field>
+            <v-text-field label="Confirm Password" variant="outlined" type="password"></v-text-field>
 
-        <v-select
-          v-model="formData.reportToId"
-          :items="userCountries"
-          item-title="title"
-          item-value="id"
-          label="Select Country"
-          placeholder="Select a Country"
-        />
+            <v-select
+              v-model="formData.roleId"
+              :items="userRoles"
+              item-title="roleName"
+              item-value="roleId"
+              label="Select Role"
+              placeholder="Select a role"
+            />
 
-        <div class="d-flex justify-end">
-          <v-btn type="submit" color="primary">Create</v-btn>
-        </div>
-      </v-form>
+            <v-select
+              v-model="formData.reportToId"
+              :items="userCountries"
+              item-title="title"
+              item-value="id"
+              label="Select Country"
+              placeholder="Select a Country"
+            />
+
+            <div class="d-flex justify-end">
+              <v-btn type="submit" color="primary">Create</v-btn>
+            </div>
+          </v-form>
+        </v-card-text>
+      </v-card>
     </main-drawer>
 
+    <!-- <v-dialog v-model="showEdit" width="100vw" title="Update USER" :toolbar="{ color: 'primary' }"> -->
     <main-drawer v-model="showEdit" width="1025" title="Update USER" :toolbar="{ color: 'primary' }">
       <v-card>
+        <!-- <v-toolbar flat dense>
+          <v-toolbar-title>Edit Profile</v-toolbar-title>
+          <v-spacer></v-spacer>
+          <v-btn icon @click="showEdit = false">
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </v-toolbar> -->
         <div class="d-flex flex-row">
           <v-tabs v-model="tab" color="primary" direction="vertical">
             <v-tab prepend-icon="mdi-account" text="Basic Info" value="option-1"></v-tab>
@@ -335,28 +382,47 @@ onMounted(async () => {
                     <!-- Basic Info Section -->
                     <v-card class="mb-2">
                       <v-card-text>
-                        <v-row>
-                          <v-col justify="center" align-self="center" cols="12" md="2">
+                        <v-row class="align-items-center">
+                          <v-col cols="12" md="2" class="d-flex flex-column align-items-center position-relative">
                             <v-avatar size="100">
-                              <v-img :src="profileData.profilePicturePath" />
+                              <v-img :src="selectedImage || profileData.fileBase64 || '/default_Profile_Img.jpg'" />
+                              <v-icon
+                                @click="triggerFileInput"
+                                class="position-absolute"
+                                style="
+                                  top: 0;
+                                  right: 0;
+                                  bottom: 0;
+                                  margin: auto;
+                                  color: white;
+                                  background: white;
+                                  border-radius: 50%;
+                                "
+                                color="black"
+                                small
+                              >
+                                mdi-pencil
+                              </v-icon>
                             </v-avatar>
-                          </v-col>
-                          <v-col cols="12" md="10">
-                            <div class="d-flex flex-column">
-                              <div class="d-flex flex-column">
-                                <h2>{{ profileData.username || 'Username' }}</h2>
-                                <h3 class="mr-2">Email: {{ profileData.email }}</h3>
-                                <h3 class="mr-2">ID: {{ profileData.id }}</h3>
-                              </div>
 
-                              <div class="d-inline-block mt-2">
-                                <v-btn color="primary" small style="min-width: auto; padding: 4px 8px">
-                                  <v-icon left size="18">mdi-lock</v-icon>
-                                  Change Password
-                                </v-btn>
-                              </div>
+                            <!-- Hidden file input -->
+                            <input
+                              ref="fileInput"
+                              type="file"
+                              accept="image/*"
+                              style="display: none"
+                              @change="handleImageUpload"
+                            />
+                          </v-col>
+
+                          <v-col cols="12" md="10">
+                            <div class="d-flex flex-column justify-center align-start">
+                              <h2 class="mb-3">{{ profileData.username || 'Username' }}</h2>
+                              <h3 class="mb-3">Email: {{ profileData.email }}</h3>
+                              <h3>ID: {{ profileData.id }}</h3>
                             </div>
                           </v-col>
+
                           <v-col cols="12" md="6">
                             <v-text-field v-model="profileData.firstName" label="First Name" />
                           </v-col>
@@ -450,17 +516,8 @@ onMounted(async () => {
                     </v-card>
 
                     <v-btn @click="updateUser" color="primary">Update</v-btn>
-                    <v-btn @click="showEdit = false" color="primary" class="ml-4">Cancel</v-btn>
+                    <v-btn @click="cancelEdit" color="primary" class="ml-4">Cancel</v-btn>
                   </v-form>
-
-                  <v-dialog v-model="isChangePasswordPopupVisible" max-width="500px">
-                    <v-card>
-                      <v-card-title>Change Password</v-card-title>
-                      <v-card-actions>
-                        <v-btn text @click="closeChangePassword">Cancel</v-btn>
-                      </v-card-actions>
-                    </v-card>
-                  </v-dialog>
                 </v-card-text>
               </v-card>
             </v-tabs-window-item>
@@ -468,27 +525,41 @@ onMounted(async () => {
             <v-tabs-window-item value="option-2">
               <v-card flat>
                 <v-card-text>
-                  <div id="app">
-                    <!-- Accordion for features and permissions -->
-                    <v-expansion-panels multiple>
-                      <v-expansion-panel v-for="(feature, index) in features" :key="index">
-                        <v-expansion-panel-title>
-                          {{ feature.title }}
-                        </v-expansion-panel-title>
-                        <v-expansion-panel-text>
-                          <div v-for="code in feature.codes" :key="code">
-                            <v-checkbox :label="code" :value="code" v-model="selectedPermissions" />
-                          </div>
-                        </v-expansion-panel-text>
-                      </v-expansion-panel>
-                    </v-expansion-panels>
+                  <v-row>
+                    <!-- Grid for features -->
+                    <v-col v-for="(featureGroup, index) in groupedFeatures" :key="index" cols="12" md="6">
+                      <v-expansion-panels multiple>
+                        <v-expansion-panel>
+                          <v-expansion-panel-title>
+                            {{ featureGroup[0].feature }}
+                          </v-expansion-panel-title>
+                          <v-expansion-panel-text>
+                            <v-row>
+                              <v-col v-for="feature in featureGroup" :key="feature.code" cols="6">
+                                <v-checkbox
+                                  :label="feature.permissionType"
+                                  :value="feature.code"
+                                  v-model="selectedCodes"
+                                />
+                              </v-col>
+                            </v-row>
+                          </v-expansion-panel-text>
+                        </v-expansion-panel>
+                      </v-expansion-panels>
+                    </v-col>
+                  </v-row>
 
-                    <!-- Display selected permissions -->
-                    <div class="mt-3">
-                      <h4>Selected Permissions:</h4>
-                      <p>{{ selectedPermissions }}</p>
-                    </div>
-                  </div>
+                  <!-- Display selected codes -->
+                  <v-divider></v-divider>
+                  <v-card>
+                    <v-card-title>Selected Permission Codes</v-card-title>
+                    <v-card-text>
+                      <div v-if="selectedCodes.length === 0">No permissions selected</div>
+                      <ul>
+                        <li v-for="code in selectedCodes" :key="code">{{ code }}</li>
+                      </ul>
+                    </v-card-text>
+                  </v-card>
                 </v-card-text>
               </v-card>
             </v-tabs-window-item>
@@ -496,6 +567,7 @@ onMounted(async () => {
         </div>
       </v-card>
     </main-drawer>
+    <!-- </v-dialog> -->
   </v-container>
 </template>
 <style scoped>

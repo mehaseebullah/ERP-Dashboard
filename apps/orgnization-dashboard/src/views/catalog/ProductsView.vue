@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useUnitStore } from '@/store/unit';
 import { useSwal } from '@/composables/useSwal';
@@ -16,6 +16,10 @@ const { categories } = storeToRefs(categoryStore);
 const { products } = storeToRefs(productStore);
 const { manufacturers } = storeToRefs(manufacturerStore);
 const swal = useSwal();
+
+const isEdit = ref(false);
+const showDrawer = ref(false);
+const selectedImage = ref(null); // Temporary variable to store selected image
 
 const headers = [
   {
@@ -60,7 +64,8 @@ const headers = [
   },
   {
     title: 'Image',
-    key: 'filePath',
+    // key: 'filePath',
+    key: 'fileBase64',
   },
   {
     title: 'Actions',
@@ -80,21 +85,12 @@ const formModal = {
 };
 
 const formData = ref({ ...formModal });
-const isEdit = ref(false);
-const showDrawer = ref(false);
-
-const imagePreview = ref(null);
 
 const handleImageUpload = (event) => {
-  console.log('in handle');
-
   const file = event.target.files[0];
   if (file) {
-    console.log('file found');
     formData.value.file = file;
-    console.log(formData.value.file);
-
-    imagePreview.value = URL.createObjectURL(file);
+    selectedImage.value = URL.createObjectURL(file);
   }
 };
 
@@ -132,6 +128,10 @@ async function deleteProduct(id) {
     }
   });
 }
+const fileInput = ref(null);
+const triggerFileInput = () => {
+  fileInput.value.click();
+};
 
 onMounted(async () => {
   unitStore.fetchUnits();
@@ -148,10 +148,8 @@ onMounted(async () => {
         <v-btn @click="newProduct()">Create Product</v-btn>
       </v-toolbar>
       <v-data-table :loading="$loading('fetchProducts')" :headers="headers" :items="products">
-        <template v-slot:item.filePath="{ item }">
-          <v-img :src="item.filePath" alt="Product Image" max-width="100" max-height="100" contain />
-
-          <!-- <img :src="item.filePath" alt="Product Image" width="100" height="100" /> -->
+        <template v-slot:item.fileBase64="{ item }">
+          <v-img :src="item.fileBase64" alt="Product Image" max-width="100" max-height="100" contain />
         </template>
         <template v-slot:item.actions="{ item }">
           <v-icon class="me-2" size="small" @click="editProduct(item)"> mdi-pencil </v-icon>
@@ -209,16 +207,26 @@ onMounted(async () => {
             ></v-text-field>
           </v-col>
         </v-row>
+        <v-row>
+          <v-col cols="12" md="2" class="d-flex flex-column align-items-center position-relative">
+            <v-avatar size="150" class="position-relative" style="border-radius: 0">
+              <v-img :src="selectedImage || formData.fileBase64 || '/upload_Img.png'" />
+              <v-icon
+                @click="triggerFileInput"
+                class="position-absolute"
+                style="top: 0; right: 0; bottom: 0; margin: auto; color: white; background: white; border-radius: 50%"
+                color="black"
+                small
+              >
+                mdi-pencil
+              </v-icon>
+            </v-avatar>
 
-        <!-- Image Selection -->
-        <input type="file" @change="handleImageUpload" />
+            <!-- Hidden file input -->
+            <input ref="fileInput" type="file" accept="image/*" style="display: none" @change="handleImageUpload" />
+          </v-col>
+        </v-row>
 
-        <!-- Display Selected Image -->
-        <!-- v-if="imagePreview" -->
-
-        <div>
-          <img :src="imagePreview" alt="Selected Image" width="200" />
-        </div>
         <div class="d-flex justify-end mt-5">
           <v-btn v-if="isEdit" :loading="$loading('updateProduct')" type="submit" color="primary">Update</v-btn>
           <v-btn v-else :loading="$loading('createProduct')" type="submit" color="primary">Create</v-btn>
