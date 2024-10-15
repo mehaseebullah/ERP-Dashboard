@@ -1,13 +1,13 @@
 version: "3"
 
 services:
-  workspace-dashboard-fe:
+  orgnization-dashboard-fe:
     build:
-      context: ./apps/workspace-dashboard
+      context: ./apps/orgnization-dashboard
       dockerfile: Dockerfile
     restart: always
     ports:
-      - "9090:8080"
+      - "3011:8080"
     networks:
       - vue-network
 
@@ -17,7 +17,7 @@ services:
       dockerfile: Dockerfile
     restart: always
     ports:
-      - "9091:8081"
+      - "3012:8081"
     networks:
       - vue-network
 networks:

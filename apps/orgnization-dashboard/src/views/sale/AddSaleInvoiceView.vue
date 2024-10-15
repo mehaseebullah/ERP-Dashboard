@@ -63,12 +63,12 @@ const formData = ref({ ...formModal });
 const pos = ref();
 
 watchEffect(() => {
-  let total = 0, totalDiscount = 0,purchaseTotal=0,subTotal=0;
+  let total = 0, totalDiscount = 0, purchaseTotal = 0, subTotal = 0;
   formData.value.siDetails.forEach((entry) => {
-    let perItemAmount=entry.salePrice * entry.quantity;
+    let perItemAmount = entry.salePrice * entry.quantity;
     entry.total = perItemAmount - entry.discount;
     total += entry.total || 0;
-    subTotal+=perItemAmount||0;
+    subTotal += perItemAmount || 0;
     totalDiscount += entry.discount || 0;
     purchaseTotal += entry.purchasePrice * entry.quantity || 0;
 
@@ -100,7 +100,9 @@ async function createInvoice() {
     swal.info('please pay full amount or select a supplier');
     return;
   }
-  await saleInvoiceStore.createInvoice(formData.value)
+  const data = await saleInvoiceStore.createInvoice(formData.value);
+  if (data.statusCode == 404)
+    return;
   await newInvoice()
   await newInvoiceNum();
 
@@ -162,7 +164,7 @@ function addProduct(productId) {
       title: prod.title,
       quantity: 1,
       purchasePrice: prod.purchasePrice,
-      salePrice:prod.salePrice,
+      salePrice: prod.salePrice,
       total: prod.purchasePrice,
       discount: 0.0,
     });
@@ -216,8 +218,10 @@ onMounted(async () => {
           <template v-slot:item.total="{ item }">
             {{ item.total }}
           </template>
-          <template v-slot:item.actions="{ item }">
-            <v-btn variant="text" size="small" icon="mdi-delete"></v-btn>
+          <template v-slot:item.actions="{ item, index }">
+            <v-col  cols="1">
+              <v-btn variant="text" size="small" icon="mdi-delete" @click="formData.siDetails.splice(index, 1)"></v-btn>
+            </v-col>
           </template>
         </v-data-table>
       </v-col>

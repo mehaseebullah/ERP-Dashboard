@@ -1,6 +1,11 @@
 <script setup>
 import { useConfigStore } from '@/store/config';
-
+import { useRoute, useRouter } from 'vue-router';
+const router = useRouter();
+const logout=()=>{
+localStorage.clear();
+router.push('/');
+}
 const configStore = useConfigStore();
 </script>
 <template>
@@ -26,5 +31,12 @@ const configStore = useConfigStore();
         <v-list-item title="Change Password"></v-list-item>
       </v-list-group>
     </v-list>
+    <template v-slot:append>
+      <div class="pa-2">
+        <v-btn block @click="logout">
+          Logout
+        </v-btn>
+      </div>
+    </template>
   </v-navigation-drawer>
 </template>
