@@ -8,8 +8,9 @@ export const useProductStore = defineStore({
   }),
   actions: {
     async fetchProducts() {
-      const { data } = await api.get('/Inventory/Products/GetAllProducts');
-      this.products = data?.data;
+      // const { data } = await api.get('/Inventory/Products/GetAllProducts');
+      const { data } = await api.get('/Inventory/Products/GetPaginatedProducts');
+      this.products = data?.data?.data;
       return this.products;
     },
     async fetchPaginatedProducts() {
@@ -17,7 +18,7 @@ export const useProductStore = defineStore({
       this.products = data?.data?.data;
       return this.products;
     },
-    
+
     async createProduct({
       title,
       sku,
@@ -27,7 +28,7 @@ export const useProductStore = defineStore({
       manufacturerId,
       salePrice,
       purchasePrice,
-      image,
+      file,
     }) {
       let createProduct = new FormData();
       createProduct.append('title', title);
@@ -38,8 +39,10 @@ export const useProductStore = defineStore({
       createProduct.append('manufacturerId', manufacturerId);
       createProduct.append('salePrice', salePrice);
       createProduct.append('purchasePrice', purchasePrice);
-      if (this.file) {
-        createProduct.append('file', image);
+
+      if (file) {
+        createProduct.append('file', file);
+        console.log('filepath after append', createProduct.get('file'));
       }
       const { data } = await api.post('/Inventory/Products/Create', createProduct, {
         headers: {
@@ -49,7 +52,18 @@ export const useProductStore = defineStore({
       this.fetchProducts();
       return data?.data;
     },
-    async updateProduct({ id, title, sku, description, categoryId, unitId, manufacturerId, salePrice, purchasePrice }) {
+    async updateProduct({
+      id,
+      title,
+      sku,
+      description,
+      categoryId,
+      unitId,
+      manufacturerId,
+      salePrice,
+      purchasePrice,
+      file,
+    }) {
       let updateProduct = new FormData();
       updateProduct.append('id', id);
       updateProduct.append('title', title);
@@ -60,17 +74,26 @@ export const useProductStore = defineStore({
       updateProduct.append('manufacturerId', manufacturerId);
       updateProduct.append('salePrice', salePrice);
       updateProduct.append('purchasePrice', purchasePrice);
-      const { data } = await api.put('/Inventory/Products/Update', {
-        id,
-        title,
-        sku,
-        description,
-        categoryId,
-        unitId,
-        manufacturerId,
-        salePrice,
-        purchasePrice,
+      if (file) {
+        updateProduct.append('file', file);
+        console.log('filepath after append', updateProduct.get('file'));
+      }
+      const { data } = await api.put('/Inventory/Products/Update', updateProduct, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       });
+      // const { data } = await api.put('/Inventory/Products/Update', {
+      //   id,
+      //   title,
+      //   sku,
+      //   description,
+      //   categoryId,
+      //   unitId,
+      //   manufacturerId,
+      //   salePrice,
+      //   purchasePrice,
+      // });
       this.fetchProducts();
       return data?.data;
     },
