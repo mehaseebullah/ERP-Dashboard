@@ -2,7 +2,7 @@
 import { useConfigStore } from '@/store/config';
 // import { storeToRefs } from 'pinia';
 import { onMounted, inject, ref, computed } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import {  useRouter } from 'vue-router';
 const modules = ref([]);
 const configStore = useConfigStore();
 // const { modules } = storeToRefs(configStore);

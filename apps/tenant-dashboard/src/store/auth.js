@@ -18,10 +18,14 @@ export const useAuthStore = defineStore({
     async register({ username, email, password }) {
       try {
         const { data } = await progHubHttpService.post('/ProgHub/Account/Register', { username, email, password });
-        if (data) {
-          swal.success('Account created successfully');
+        console.log(data)
+        if (data?.statusCode == 409) {
 
-          this.$router.push('/');
+          swal.success(data?.message);
+
+          // this.$router.push('/');
+        } else {
+          this.$router.push('/password/verify/otp');
         }
         // return data;
       } catch (err) {
@@ -33,17 +37,17 @@ export const useAuthStore = defineStore({
         const { data } = await progHubHttpService.post('/ProgHub/Account/Login', { username, password });
 
         this.token = data?.data?.token;
-        localStorage.setItem('access_token', this.token);
+        localStorage.setItem('prog_access_token', this.token);
 
         swal.success('You are successfully logged in.');
         this.$router.push('/home');
       } catch (err) {
         console.log(err);
         if (err.response.data.statusCode === 403) {
-          swal.error(err.message || 'Something went wrong');
+          swal.error(err.response.data.message || 'Something went wrong');
           this.$router.push('/password/verify/otp');
         } else {
-          swal.error(err.message || 'Something went wrong');
+          swal.error(err.response.data.message || 'Something went wrong');
         }
       }
     },
@@ -61,7 +65,11 @@ export const useAuthStore = defineStore({
         const { data } = await progHubHttpService.get(
           `/ProgHub/OtpVerification/VerificationByOtpCodeAndType/${OtpCode}`,
         );
-        this.token = data?.data;
+        if(data.statusCode==404)
+        {
+          swal.error(data.message);
+          return;
+        }
         swal.success('OTP verified successfully');
         if (verificationType === '6') {
           this.$router.push('/');
@@ -99,7 +107,7 @@ export const useAuthStore = defineStore({
     logout() {
       this.token = null;
       this.user = null;
-      localStorage.removeItem('access_token', this.token);
+      localStorage.removeItem('prog_access_token');
       this.$router.push('/');
     },
   },

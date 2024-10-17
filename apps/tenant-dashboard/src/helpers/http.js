@@ -9,7 +9,7 @@ const tenantAuthHttpService = axios.create({ baseURL: cfg.tenantAuthApiUrl }); /
 progHubHttpService.interceptors.request.use(
   (config) => {
     const authStore = useAuthStore();
-    let token = localStorage.getItem('access_token');
+    let token = localStorage.getItem('prog_access_token');
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -26,7 +26,7 @@ tenantAuthHttpService.interceptors.request.use(
   (config) => {
     const authStore = useAuthStore();
 
-    let token = localStorage.getItem('access_token');
+    let token = localStorage.getItem('prog_access_token');
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
