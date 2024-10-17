@@ -413,9 +413,9 @@ onMounted(async () => {
     </main-drawer>
 
     <!-- <v-dialog v-model="showEdit" width="100vw" title="Update USER" :toolbar="{ color: 'primary' }"> -->
-    <main-drawer v-model="showEdit" width="1025" title="Update USER" :toolbar="{ color: 'primary' }">
+    <main-drawer v-model="showEdit" :style="showEdit ? { width: 'calc(100% - 256px)' } : {}" title="Update USER" :toolbar="{ color: 'primary' }">
       <v-card>
-        <div class="d-flex flex-row">
+        <div class="d-flex flex-row full-width" >
           <v-tabs v-model="tab" color="primary" direction="vertical">
             <v-tab prepend-icon="mdi-account" text="Basic Info" value="option-1"></v-tab>
             <v-tab
@@ -426,7 +426,7 @@ onMounted(async () => {
             ></v-tab>
           </v-tabs>
 
-          <v-tabs-window v-model="tab">
+          <v-tabs-window v-model="tab"  :style="showEdit ? { width: '100%' } : {}" >
             <v-tabs-window-item value="option-1">
               <v-card flat>
                 <!-- <v-card-title>User Profile</v-card-title> -->
