@@ -12,6 +12,7 @@ const { users } = storeToRefs(roleStore);
 const { userRolePermissions } = storeToRefs(roleStore);
 
 const swal = useSwal();
+const loadingPermissions = ref(true);
 const selectedCodes = ref([]);
 const showUserDialog = ref(false);
 const tab = ref(null);
@@ -58,7 +59,7 @@ const headers = ref([
     sortable: true,
   },
   {
-    title: 'Permissions',
+    title: 'Invoke Permissions',
     key: 'actions',
     sortable: false,
   },
@@ -96,6 +97,10 @@ const profileData = ref({
 });
 
 const cancelEdit = () => {
+  console.log('cancellllllll');
+  selectedCodes.value = [];
+  userRolePermissions.value = [];
+  loadingPermissions.value = true;
   showRoles.value = false; // Hide edit mode
 };
 
@@ -112,7 +117,8 @@ async function openEditUserDialog(user) {
   // console.log('user reporttoid', user.reportToId);
 
   profileData.value = { ...user }; //to populate user data
-  // showUserDialog.value = true; // Show the UserProfileUpdate dialog
+  fetchRolePermissions(profileData.value.roleId);
+
   showRoles.value = true;
 }
 
@@ -128,16 +134,26 @@ async function fetchUsers() {
 }
 
 async function fetchRolePermissions(RoleId) {
-  try {
-    await roleStore.fetchRolePermissions(RoleId);
-    userRolePermissions.value.forEach((feature) => {
-      if (feature.isPermission === 1 && !selectedCodes.value.includes(feature.code)) {
-        selectedCodes.value.push(feature.code); // Add the feature code to selectedCodes
-      }
-    });
-  } catch (error) {
-    swal.error('Error fetching permissions:', error);
-  }
+  await roleStore.fetchRolePermissions(RoleId);
+  loadingPermissions.value = false;
+  userRolePermissions.value.forEach((feature) => {
+    if (feature.isPermission === 1 && !selectedCodes.value.includes(feature.code)) {
+      selectedCodes.value.push(feature.code); // Add the feature code to selectedCodes
+    }
+  });
+}
+async function invokeRolePermission(RoleId) {
+  // console.log('roleId', RoleId);
+  // console.log('codes', selectedCodes.value);
+
+  await roleStore.invokeRolePermission(RoleId, selectedCodes.value);
+  userRolePermissions.value.forEach((feature) => {
+    if (feature.isPermission === 1 && !selectedCodes.value.includes(feature.code)) {
+      selectedCodes.value.push(feature.code); // Add the feature code to selectedCodes
+    }
+  });
+  showRoles.value = false;
+  fetchUsers();
 }
 
 onMounted(async () => {
@@ -156,8 +172,10 @@ onMounted(async () => {
           </template>
 
           <template v-slot:item.actions="{ item }">
-            <v-icon class="me-2" size="small" @click="openEditUserDialog(item)"> mdi-pencil </v-icon>
-            <!-- <v-icon size="small" @click="deleteUser(item.id)"> mdi-delete </v-icon> -->
+            <v-row class="d-flex align-center justify-center">
+              <v-icon class="me-2" size="small" @click="openEditUserDialog(item)"> mdi-lock </v-icon>
+            </v-row>
+            <!-- <v-icon class="me-2" size="small" @click="openEditUserDialog(item)"> mdi-lock </v-icon> -->
           </template>
         </v-data-table>
       </v-table>
@@ -167,50 +185,62 @@ onMounted(async () => {
       <v-card>
         <div class="d-flex flex-row">
           <v-tabs v-model="tab" color="primary" direction="vertical">
-            <v-tab prepend-icon="mdi-account" text="Basic Info" value="option-1"></v-tab>
-            <v-tab
-              @click="fetchRolePermissions(profileData.roleId)"
-              prepend-icon="mdi-lock"
-              text="Permissions"
-              value="option-2"
-            ></v-tab>
+            <!-- <v-tab prepend-icon="mdi-account" text="Basic Info" value="option-1"></v-tab> -->
+            <v-tab prepend-icon="mdi-lock" text="Permissions" value="option-1"></v-tab>
           </v-tabs>
 
           <v-tabs-window v-model="tab">
             <v-tabs-window-item value="option-1">
-              <v-card flat> </v-card>
-            </v-tabs-window-item>
+              <v-card flat
+                ><v-card-text>
+                  <template v-if="loadingPermissions">
+                    <!-- Loader component -->
+                    <v-progress-circular indeterminate color="primary"></v-progress-circular>
+                  </template>
+                  <template v-else>
+                    <v-row>
+                      <!-- Grid for features -->
+                      <v-col v-for="(featureGroup, index) in groupedFeatures" :key="index" cols="12" md="6">
+                        <v-expansion-panels multiple>
+                          <v-expansion-panel>
+                            <v-expansion-panel-title>
+                              {{ featureGroup[0].feature }}
+                            </v-expansion-panel-title>
+                            <v-expansion-panel-text>
+                              <v-row>
+                                <v-col v-for="feature in featureGroup" :key="feature.code" cols="6">
+                                  <v-checkbox
+                                    :label="feature.permissionType"
+                                    :value="feature.code"
+                                    v-model="selectedCodes"
+                                  />
+                                </v-col>
+                              </v-row>
+                            </v-expansion-panel-text>
+                          </v-expansion-panel>
+                        </v-expansion-panels>
+                      </v-col>
+                    </v-row>
 
-            <v-tabs-window-item value="option-2">
-              <v-card flat>
-                <v-card-text>
-                  <v-row>
-                    <!-- Grid for features -->
-                    <v-col v-for="(featureGroup, index) in groupedFeatures" :key="index" cols="12" md="6">
-                      <v-expansion-panels multiple>
-                        <v-expansion-panel>
-                          <v-expansion-panel-title>
-                            {{ featureGroup[0].feature }}
-                          </v-expansion-panel-title>
-                          <v-expansion-panel-text>
-                            <v-row>
-                              <v-col v-for="feature in featureGroup" :key="feature.code" cols="6">
-                                <v-checkbox
-                                  :label="feature.permissionType"
-                                  :value="feature.code"
-                                  v-model="selectedCodes"
-                                />
-                              </v-col>
-                            </v-row>
-                          </v-expansion-panel-text>
-                        </v-expansion-panel>
-                      </v-expansion-panels>
-                    </v-col>
-                  </v-row>
-
-                  <!-- Display selected codes -->
-                  <v-divider></v-divider>
-                  <v-card>
+                    <!-- Display selected codes -->
+                    <v-divider></v-divider>
+                    <v-card>
+                      <v-card-title>Selected Permission Codes</v-card-title>
+                      <v-card-text>
+                        <div v-if="selectedCodes.length === 0">No permissions selected</div>
+                        <v-row>
+                          <v-col
+                            v-for="(code, index) in selectedCodes"
+                            :key="index"
+                            cols="auto"
+                            class="d-flex align-center"
+                          >
+                            <v-chip color="primary" class="ma-2">{{ code }}</v-chip>
+                          </v-col>
+                        </v-row>
+                      </v-card-text>
+                    </v-card>
+                    <!-- <v-card>
                     <v-card-title>Selected Permission Codes</v-card-title>
                     <v-card-text>
                       <div v-if="selectedCodes.length === 0">No permissions selected</div>
@@ -218,7 +248,20 @@ onMounted(async () => {
                         <li v-for="code in selectedCodes" :key="code">{{ code }}</li>
                       </ul>
                     </v-card-text>
-                  </v-card>
+                  </v-card> -->
+                    <!-- //btn -->
+
+                    <v-card>
+                      <v-card-text>
+                        <v-form>
+                          <v-row class="justify-end">
+                            <v-btn @click="invokeRolePermission(profileData.roleId)" color="primary"> Update </v-btn>
+                            <v-btn @click="cancelEdit" color="primary" class="ml-4">Cancel</v-btn>
+                          </v-row>
+                        </v-form>
+                      </v-card-text>
+                    </v-card>
+                  </template>
                 </v-card-text>
               </v-card>
             </v-tabs-window-item>
