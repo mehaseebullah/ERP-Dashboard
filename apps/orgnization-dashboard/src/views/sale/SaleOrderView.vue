@@ -10,7 +10,9 @@ const { saleOrders } = storeToRefs(saleOrderStore);
 
 const swal = useSwal();
 const router = useRouter();
+const expandedItemLength = ref(0);
 const headers = [
+  { title: '', key: 'data-table-expand' },
   {
     title: 'Sale Order No',
     key: 'soNo',
@@ -47,11 +49,48 @@ const headers = [
   },
 ];
 
+// Headers for the nested grid (Items table)
+const getItemHeaders = () => [
+  { title: 'Product Id', key: 'productId', sortable: true },
+  { title: 'Title', key: 'title', sortable: true },
+  { title: 'Purchase Price', key: 'purchasePrice', sortable: true },
+  { title: 'Sale Price', key: 'salePrice', sortable: true },
+  { title: 'Discount', key: 'discount', sortable: true },
+  { title: 'Quantity', key: 'quantity', sortable: true },
+  { title: 'Total', key: 'total', sortable: true },
+];
 
 async function createInvoice() {
   router.push('add-sale-order');
 }
 
+async function handleClick(items) {
+  const lastItem = items[items.length - 1];
+  const SaleOrderId = lastItem;
+  if (expandedItemLength.value == 0) expandedItemLength.value = items.length;
+  if (items.length < expandedItemLength.value) {
+    expandedItemLength.value = items.length;
+    return;
+  }
+  expandedItemLength.value = items.length;
+  if (SaleOrderId) {
+    let currentItemIndex = saleOrders.value.findIndex((x) => x.id == SaleOrderId);
+    SaleOrderId,
+      (saleOrders.value[currentItemIndex] = await saleOrderStore.fetchSaleOrderListDetails(
+        SaleOrderId,
+        saleOrders.value[currentItemIndex],
+      ));
+  }
+}
+
+// Function to calculate the total for fields (like 'purchasePrice' etc)
+function calculateTotal(items, field) {
+  // Check if the items array exists and is not empty
+  if (!items || items.length === 0) {
+    return 0;
+  }
+  return items.reduce((sum, item) => sum + (item[field] || 0), 0);
+}
 
 onMounted(async () => {
   saleOrderStore.fetchSaleOrderList();
@@ -64,14 +103,56 @@ onMounted(async () => {
         <v-spacer></v-spacer>
         <v-btn @click="createInvoice()">Create Order</v-btn>
       </v-toolbar>
-      <v-data-table :loading="$loading('fetchSaleOrderList')" :headers="headers" :items="saleOrders">
+      <v-data-table
+        :loading="$loading('fetchSaleOrderList')"
+        :headers="headers"
+        :items="saleOrders"
+        item-value="id"
+        show-expand
+        @update:expanded="handleClick"
+      >
+        <!-- Expandable Row for Order Details   -->
+        <template v-slot:expanded-row="{ columns, item }">
+          <tr>
+            <td :colspan="columns.length">
+              <v-card flat>
+                <v-card-text>
+                  <v-data-table :headers="getItemHeaders()" :items="item.soDetails">
+                    <template v-slot:item.productId="{ item }">{{ item.productId }} </template>
+                    <!-- Totals row at the bottom -->
+                    <template v-slot:body.append>
+                      <tr>
+                        <td><strong>Total</strong></td>
+                        <td><strong></strong></td>
+                        <td>
+                          <strong>{{ calculateTotal(item.soDetails, 'purchasePrice') }}</strong>
+                        </td>
+                        <td>
+                          <strong>{{ calculateTotal(item.soDetails, 'salePrice') }}</strong>
+                        </td>
+                        <td>
+                          <strong>{{ calculateTotal(item.soDetails, 'discount') }}</strong>
+                        </td>
+                        <td>
+                          <strong>{{ calculateTotal(item.soDetails, 'quantity') }}</strong>
+                        </td>
+                        <td>
+                          <strong>{{ calculateTotal(item.soDetails, 'total') }}</strong>
+                        </td>
+                      </tr>
+                    </template>
+                  </v-data-table>
+                </v-card-text>
+              </v-card>
+            </td>
+          </tr>
+        </template>
         <template v-slot:item.actions="{ item }">
           <v-icon class="me-2" size="small" @click="editInvoice(item)"> mdi-pencil </v-icon>
           <v-icon size="small" @click="deleteInvoice(item.id)"> mdi-delete </v-icon>
         </template>
       </v-data-table>
     </v-card>
-  
   </v-container>
 </template>
 <!-- <file-upload title="Upload Files" v-model="state.files" multiple></file-upload> -->

@@ -14,9 +14,11 @@ const { products } = storeToRefs(productStore);
 const { customers } = storeToRefs(customerStore);
 const { saleInvoices } = storeToRefs(saleInvoiceStore);
 
+const expandedItemLength = ref(0);
 const swal = useSwal();
 const router = useRouter();
 const headers = [
+  { title: '', key: 'data-table-expand' },
   {
     title: 'invoice No',
     key: 'invoiceNo',
@@ -46,6 +48,16 @@ const headers = [
     title: 'Actions',
     key: 'actions',
   },
+];
+
+// Headers for the nested grid (Items table)
+const getItemHeaders = () => [
+  { title: 'Product Id', key: 'productId', sortable: true },
+  { title: 'Title', key: 'title', sortable: true },
+  { title: 'Purchase Price', key: 'purchasePrice', sortable: true },
+  { title: 'Discount', key: 'discount', sortable: true },
+  { title: 'Quantity', key: 'quantity', sortable: true },
+  { title: 'Total', key: 'total', sortable: true },
 ];
 const formModal = {
   invoiceNo: '',
@@ -127,7 +139,7 @@ async function updateInvoice() {
 async function deleteInvoice(id) {
   swal.confirm('Are you sure you want to delete this unit?').then(async (result) => {
     if (result.isConfirmed) {
-      await invoiceStore.deletePurchaseInvoice({ id });
+      await saleInvoiceStore.deletePurchaseInvoice({ id });
       showDrawer.value = false;
     }
   });
@@ -144,6 +156,33 @@ function updateEntryTotal(entry) {
   entry.purchaseTotal = entry.purchasePrice * entry.quantity;
 }
 
+async function handleClick(items) {
+  const lastItem = items[items.length - 1];
+  const SaleInvoiceId = lastItem;
+  if (expandedItemLength.value == 0) expandedItemLength.value = items.length;
+  if (items.length < expandedItemLength.value) {
+    expandedItemLength.value = items.length;
+    return;
+  }
+  expandedItemLength.value = items.length;
+  if (SaleInvoiceId) {
+    let currentItemIndex = saleInvoices.value.findIndex((x) => x.id == SaleInvoiceId);
+    SaleInvoiceId,
+      (saleInvoices.value[currentItemIndex] = await saleInvoiceStore.fetchSaleInvoiceListDetails(
+        SaleInvoiceId,
+        saleInvoices.value[currentItemIndex],
+      ));
+  }
+}
+
+// Function to calculate the total for fields (like 'purchasePrice' etc)
+function calculateTotal(items, field) {
+  // Check if the items array exists and is not empty
+  if (!items || items.length === 0) {
+    return 0;
+  }
+  return items.reduce((sum, item) => sum + (item[field] || 0), 0);
+}
 onMounted(async () => {
   customerStore.fetchCustomers();
   productStore.fetchProducts();
@@ -157,7 +196,47 @@ onMounted(async () => {
         <v-spacer></v-spacer>
         <v-btn @click="newInvoice()">Create Invoice</v-btn>
       </v-toolbar>
-      <v-data-table :loading="$loading('fetchPurchaseInvoiceList')" :headers="headers" :items="saleInvoices">
+      <v-data-table
+        :loading="$loading('fetchPurchaseInvoiceList')"
+        :headers="headers"
+        :items="saleInvoices"
+        item-value="id"
+        show-expand
+        @update:expanded="handleClick"
+      >
+        <!-- Expandable Row for Order Details   -->
+        <template v-slot:expanded-row="{ columns, item }">
+          <tr>
+            <td :colspan="columns.length">
+              <v-card flat>
+                <v-card-text>
+                  <v-data-table :headers="getItemHeaders()" :items="item.siDetails">
+                    <template v-slot:item.productId="{ item }">{{ item.productId }} </template>
+                    <!-- Totals row at the bottom -->
+                    <template v-slot:body.append>
+                      <tr>
+                        <td><strong>Total</strong></td>
+                        <td><strong></strong></td>
+                        <td>
+                          <strong>{{ calculateTotal(item.siDetails, 'purchasePrice') }}</strong>
+                        </td>
+                        <td>
+                          <strong>{{ calculateTotal(item.siDetails, 'discount') }}</strong>
+                        </td>
+                        <td>
+                          <strong>{{ calculateTotal(item.siDetails, 'quantity') }}</strong>
+                        </td>
+                        <td>
+                          <strong>{{ calculateTotal(item.siDetails, 'total') }}</strong>
+                        </td>
+                      </tr>
+                    </template>
+                  </v-data-table>
+                </v-card-text>
+              </v-card>
+            </td>
+          </tr>
+        </template>
         <template v-slot:item.supplierId="{ item }">
           {{ suppliers.find((s) => s.id == item.supplierId)?.fullName }}
         </template>
@@ -177,27 +256,60 @@ onMounted(async () => {
             <v-text-field v-model="formData.refNo" label="Ref No" variant="outlined"></v-text-field>
           </v-col>
         </v-row>
-        <v-select :items="customers" item-title="fullName" item-value="id" v-model="formData.customerId"
-          :loading="$loading('fetchSuppliers')" label="Customer" variant="outlined"></v-select>
+        <v-select
+          :items="customers"
+          item-title="fullName"
+          item-value="id"
+          v-model="formData.customerId"
+          :loading="$loading('fetchSuppliers')"
+          label="Customer"
+          variant="outlined"
+        ></v-select>
         <v-textarea v-model="formData.description" label="Description" variant="outlined" rows="2"></v-textarea>
         <template v-for="(entry, index) in formData.siDetails" :key="index">
           <v-row>
             <v-col>
-              <v-select :items="products" item-title="title" item-value="id" v-model="entry.productId"
-                :loading="$loading('fetchProducts')" label="Product" variant="outlined" density="compact"
-                @update:model-value="updateEntryPrices(entry)"></v-select>
+              <v-select
+                :items="products"
+                item-title="title"
+                item-value="id"
+                v-model="entry.productId"
+                :loading="$loading('fetchProducts')"
+                label="Product"
+                variant="outlined"
+                density="compact"
+                @update:model-value="updateEntryPrices(entry)"
+              ></v-select>
             </v-col>
             <v-col>
-              <v-text-field type="number" density="compact" v-model.number="entry.salePrice" label="Unit Price"
-                @keyup="updateEntryTotal(entry)" variant="outlined"></v-text-field>
+              <v-text-field
+                type="number"
+                density="compact"
+                v-model.number="entry.salePrice"
+                label="Unit Price"
+                @keyup="updateEntryTotal(entry)"
+                variant="outlined"
+              ></v-text-field>
             </v-col>
             <v-col>
-              <v-text-field type="number" density="compact" v-model.number="entry.quantity" label="Quantity"
-                variant="outlined" @keyup="updateEntryTotal(entry)"></v-text-field>
+              <v-text-field
+                type="number"
+                density="compact"
+                v-model.number="entry.quantity"
+                label="Quantity"
+                variant="outlined"
+                @keyup="updateEntryTotal(entry)"
+              ></v-text-field>
             </v-col>
             <v-col>
-              <v-text-field readonly type="number" density="compact" v-model.number="entry.total" label="Total"
-                variant="outlined"></v-text-field>
+              <v-text-field
+                readonly
+                type="number"
+                density="compact"
+                v-model.number="entry.total"
+                label="Total"
+                variant="outlined"
+              ></v-text-field>
             </v-col>
             <v-col v-if="index > 0" cols="1">
               <v-btn variant="text" size="small" icon="mdi-delete" @click="formData.siDetails.splice(index, 1)"></v-btn>
@@ -205,19 +317,27 @@ onMounted(async () => {
           </v-row>
         </template>
         <div class="d-flex justify-end mb-5">
-          <v-btn variant="text" @click="
-            formData.siDetails.push({
-              productId: null,
-              purchasePrice: 0.0,
-              quantity: 0,
-              salePrice: 0.0,
-              total: 0.0,
-            })
-            ">Add Entry</v-btn>
+          <v-btn
+            variant="text"
+            @click="
+              formData.siDetails.push({
+                productId: null,
+                purchasePrice: 0.0,
+                quantity: 0,
+                salePrice: 0.0,
+                total: 0.0,
+              })
+            "
+            >Add Entry</v-btn
+          >
         </div>
         <div class="d-flex justify-end">
-          <v-text-field v-model.number="formData.total" type="number" label="Total Amount"
-            variant="outlined"></v-text-field>
+          <v-text-field
+            v-model.number="formData.total"
+            type="number"
+            label="Total Amount"
+            variant="outlined"
+          ></v-text-field>
         </div>
 
         <div class="d-flex justify-end mt-5">

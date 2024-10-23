@@ -8,10 +8,15 @@ export const useSaleOrderStore = defineStore({
   }),
   actions: {
     async fetchSaleOrderList() {
-      this.saleOrders=[];
+      this.saleOrders = [];
       const { data } = await api.get('/Sale/SaleOrder/GetAllSaleOrders?PageSize=100000&PageNumber=0');
       this.saleOrders = data?.data?.data;
       return this.saleOrders;
+    },
+    async fetchSaleOrderListDetails(SaleOrderId, item) {
+      const { data } = await api.get(`/Sale/SaleOrder/GetSaleOrderDetailsBySOId/${SaleOrderId}`);
+      item['soDetails'] = data?.data || [];
+      return item;
     },
     async fetchSaleOrderBySONumber(soNumber) {
       const { data } = await api.get(`/Sale/SaleOrder/GetSaleOrderWithDetailsBySONumber/${soNumber}`);

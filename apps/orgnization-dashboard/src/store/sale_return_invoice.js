@@ -8,11 +8,21 @@ export const useReturnSaleInvoiceStore = defineStore({
   }),
   actions: {
     async fetchReturnSaleInvoiceList() {
-      this.saleReturnInvoices=[];
-      const { data } = await api.get('/Sale/ReturnSaleInvoice/GetAllReturnSaleInvoiceOrders?PageSize=100000&PageNumber=0');
+      this.saleReturnInvoices = [];
+      const { data } = await api.get(
+        '/Sale/ReturnSaleInvoice/GetAllReturnSaleInvoiceOrders?PageSize=100000&PageNumber=0',
+      );
       this.saleReturnInvoices = data?.data?.data;
       return this.saleReturnInvoices;
     },
+    async fetchReturnSaleInvoiceListDetails(ReturnSaleInvoiceId, item) {
+      const { data } = await api.get(
+        `/Sale/ReturnSaleInvoice/GetReturnSaleInvoiceDetailsByRSIId/${ReturnSaleInvoiceId}`,
+      );
+      item['rsiDetails'] = data?.data || [];
+      return item;
+    },
+
     async createReturnSaleInvoice(d) {
       const { data } = await api.post('/Sale/ReturnSaleInvoice/Create', d);
       return data?.data?.data;
