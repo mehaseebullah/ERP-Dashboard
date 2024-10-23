@@ -20,5 +20,12 @@ export const useRoleStore = defineStore({
       this.userRolePermissions = data?.data || [];
       return this.userRolePermissions;
     },
+    async invokeRolePermission(RoleId, selectedCodes) {
+      console.log(selectedCodes);
+
+      const { data } = await api.post(`/Tenant/Account/InvokeRolePermission/${RoleId}`, selectedCodes);
+      // const { data } = await post.get(`/Tenant/Account/InvokeUserPermission/${RoleId}`);
+      return data?.data;
+    },
   },
 });

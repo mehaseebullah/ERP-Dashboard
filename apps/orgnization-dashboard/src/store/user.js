@@ -38,7 +38,7 @@ export const useUserStore = defineStore({
     },
     async updateUser(updatedUser) {
       const { data } = await api.put('/Tenant/User/Update', updatedUser);
-      this.fetchProducts();
+      this.fetchUsers();
       return data?.data;
     },
     async deleteUser({ UserId }) {
@@ -88,6 +88,16 @@ export const useUserStore = defineStore({
       );
       this.userGenders = data?.data || [];
       return this.userGenders;
+    },
+
+    async updateUserPassword(userId, oldPassword, newPassword) {
+      const { data } = await api.put('/Tenant/User/ChangePassword', {
+        oldPassword,
+        newPassword,
+        userId,
+      });
+      this.fetchUsers();
+      return data?.data;
     },
   },
 });

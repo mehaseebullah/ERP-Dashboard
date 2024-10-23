@@ -19,21 +19,26 @@ const { userCities } = storeToRefs(userStore);
 const swal = useSwal();
 const selectedCodes = ref([]);
 const showUserDialog = ref(false);
+
 const tab = ref(null);
 const showEdit = ref(false);
 const isEdit = ref(false);
 const showDrawer = ref(false);
 const isLoading = ref(false);
+const loadingPermissions = ref(true);
 
 const state = reactive({
   showPass: false,
   showCPass: false,
 });
 
+const oldPassword = ref('');
+const newPassword = ref('');
+
 const form = ref();
 const updateForm = ref();
 const confirmPassword = (val) => {
-  return (!!formData.value.password && val === formData.value.password) || 'Password not matched';
+  return (!!formData.value.password && val === formData.value.password) || 'Password matched';
 };
 
 // Group permissions by feature
@@ -49,6 +54,10 @@ const groupedFeatures = computed(() => {
   }, []);
   return groups;
 });
+
+function calculateTotal(item) {
+  return (item.quantity * item.price).toFixed(2);
+}
 
 const headers = ref([
   {
@@ -131,7 +140,14 @@ const handleImageUpload = (event) => {
 };
 
 const cancelEdit = () => {
+  selectedCodes.value = [];
+  userPermissions.value = [];
+  loadingPermissions.value = true;
   selectedImage.value = null; // Reset selected image
+  tab.value = 'option-1';
+  formData.value = { ...formModal };
+  oldPassword.value = '';
+  newPassword.value = '';
   showEdit.value = false; // Hide edit mode
 };
 
@@ -145,14 +161,10 @@ watch(showEdit, (newValue) => {
 async function createUser() {
   const { valid } = await form.value.validate();
   if (valid) {
-    try {
-      await userStore.createUser(formData.value);
-      swal.success('User created successfully!');
-      showDrawer.value = false;
-      formData.value = { ...formModal };
-    } catch (error) {
-      swal.error('Error creating user!');
-    }
+    await userStore.createUser(formData.value);
+    showDrawer.value = false;
+    formData.value = { ...formModal };
+    swal.success('User created successfully!');
   } else {
     swal.error('Please fill all fields');
   }
@@ -174,32 +186,25 @@ async function fetchUsers() {
 }
 
 async function openEditUserDialog(user) {
-  console.log('user id', user.id);
-  console.log('user roleid', user.roleId);
-  console.log('user reporttoid', user.reportToId);
-
   profileData.value = { ...user }; //to populate user data
   showUserDialog.value = true; // Show the UserProfileUpdate dialog
   showEdit.value = true;
+  fetchUserRoles();
 }
 
 async function updateUser() {
   const { valid } = await updateForm.value.validate();
   if (valid) {
-    try {
-      showEdit.value = false;
-      const updatedUser = { ...profileData.value };
-      if (imgUploadData.value.File) {
-        imgUploadData.value.Id = updatedUser.id;
-        imgUploadData.value.ProfilePicturePath = updatedUser.profilePicturePath;
-        await userStore.uploadUserImg(imgUploadData.value);
-      }
-      await userStore.updateUser(updatedUser);
-      swal.success('User updated successfully!');
-      showDrawer.value = false;
-    } catch (error) {
-      swal.error('Error updating user!');
+    showEdit.value = false;
+    const updatedUser = { ...profileData.value };
+    if (imgUploadData.value.File) {
+      imgUploadData.value.Id = updatedUser.id;
+      imgUploadData.value.ProfilePicturePath = updatedUser.profilePicturePath;
+      await userStore.uploadUserImg(imgUploadData.value);
     }
+    await userStore.updateUser(updatedUser);
+    swal.success('User updated successfully!');
+    showDrawer.value = false;
   } else {
     swal.error('Please fill all fields');
   }
@@ -220,53 +225,34 @@ async function deleteUser(UserId) {
 
 async function newUser() {
   isEdit.value = false;
-  fetchUserRoles();
   formData.value = { ...formModal };
   showDrawer.value = true;
+  fetchUserRoles();
 }
 
 async function fetchUserRoles() {
-  try {
-    await userStore.fetchUserRoles();
-  } catch (error) {
-    swal.error('Error fetching users Roles:', error);
-  }
+  await userStore.fetchUserRoles();
 }
 
 async function fetchUserCountries() {
-  try {
-    await userStore.fetchUserCountries();
-  } catch (error) {
-    swal.error('Error fetching users Countries:', error);
-  }
+  await userStore.fetchUserCountries();
 }
 
 async function fetchUserStates(Id) {
-  try {
-    await userStore.fetchUserStates(Id);
-  } catch (error) {
-    swal.error('Error fetching users States:', error);
-  }
+  await userStore.fetchUserStates(Id);
 }
 
 async function fetchUserCities(Id) {
-  try {
-    await userStore.fetchUserCities(Id);
-  } catch (error) {
-    swal.error('Error fetching user Cities:', error);
-  }
+  await userStore.fetchUserCities(Id);
 }
 async function fetchUserGenders() {
-  try {
-    await userStore.fetchUserGenders();
-  } catch (error) {
-    swal.error('Error fetching user Genders:', error);
-  }
+  await userStore.fetchUserGenders();
 }
 const fetchStateByCountryId = (id) => {
   if (id) {
     fetchUserStates(id);
-    profileData.value.cityId = null;
+    // profileData.value.stateId = null;
+    // profileData.value.cityId = null;
   } else {
     swal.error('Select Country first');
   }
@@ -280,25 +266,27 @@ const fetchCitiesByStateId = (id) => {
 };
 
 async function fetchPermissions(UserId) {
-  try {
-    await userStore.fetchPermissions(UserId);
-    // Pre-select checkboxes where isPermission === 1
-    userPermissions.value.forEach((feature) => {
-      if (feature.isPermission === 1 && !selectedCodes.value.includes(feature.code)) {
-        selectedCodes.value.push(feature.code); // Add the feature code to selectedCodes
-      }
-    });
-  } catch (error) {
-    swal.error('Error fetching permissions:', error);
-  }
+  await userStore.fetchPermissions(UserId);
+  loadingPermissions.value = false;
+  // Pre-select checkboxes where isPermission === 1
+  userPermissions.value.forEach((feature) => {
+    if (feature.isPermission === 1 && !selectedCodes.value.includes(feature.code)) {
+      selectedCodes.value.push(feature.code); // Add the feature code to selectedCodes
+    }
+  });
 }
 async function GetUserByParentRoleId(roleId) {
   let pRoleId = userRoles.value.find((x) => x.roleId == roleId).pRoleId;
-  try {
-    await userStore.GetUserByParentRoleId(pRoleId);
-  } catch (error) {
-    swal.error('Error fetching users Roles:', error);
-  }
+
+  await userStore.GetUserByParentRoleId(pRoleId);
+}
+async function updateUserPassword(userId) {
+  // console.log('id', userId);
+  // console.log('new', oldPassword.value);
+  // console.log('old', newPassword.value);
+
+  await userStore.updateUserPassword(userId, oldPassword.value, newPassword.value);
+  showEdit.value = false;
 }
 onMounted(async () => {
   await fetchUsers();
@@ -339,14 +327,6 @@ onMounted(async () => {
 
     <main-drawer v-model="showDrawer" width="800" title="CREATE USER" :toolbar="{ color: 'primary' }">
       <v-card>
-        <!-- <v-toolbar flat dense>
-          <v-toolbar-title>CREATE USER</v-toolbar-title>
-          <v-spacer></v-spacer>
-          <v-btn icon @click="showDrawer = false">
-            <v-icon>mdi-close</v-icon>
-          </v-btn>
-        </v-toolbar> -->
-
         <v-card-text>
           <v-form ref="form" class="pa-5" @submit.prevent="createUser()">
             <v-text-field
@@ -412,10 +392,14 @@ onMounted(async () => {
       </v-card>
     </main-drawer>
 
-    <!-- <v-dialog v-model="showEdit" width="100vw" title="Update USER" :toolbar="{ color: 'primary' }"> -->
-    <main-drawer v-model="showEdit" :style="showEdit ? { width: 'calc(100% - 256px)' } : {}" title="Update USER" :toolbar="{ color: 'primary' }">
+    <main-drawer
+      v-model="showEdit"
+      :style="showEdit ? { width: 'calc(100% - 256px)' } : {}"
+      title="Update USER"
+      :toolbar="{ color: 'primary' }"
+    >
       <v-card>
-        <div class="d-flex flex-row full-width" >
+        <div class="d-flex flex-row full-width">
           <v-tabs v-model="tab" color="primary" direction="vertical">
             <v-tab prepend-icon="mdi-account" text="Basic Info" value="option-1"></v-tab>
             <v-tab
@@ -424,12 +408,12 @@ onMounted(async () => {
               text="Permissions"
               value="option-2"
             ></v-tab>
+            <v-tab prepend-icon="mdi-key" text="Change Password" value="option-3"></v-tab>
           </v-tabs>
 
-          <v-tabs-window v-model="tab"  :style="showEdit ? { width: '100%' } : {}" >
+          <v-tabs-window v-model="tab" :style="showEdit ? { width: '100%' } : {}">
             <v-tabs-window-item value="option-1">
               <v-card flat>
-                <!-- <v-card-title>User Profile</v-card-title> -->
                 <v-card-text>
                   <v-form ref="updateForm">
                     <!-- Basic Info Section -->
@@ -504,6 +488,32 @@ onMounted(async () => {
                           <v-col cols="12" md="6">
                             <v-text-field v-model="profileData.roles" label="Role" readonly />
                           </v-col>
+
+                          <v-col cols="12" md="6">
+                            <v-select
+                              v-model="profileData.roleId"
+                              :items="userRoles"
+                              item-title="roleName"
+                              item-value="roleId"
+                              label="Select Role"
+                              placeholder="Select a role"
+                              @update:model-value="GetUserByParentRoleId"
+                              :rules="[rules.required]"
+                            />
+                          </v-col>
+
+                          <v-col cols="12" md="6">
+                            <v-select
+                              v-model="profileData.reportToId"
+                              :items="pRoleUsers"
+                              item-title="text"
+                              item-value="id"
+                              label="Report To"
+                              placeholder="Please select a user"
+                              :rules="[rules.required]"
+                            />
+                          </v-col>
+
                           <v-col cols="12" md="6">
                             <v-text-field v-model="profileData.bio" label="Bio" :rules="[rules.required]" />
                           </v-col>
@@ -596,41 +606,151 @@ onMounted(async () => {
             <v-tabs-window-item value="option-2">
               <v-card flat>
                 <v-card-text>
-                  <v-row>
-                    <!-- Grid for features -->
-                    <v-col v-for="(featureGroup, index) in groupedFeatures" :key="index" cols="12" md="6">
-                      <v-expansion-panels multiple>
-                        <v-expansion-panel>
-                          <v-expansion-panel-title>
-                            {{ featureGroup[0].feature }}
-                          </v-expansion-panel-title>
-                          <v-expansion-panel-text>
-                            <v-row>
-                              <v-col v-for="feature in featureGroup" :key="feature.code" cols="6">
-                                <v-checkbox
-                                  :label="feature.permissionType"
-                                  :value="feature.code"
-                                  v-model="selectedCodes"
-                                />
-                              </v-col>
-                            </v-row>
-                          </v-expansion-panel-text>
-                        </v-expansion-panel>
-                      </v-expansion-panels>
-                    </v-col>
-                  </v-row>
+                  <template v-if="loadingPermissions">
+                    <!-- Loader component -->
+                    <v-progress-circular indeterminate color="primary"></v-progress-circular>
+                  </template>
+                  <template v-else>
+                    <v-row>
+                      <!-- Grid for features -->
+                      <v-col v-for="(featureGroup, index) in groupedFeatures" :key="index" cols="12" md="6">
+                        <v-expansion-panels multiple>
+                          <v-expansion-panel>
+                            <v-expansion-panel-title>
+                              {{ featureGroup[0].feature }}
+                            </v-expansion-panel-title>
+                            <v-expansion-panel-text>
+                              <v-row>
+                                <v-col v-for="feature in featureGroup" :key="feature.code" cols="6">
+                                  <v-checkbox
+                                    :label="feature.permissionType"
+                                    :value="feature.code"
+                                    v-model="selectedCodes"
+                                  />
+                                </v-col>
+                              </v-row>
+                            </v-expansion-panel-text>
+                          </v-expansion-panel>
+                        </v-expansion-panels>
+                      </v-col>
+                    </v-row>
 
-                  <!-- Display selected codes -->
-                  <v-divider></v-divider>
-                  <v-card>
-                    <v-card-title>Selected Permission Codes</v-card-title>
-                    <v-card-text>
-                      <div v-if="selectedCodes.length === 0">No permissions selected</div>
-                      <ul>
-                        <li v-for="code in selectedCodes" :key="code">{{ code }}</li>
-                      </ul>
-                    </v-card-text>
-                  </v-card>
+                    <!-- Display selected codes -->
+                    <v-divider></v-divider>
+                    <v-card>
+                      <v-card-title>Selected Permission Codes</v-card-title>
+                      <v-card-text>
+                        <div v-if="selectedCodes.length === 0">No permissions selected</div>
+                        <ul>
+                          <li v-for="code in selectedCodes" :key="code">{{ code }}</li>
+                        </ul>
+                      </v-card-text>
+                    </v-card>
+                  </template>
+                </v-card-text>
+              </v-card>
+            </v-tabs-window-item>
+            <v-tabs-window-item value="option-3">
+              <v-card flat>
+                <!-- <v-card-title>User Profile</v-card-title> -->
+                <v-card-text>
+                  <v-form class="pa-5" @submit.prevent="updateUserPassword(profileData.id)">
+                    <v-text-field
+                      prepend-inner-icon="mdi-account"
+                      v-model="profileData.username"
+                      label="Username"
+                      variant="outlined"
+                      readonly
+                    ></v-text-field>
+                    <v-text-field
+                      prepend-inner-icon="mdi-account"
+                      v-model="profileData.email"
+                      label="Email"
+                      variant="outlined"
+                      readonly
+                    ></v-text-field>
+                    <v-text-field
+                      prepend-inner-icon="mdi-key"
+                      v-model="oldPassword"
+                      label="Old Password"
+                      variant="outlined"
+                      :append-inner-icon="state.showPass ? 'mdi-eye-off' : 'mdi-eye'"
+                      @click:append-inner="() => (state.showPass = !state.showPass)"
+                      :type="state.showPass ? 'text' : 'password'"
+                      :rules="[rules.required, rules.minLength(6)]"
+                    ></v-text-field>
+                    <v-text-field
+                      prepend-inner-icon="mdi-key"
+                      v-model="newPassword"
+                      label="New Password"
+                      variant="outlined"
+                      :append-inner-icon="state.showCPass ? 'mdi-eye-off' : 'mdi-eye'"
+                      @click:append-inner="() => (state.showCPass = !state.showCPass)"
+                      :type="state.showCPass ? 'text' : 'password'"
+                      :rules="[rules.required, rules.minLength(6)]"
+                    ></v-text-field>
+
+                    <div class="d-flex justify-end">
+                      <v-btn type="submit" color="primary">Update</v-btn>
+                    </div>
+                  </v-form>
+                  <!-- <v-form>
+                    <v-card class="mb-2">
+                      <v-card-text>
+                        <v-row class="align-items-center">
+                          <v-col cols="12" md="10">
+                            <div class="d-flex flex-column justify-center align-start">
+                              <h2 class="mb-3">Username: {{ profileData.username || 'Username' }}</h2>
+                              <h3 class="mb-3">Email: {{ profileData.email }}</h3>
+                              <h3>ID: {{ profileData.id }}</h3>
+                            </div>
+                          </v-col>
+
+                          <v-col cols="12" md="6">
+                            <v-text-field
+                              v-model="profileData.firstName"
+                              label="First Name"
+                              :rules="[rules.required, rules.minLength(2)]"
+                            />
+                          </v-col>
+                          <v-col cols="12" md="6">
+                            <v-text-field
+                              v-model="profileData.lastName"
+                              label="Last Name"
+                              :rules="[rules.required, rules.minLength(2)]"
+                            />
+                          </v-col>
+                          <v-col cols="12" md="6">
+                            <v-select
+                              v-model="profileData.genderId"
+                              :items="userGenders"
+                              item-title="title"
+                              item-value="id"
+                              label="Select Gender"
+                              placeholder="Select Gender"
+                              :rules="[rules.required]"
+                            />
+                          </v-col>
+                          <v-col cols="12" md="6">
+                            <v-text-field v-model="profileData.roles" label="Role" readonly />
+                          </v-col>
+                          <v-col cols="12" md="6">
+                            <v-text-field v-model="profileData.bio" label="Bio" :rules="[rules.required]" />
+                          </v-col>
+                          <v-col cols="12" md="6">
+                            <v-text-field
+                              v-model="profileData.preferences"
+                              label="Preferences"
+                              :rules="[rules.required]"
+                            />
+                          </v-col>
+                        </v-row>
+                      </v-card-text>
+                    </v-card>
+
+                    <v-btn @click="updateUser" color="primary">Update</v-btn>
+                    <v-btn @click="cancelEdit" color="primary" class="ml-4">Cancel</v-btn>
+                  </v-form> -->
                 </v-card-text>
               </v-card>
             </v-tabs-window-item>
@@ -638,9 +758,9 @@ onMounted(async () => {
         </div>
       </v-card>
     </main-drawer>
-    <!-- </v-dialog> -->
   </v-container>
 </template>
+
 <style scoped>
 .mt-3 {
   margin-top: 1rem;
