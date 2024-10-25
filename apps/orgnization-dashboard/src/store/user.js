@@ -19,8 +19,15 @@ export const useUserStore = defineStore({
       this.users = data?.data || [];
       return this.users;
     },
-    async createUser({ username, password, email, roleId, reportToId }) {
-      const { data } = await api.post('/Tenant/User/Create', { username, password, email, roleId, reportToId });
+    async createUser({ username, password, email, organizationId, roleId, reportToId }) {
+      const { data } = await api.post('/Tenant/User/Create', {
+        username,
+        password,
+        email,
+        organizationId,
+        roleId,
+        reportToId,
+      });
       this.fetchUsers();
       return data?.data;
     },
@@ -59,6 +66,7 @@ export const useUserStore = defineStore({
     },
     async GetUserByParentRoleId(pRoleId) {
       const { data } = await api.get(`/Tenant/User/GetUsersByRoleId?RoleId=${pRoleId}`);
+
       this.pRoleUsers = data?.data || [];
       return this.pRoleUsers;
     },

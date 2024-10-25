@@ -24,7 +24,7 @@ const updateForm = ref();
 
 const headers = ref([
   {
-    title: 'Logo',
+    title: '',
     key: 'fileBase64',
   },
   {
@@ -132,7 +132,7 @@ async function fetchOrganizations() {
     isLoading.value = true;
     await organizationStore.fetchOrganizations();
   } catch (error) {
-    swal.error('Error fetching users:', error);
+    swal.error('Error fetching organizations:', error);
   } finally {
     isLoading.value = false;
   }

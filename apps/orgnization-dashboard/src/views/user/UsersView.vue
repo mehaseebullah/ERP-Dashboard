@@ -5,6 +5,10 @@ import { useSwal } from '@/composables/useSwal';
 import { api } from '@/helpers/http';
 import { storeToRefs } from 'pinia';
 import { useUserStore } from '@/store/user';
+import { useOrganizationStore } from '@/store/organization';
+
+const organizationStore = useOrganizationStore();
+const { organizations } = storeToRefs(organizationStore);
 
 const userStore = useUserStore();
 const { users } = storeToRefs(userStore);
@@ -38,7 +42,7 @@ const newPassword = ref('');
 const form = ref();
 const updateForm = ref();
 const confirmPassword = (val) => {
-  return (!!formData.value.password && val === formData.value.password) || 'Password matched';
+  return (!!formData.value.password && val === formData.value.password) || 'Password and Confirm password not matched';
 };
 
 // Group permissions by feature
@@ -91,6 +95,7 @@ const formModal = {
   username: '',
   password: '',
   email: '',
+  organizationId: null,
   roleId: null,
   reportToId: 0,
 };
@@ -101,6 +106,7 @@ const profileData = ref({
   id: '',
   username: '',
   email: '',
+  organizationId: null,
   roleId: null,
   roles: null,
   reportToId: 0,
@@ -221,6 +227,17 @@ async function deleteUser(UserId) {
       }
     }
   });
+}
+
+async function fetchOrganizations() {
+  try {
+    isLoading.value = true;
+    await organizationStore.fetchOrganizations();
+  } catch (error) {
+    swal.error('Error fetching organizations:', error);
+  } finally {
+    isLoading.value = false;
+  }
 }
 
 async function newUser() {
@@ -364,6 +381,17 @@ onMounted(async () => {
             ></v-text-field>
 
             <v-select
+              v-model="formData.organizationId"
+              :items="organizations"
+              item-title="title"
+              item-value="id"
+              label="Select Organization"
+              placeholder="Select a Organization"
+              @click="fetchOrganizations"
+              :rules="[rules.required]"
+            />
+            <!-- @update:model-value="GetUserByParentRoleId" -->
+            <v-select
               v-model="formData.roleId"
               :items="userRoles"
               item-title="roleName"
@@ -487,6 +515,9 @@ onMounted(async () => {
                           </v-col>
                           <v-col cols="12" md="6">
                             <v-text-field v-model="profileData.roles" label="Role" readonly />
+                          </v-col>
+                          <v-col cols="12" md="6">
+                            <v-text-field v-model="profileData.organizationId" label="Organization" readonly />
                           </v-col>
 
                           <v-col cols="12" md="6">
