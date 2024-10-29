@@ -52,12 +52,18 @@ const headers = ref([
     key: 'email',
     sortable: true,
   },
+  {
+    title: 'Organization',
+    key: 'organizationName',
+    sortable: true,
+  },
 
   {
     title: 'Role',
     key: 'roles',
     sortable: true,
   },
+
   {
     title: 'Invoke Permissions',
     key: 'actions',
@@ -79,6 +85,8 @@ const profileData = ref({
   id: '',
   username: '',
   email: '',
+  organizationId: null,
+  organizationName: '',
   roleId: null,
   roles: null,
   reportToId: null,
@@ -97,7 +105,6 @@ const profileData = ref({
 });
 
 const cancelEdit = () => {
-  console.log('cancellllllll');
   selectedCodes.value = [];
   userRolePermissions.value = [];
   loadingPermissions.value = true;
@@ -142,11 +149,11 @@ async function fetchRolePermissions(RoleId) {
     }
   });
 }
-async function invokeRolePermission(RoleId) {
+async function invokeRolePermission(RoleId, OrganizationId) {
   // console.log('roleId', RoleId);
   // console.log('codes', selectedCodes.value);
 
-  await roleStore.invokeRolePermission(RoleId, selectedCodes.value);
+  await roleStore.invokeRolePermission(RoleId, OrganizationId, selectedCodes.value);
   userRolePermissions.value.forEach((feature) => {
     if (feature.isPermission === 1 && !selectedCodes.value.includes(feature.code)) {
       selectedCodes.value.push(feature.code); // Add the feature code to selectedCodes
@@ -255,7 +262,12 @@ onMounted(async () => {
                       <v-card-text>
                         <v-form>
                           <v-row class="justify-end">
-                            <v-btn @click="invokeRolePermission(profileData.roleId)" color="primary"> Update </v-btn>
+                            <v-btn
+                              @click="invokeRolePermission(profileData.roleId, profileData.organizationId)"
+                              color="primary"
+                            >
+                              Update
+                            </v-btn>
                             <v-btn @click="cancelEdit" color="primary" class="ml-4">Cancel</v-btn>
                           </v-row>
                         </v-form>

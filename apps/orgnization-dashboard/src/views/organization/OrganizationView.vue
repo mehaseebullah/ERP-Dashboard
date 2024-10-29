@@ -17,15 +17,15 @@ const showEdit = ref(false);
 const isEdit = ref(false);
 const showDrawer = ref(false);
 const isLoading = ref(false);
-const loadingPermissions = ref(true);
 
+const loader = ref(false);
 const form = ref();
 const updateForm = ref();
 
 const headers = ref([
   {
     title: '',
-    key: 'fileBase64',
+    key: 'filePath',
   },
   {
     title: 'Id',
@@ -73,6 +73,8 @@ const profileData = ref({
   title: '',
   description: '',
   isActive: null,
+  isDeleted: null,
+  filePath: null,
   File: null,
 });
 
@@ -113,7 +115,6 @@ const handleUpdateImageUpload = (event) => {
 
 const cancelEdit = () => {
   selectedCodes.value = [];
-  loadingPermissions.value = true;
   selectedImage.value = null; // Reset selected image
   tab.value = 'option-1';
   formData.value = { ...formModal };
@@ -139,14 +140,20 @@ async function fetchOrganizations() {
 }
 
 async function createOrganization() {
-  //console.log('create data', formData.value);
-
   const { valid } = await form.value.validate();
   if (valid) {
-    await organizationStore.createOrganization(formData.value);
-    showDrawer.value = false;
-    formData.value = { ...formModal };
-    swal.success('Organization created successfully!');
+    try {
+      loader.value = true;
+      await organizationStore.createOrganization(formData.value);
+      loader.value = false;
+      showDrawer.value = false;
+      formData.value = { ...formModal };
+      selectedImage.value = null;
+      swal.success('Organization created successfully!');
+    } catch (error) {
+      swal.error(error);
+      loader.value = false;
+    }
   } else {
     swal.error('Please fill all fields');
   }
@@ -155,13 +162,19 @@ async function createOrganization() {
 async function updateOrganization() {
   const { valid } = await updateForm.value.validate();
   if (valid) {
-    showEdit.value = false;
-    const updatedOrganization = { ...profileData.value };
-
-    await organizationStore.updateOrganization(updatedOrganization);
-    swal.success('Organization updated successfully!');
-    showDrawer.value = false;
-    selectedImage.value = null;
+    try {
+      loader.value = true;
+      const updatedOrganization = { ...profileData.value };
+      await organizationStore.updateOrganization(updatedOrganization);
+      loader.value = false;
+      showEdit.value = false;
+      swal.success('Organization updated successfully!');
+      showDrawer.value = false;
+      selectedImage.value = null;
+    } catch (error) {
+      swal.error(error);
+      loader.value = false;
+    }
   } else {
     swal.error('Please fill all fields');
   }
@@ -200,9 +213,9 @@ onMounted(async () => {
       </v-toolbar>
       <v-table>
         <v-data-table :loading="$loading('fetchOrganizations')" :headers="headers" :items="organizations">
-          <template v-slot:item.fileBase64="{ item }">
+          <template v-slot:item.filePath="{ item }">
             <v-avatar size="60">
-              <v-img :src="item.fileBase64 || '/default_organization_logo.jpg'" />
+              <v-img :src="item.filePath || '/default_organization_logo.jpg'" />
             </v-avatar>
           </template>
 
@@ -234,7 +247,7 @@ onMounted(async () => {
               :rules="[rules.required, rules.maxLength(1000)]"
             ></v-textarea>
             <v-avatar size="100">
-              <v-img :src="selectedImage || formData.fileBase64 || '/default_organization_logo.jpg'" />
+              <v-img :src="selectedImage || '/default_organization_logo.jpg'" />
               <v-icon
                 @click="triggerFileInput"
                 class="position-absolute"
@@ -250,7 +263,13 @@ onMounted(async () => {
             <input ref="fileInput" type="file" accept="image/*" style="display: none" @change="handleImageUpload" />
 
             <div class="d-flex justify-end">
-              <v-btn type="submit" color="primary">Create</v-btn>
+              <v-btn type="submit" color="primary">
+                <template v-if="loader">
+                  <!-- Loader component -->
+                  <v-progress-circular indeterminate color="white"></v-progress-circular>
+                </template>
+                <template v-else> Create</template></v-btn
+              >
             </div>
           </v-form>
         </v-card-text>
@@ -280,9 +299,7 @@ onMounted(async () => {
                         <v-row class="align-items-center">
                           <v-col cols="12" md="2" class="d-flex flex-column align-items-center position-relative">
                             <v-avatar size="100">
-                              <v-img
-                                :src="selectedImage || profileData.fileBase64 || '/default_organization_logo.jpg'"
-                              />
+                              <v-img :src="selectedImage || profileData.filePath || '/default_organization_logo.jpg'" />
                               <v-icon
                                 @click="triggerFileInput"
                                 class="position-absolute"
@@ -344,16 +361,25 @@ onMounted(async () => {
                               :items="booleanOptions"
                               item-title="title"
                               item-value="value"
-                              label="Select"
+                              label="Is Active"
                               placeholder="Select"
                               required
                             />
+                          </v-col>
+                          <v-col cols="12" md="12">
+                            <v-text-field v-model="profileData.isDeleted" label="Is Deleted" readonly />
                           </v-col>
                         </v-row>
                       </v-card-text>
                     </v-card>
 
-                    <v-btn @click="updateOrganization" color="primary">Update</v-btn>
+                    <v-btn @click="updateOrganization" color="primary"
+                      ><template v-if="loader">
+                        <!-- Loader component -->
+                        <v-progress-circular indeterminate color="white"></v-progress-circular>
+                      </template>
+                      <template v-else> Update </template></v-btn
+                    >
                     <v-btn @click="cancelEdit" color="primary" class="ml-4">Cancel</v-btn>
                   </v-form>
                 </v-card-text>

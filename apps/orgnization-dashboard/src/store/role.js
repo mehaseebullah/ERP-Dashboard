@@ -15,16 +15,19 @@ export const useRoleStore = defineStore({
     },
 
     async fetchRolePermissions(RoleId) {
-      RoleId = 1;
+      //RoleId = 1;
       const { data } = await api.get(`/Tenant/Account/GetRolePermissions/${RoleId}`);
       this.userRolePermissions = data?.data || [];
       return this.userRolePermissions;
     },
-    async invokeRolePermission(RoleId, selectedCodes) {
+    async invokeRolePermission(RoleId, OrganizationId, selectedCodes) {
       console.log(selectedCodes);
 
-      const { data } = await api.post(`/Tenant/Account/InvokeRolePermission/${RoleId}`, selectedCodes);
-      // const { data } = await post.get(`/Tenant/Account/InvokeUserPermission/${RoleId}`);
+      const { data } = await api.post(
+        `/Tenant/Account/InvokeRolePermission/${OrganizationId}/${RoleId}`,
+        selectedCodes,
+      );
+
       return data?.data;
     },
   },

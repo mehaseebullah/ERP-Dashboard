@@ -6,6 +6,7 @@ export const useUserStore = defineStore({
   state: () => ({
     users: [],
     userRoles: [],
+    organizationRoles: [],
     pRoleUsers: [],
     userPermissions: [],
     userCountries: [],
@@ -65,15 +66,19 @@ export const useUserStore = defineStore({
       return this.userPermissions;
     },
     async GetUserByParentRoleId(pRoleId) {
-      const { data } = await api.get(`/Tenant/User/GetUsersByRoleId?RoleId=${pRoleId}`);
-
+      const { data } = await api.get(`/Tenant/User/GetUsersByParentRoleId?RoleId=${pRoleId}`);
       this.pRoleUsers = data?.data || [];
       return this.pRoleUsers;
     },
-    async fetchUserCountries() {
+    async GetRolesByOrganizationId(OrganizationId) {
+      const { data } = await api.get(`/Tenant/User/GetRolesByOrganizationId/${OrganizationId}`);
+      this.organizationRoles = data?.data || [];
+      return this.organizationRoles;
+    },
+    async fetchUserCountries(OrganizationId) {
       const DefinitionTypeKeyCode = 'CNT';
       const { data } = await api.get(
-        `/Tenant/TenantDefinitions/GetDefinitionByDefinitionTypeKeyCode/${DefinitionTypeKeyCode}`,
+        `/Tenant/TenantDefinitions/GetDefinitionByDefinitionTypeKeyCode/${OrganizationId}/${DefinitionTypeKeyCode}`,
       );
       this.userCountries = data?.data || [];
       return this.userCountries;
@@ -89,10 +94,10 @@ export const useUserStore = defineStore({
       return this.userCities;
     },
 
-    async fetchUserGenders() {
+    async fetchUserGenders(OrganizationId) {
       const DefinitionTypeKeyCode = 'GENDER';
       const { data } = await api.get(
-        `/Tenant/TenantDefinitions/GetDefinitionByDefinitionTypeKeyCode/${DefinitionTypeKeyCode}`,
+        `/Tenant/TenantDefinitions/GetDefinitionByDefinitionTypeKeyCode/${OrganizationId}/${DefinitionTypeKeyCode}`,
       );
       this.userGenders = data?.data || [];
       return this.userGenders;
@@ -105,6 +110,17 @@ export const useUserStore = defineStore({
         userId,
       });
       this.fetchUsers();
+      return data?.data;
+    },
+
+    async invokeUserPermission(UserId, OrganizationId, selectedCodes) {
+      console.log(selectedCodes);
+
+      const { data } = await api.post(
+        `/Tenant/Account/InvokeUserPermission/${OrganizationId}/${UserId}`,
+        selectedCodes,
+      );
+
       return data?.data;
     },
   },
