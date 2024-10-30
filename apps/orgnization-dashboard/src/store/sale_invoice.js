@@ -8,10 +8,15 @@ export const useSaleInvoiceStore = defineStore({
   }),
   actions: {
     async fetchSaleInvoiceList() {
-      this.saleInvoices=[];
+      this.saleInvoices = [];
       const { data } = await api.get('/Sale/SaleInvoice/GetAllSaleInvoiceOrders?PageSize=1000&PageNumber=0');
       this.saleInvoices = data?.data?.data;
       return this.saleInvoices;
+    },
+    async fetchSaleInvoiceListDetails(SaleInvoiceId, item) {
+      const { data } = await api.get(`/Sale/SaleInvoice/GetSaleInvoiceDetailsBySIId/${SaleInvoiceId}`);
+      item['siDetails'] = data?.data || [];
+      return item;
     },
     async fetchSaleInvoiceBySINumber(siNumber) {
       const { data } = await api.get(`/Sale/SaleInvoice/GetSaleInvoiceWithDetailsBySINumber/${siNumber}`);

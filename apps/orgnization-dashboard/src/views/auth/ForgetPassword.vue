@@ -1,4 +1,6 @@
-<script setup></script>
+<script setup>
+import rules from '@/helpers/rules';
+</script>
 <template>
   <v-sheet class="px-16 w-100">
     <v-row>
@@ -11,7 +13,13 @@
     </v-row>
     <v-row>
       <v-col cols="12">
-        <v-text-field prepend-inner-icon="mdi-account" color="primary" label="email" variant="outlined"></v-text-field>
+        <v-text-field
+          prepend-inner-icon="mdi-account"
+          color="primary"
+          label="email"
+          variant="outlined"
+          :rules="[rules.email]"
+        ></v-text-field>
       </v-col>
     </v-row>
     <v-row>

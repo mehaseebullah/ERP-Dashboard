@@ -2,9 +2,12 @@
 import { ref, onMounted, computed, watch, reactive, inject } from 'vue';
 import rules from '@/helpers/rules';
 import { useSwal } from '@/composables/useSwal';
-import { api } from '@/helpers/http';
 import { storeToRefs } from 'pinia';
 import { useUserStore } from '@/store/user';
+import { useOrganizationStore } from '@/store/organization';
+
+const organizationStore = useOrganizationStore();
+const { organizations } = storeToRefs(organizationStore);
 
 const userStore = useUserStore();
 const { users } = storeToRefs(userStore);
@@ -15,6 +18,7 @@ const { userCountries } = storeToRefs(userStore);
 const { userGenders } = storeToRefs(userStore);
 const { userStates } = storeToRefs(userStore);
 const { userCities } = storeToRefs(userStore);
+const { organizationRoles } = storeToRefs(userStore);
 
 const swal = useSwal();
 const selectedCodes = ref([]);
@@ -26,6 +30,7 @@ const isEdit = ref(false);
 const showDrawer = ref(false);
 const isLoading = ref(false);
 const loadingPermissions = ref(true);
+const loader = ref(false);
 
 const state = reactive({
   showPass: false,
@@ -38,7 +43,7 @@ const newPassword = ref('');
 const form = ref();
 const updateForm = ref();
 const confirmPassword = (val) => {
-  return (!!formData.value.password && val === formData.value.password) || 'Password matched';
+  return (!!formData.value.password && val === formData.value.password) || 'Password and Confirm password not matched';
 };
 
 // Group permissions by feature
@@ -76,10 +81,16 @@ const headers = ref([
   },
 
   {
+    title: 'Organization',
+    key: 'organizationName',
+    sortable: true,
+  },
+  {
     title: 'Role',
     key: 'roles',
     sortable: true,
   },
+
   {
     title: 'Actions',
     key: 'actions',
@@ -91,19 +102,22 @@ const formModal = {
   username: '',
   password: '',
   email: '',
+  organizationId: null,
   roleId: null,
-  reportToId: 0,
+  reportToId: null,
 };
 
 const formData = ref({ ...formModal });
 
-const profileData = ref({
+const defaultProfileData = {
   id: '',
   username: '',
   email: '',
+  organizationId: null,
+  organizationName: '',
   roleId: null,
   roles: null,
-  reportToId: 0,
+  reportToId: null,
   profilePicturePath: '',
   firstName: '',
   lastName: '',
@@ -116,7 +130,9 @@ const profileData = ref({
   genderId: null,
   bio: '',
   preferences: '',
-});
+};
+
+const profileData = ref({ ...defaultProfileData });
 
 const imgUploadData = ref({
   Id: null,
@@ -140,12 +156,15 @@ const handleImageUpload = (event) => {
 };
 
 const cancelEdit = () => {
+  console.log('cancel');
+
   selectedCodes.value = [];
   userPermissions.value = [];
   loadingPermissions.value = true;
   selectedImage.value = null; // Reset selected image
   tab.value = 'option-1';
   formData.value = { ...formModal };
+  profileData.value = { ...defaultProfileData };
   oldPassword.value = '';
   newPassword.value = '';
   showEdit.value = false; // Hide edit mode
@@ -161,10 +180,17 @@ watch(showEdit, (newValue) => {
 async function createUser() {
   const { valid } = await form.value.validate();
   if (valid) {
-    await userStore.createUser(formData.value);
-    showDrawer.value = false;
-    formData.value = { ...formModal };
-    swal.success('User created successfully!');
+    try {
+      loader.value = true;
+      await userStore.createUser(formData.value);
+      loader.value = false;
+      showDrawer.value = false;
+      formData.value = { ...formModal };
+      swal.success('User created successfully!');
+    } catch (error) {
+      loader.value = false;
+      swal.error(error);
+    }
   } else {
     swal.error('Please fill all fields');
   }
@@ -174,10 +200,6 @@ async function fetchUsers() {
   try {
     isLoading.value = true;
     await userStore.fetchUsers();
-    if (users.value.length > 0) {
-      if (users.value.stateId) fetchStateByCountryId();
-      if (users.value.cityId) fetchCitiesByStateId();
-    }
   } catch (error) {
     swal.error('Error fetching users:', error);
   } finally {
@@ -186,10 +208,24 @@ async function fetchUsers() {
 }
 
 async function openEditUserDialog(user) {
+  console.log('user', user);
+
+  showEdit.value = true;
+
+  if (user.organizationId) {
+    await GetRolesByOrganizationId(user.organizationId);
+    await fetchUserGenders(user.organizationId);
+    if (user.roleId) await GetUserByParentRoleId(user.roleId);
+    await fetchUserCountries(user.organizationId);
+    if (user.countryId) {
+      await fetchStateByCountryId(user.countryId);
+      if (user.stateId) await fetchCitiesByStateId(user.stateId);
+    }
+  }
+  ///need to be tested.....
+
   profileData.value = { ...user }; //to populate user data
   showUserDialog.value = true; // Show the UserProfileUpdate dialog
-  showEdit.value = true;
-  fetchUserRoles();
 }
 
 async function updateUser() {
@@ -223,19 +259,30 @@ async function deleteUser(UserId) {
   });
 }
 
+async function fetchOrganizations() {
+  try {
+    isLoading.value = true;
+    await organizationStore.fetchOrganizations();
+  } catch (error) {
+    swal.error('Error fetching organizations:', error);
+  } finally {
+    isLoading.value = false;
+  }
+}
+
 async function newUser() {
   isEdit.value = false;
   formData.value = { ...formModal };
   showDrawer.value = true;
-  fetchUserRoles();
+  fetchOrganizations();
 }
 
 async function fetchUserRoles() {
   await userStore.fetchUserRoles();
 }
 
-async function fetchUserCountries() {
-  await userStore.fetchUserCountries();
+async function fetchUserCountries(organizationId) {
+  await userStore.fetchUserCountries(organizationId);
 }
 
 async function fetchUserStates(Id) {
@@ -245,20 +292,21 @@ async function fetchUserStates(Id) {
 async function fetchUserCities(Id) {
   await userStore.fetchUserCities(Id);
 }
-async function fetchUserGenders() {
-  await userStore.fetchUserGenders();
+async function fetchUserGenders(organizationId) {
+  await userStore.fetchUserGenders(organizationId);
 }
 const fetchStateByCountryId = (id) => {
   if (id) {
+    profileData.value.stateId = null;
+    profileData.value.cityId = null;
     fetchUserStates(id);
-    // profileData.value.stateId = null;
-    // profileData.value.cityId = null;
   } else {
     swal.error('Select Country first');
   }
 };
 const fetchCitiesByStateId = (id) => {
   if (id) {
+    profileData.value.cityId = null;
     fetchUserCities(id);
   } else {
     swal.error('Plz select state first');
@@ -276,17 +324,32 @@ async function fetchPermissions(UserId) {
   });
 }
 async function GetUserByParentRoleId(roleId) {
-  let pRoleId = userRoles.value.find((x) => x.roleId == roleId).pRoleId;
-
-  await userStore.GetUserByParentRoleId(pRoleId);
+  profileData.value.reportToId = null;
+  // let pRoleId = userRoles.value.find((x) => x.roleId == roleId).pRoleId;
+  let pRoleId = organizationRoles.value.find((x) => x.roleId == roleId).pRoleId;
+  if (pRoleId) await userStore.GetUserByParentRoleId(pRoleId);
+}
+async function GetRolesByOrganizationId(OrganizationId) {
+  console.log('here', OrganizationId);
+  await userStore.GetRolesByOrganizationId(OrganizationId);
 }
 async function updateUserPassword(userId) {
-  // console.log('id', userId);
-  // console.log('new', oldPassword.value);
-  // console.log('old', newPassword.value);
-
   await userStore.updateUserPassword(userId, oldPassword.value, newPassword.value);
   showEdit.value = false;
+}
+
+async function invokeUserPermission(UserId, OrganizationId) {
+  // console.log('roleId', RoleId);
+  // console.log('codes', selectedCodes.value);
+
+  await userStore.invokeUserPermission(UserId, OrganizationId, selectedCodes.value);
+  userPermissions.value.forEach((feature) => {
+    if (feature.isPermission === 1 && !selectedCodes.value.includes(feature.code)) {
+      selectedCodes.value.push(feature.code); // Add the feature code to selectedCodes
+    }
+  });
+  showUserDialog.value = false;
+  fetchUsers();
 }
 onMounted(async () => {
   await fetchUsers();
@@ -308,17 +371,7 @@ onMounted(async () => {
           </template>
 
           <template v-slot:item.actions="{ item }">
-            <v-icon
-              class="me-2"
-              size="small"
-              @click="
-                openEditUserDialog(item);
-                fetchUserCountries();
-                fetchUserGenders();
-              "
-            >
-              mdi-pencil
-            </v-icon>
+            <v-icon class="me-2" size="small" @click="openEditUserDialog(item)"> mdi-pencil </v-icon>
             <v-icon size="small" @click="deleteUser(item.id)"> mdi-delete </v-icon>
           </template>
         </v-data-table>
@@ -364,8 +417,21 @@ onMounted(async () => {
             ></v-text-field>
 
             <v-select
+              :loading="$loading('fetchOrganizations')"
+              v-model="formData.organizationId"
+              :items="organizations"
+              item-title="title"
+              item-value="id"
+              label="Select Organization"
+              placeholder="Select a Organization"
+              @update:model-value="GetRolesByOrganizationId"
+              :rules="[rules.required]"
+            />
+
+            <v-select
+              :loading="$loading('GetRolesByOrganizationId')"
               v-model="formData.roleId"
-              :items="userRoles"
+              :items="organizationRoles"
               item-title="roleName"
               item-value="roleId"
               label="Select Role"
@@ -375,6 +441,7 @@ onMounted(async () => {
             />
 
             <v-select
+              :loading="$loading('GetUserByParentRoleId')"
               v-model="formData.reportToId"
               :items="pRoleUsers"
               item-title="text"
@@ -385,7 +452,13 @@ onMounted(async () => {
             />
 
             <div class="d-flex justify-end">
-              <v-btn type="submit" color="primary">Create</v-btn>
+              <v-btn type="submit" color="primary"
+                ><template v-if="loader">
+                  <!-- Loader component -->
+                  <v-progress-circular indeterminate color="white"></v-progress-circular>
+                </template>
+                <template v-else> Create </template></v-btn
+              >
             </div>
           </v-form>
         </v-card-text>
@@ -476,8 +549,9 @@ onMounted(async () => {
                           </v-col>
                           <v-col cols="12" md="6">
                             <v-select
-                              v-model="profileData.genderId"
+                              :loading="$loading('fetchUserGenders')"
                               :items="userGenders"
+                              v-model="profileData.genderId"
                               item-title="title"
                               item-value="id"
                               label="Select Gender"
@@ -488,11 +562,15 @@ onMounted(async () => {
                           <v-col cols="12" md="6">
                             <v-text-field v-model="profileData.roles" label="Role" readonly />
                           </v-col>
+                          <v-col cols="12" md="6">
+                            <v-text-field v-model="profileData.organizationName" label="Organization" readonly />
+                          </v-col>
 
                           <v-col cols="12" md="6">
                             <v-select
+                              :loading="$loading('GetRolesByOrganizationId')"
                               v-model="profileData.roleId"
-                              :items="userRoles"
+                              :items="organizationRoles"
                               item-title="roleName"
                               item-value="roleId"
                               label="Select Role"
@@ -504,6 +582,7 @@ onMounted(async () => {
 
                           <v-col cols="12" md="6">
                             <v-select
+                              :loading="$loading('GetUserByParentRoleId')"
                               v-model="profileData.reportToId"
                               :items="pRoleUsers"
                               item-title="text"
@@ -553,6 +632,7 @@ onMounted(async () => {
                           </v-col>
                           <v-col cols="12" md="6">
                             <v-select
+                              :loading="$loading('fetchUserCountries')"
                               v-model="profileData.countryId"
                               :items="userCountries"
                               item-title="title"
@@ -564,8 +644,9 @@ onMounted(async () => {
                           </v-col>
                           <v-col cols="12" md="6">
                             <v-select
-                              v-model="profileData.stateId"
+                              :loading="$loading('fetchUserStates')"
                               :items="userStates"
+                              v-model="profileData.stateId"
                               item-title="title"
                               item-value="id"
                               label="State/province/area"
@@ -575,6 +656,7 @@ onMounted(async () => {
                           </v-col>
                           <v-col cols="12" md="6">
                             <v-select
+                              :loading="$loading('fetchUserCities')"
                               v-model="profileData.cityId"
                               :items="userCities"
                               item-title="title"
@@ -644,6 +726,21 @@ onMounted(async () => {
                         <ul>
                           <li v-for="code in selectedCodes" :key="code">{{ code }}</li>
                         </ul>
+                      </v-card-text>
+                    </v-card>
+                    <v-card>
+                      <v-card-text>
+                        <v-form>
+                          <v-row class="justify-end">
+                            <v-btn
+                              @click="invokeUserPermission(profileData.id, profileData.organizationId)"
+                              color="primary"
+                            >
+                              Update
+                            </v-btn>
+                            <v-btn @click="cancelEdit" color="primary" class="ml-4">Cancel</v-btn>
+                          </v-row>
+                        </v-form>
                       </v-card-text>
                     </v-card>
                   </template>

@@ -13,61 +13,60 @@ const headers = [
   {
     title: 'Product Name',
     key: 'productName',
-    sortable: true
+    sortable: true,
   },
   {
     title: 'SKU',
     key: 'sku',
-    sortable: true
+    sortable: true,
   },
   {
     title: 'Description',
     key: 'description',
-    sortable: true
+    sortable: true,
   },
   {
     title: 'Sale Count',
     key: 'saleCount',
-    sortable: true
+    sortable: true,
   },
   {
     title: 'Purchase Count',
     key: 'purchaseCount',
-    sortable: true
+    sortable: true,
   },
   {
     title: 'Quantity',
     key: 'quantity',
-    sortable: true
+    sortable: true,
   },
   {
     title: 'Created At',
     key: 'createdAt',
-    sortable: true
+    sortable: true,
   },
   {
     title: 'Created By',
     key: 'createdBy',
-    sortable: true
+    sortable: true,
   },
   {
     title: 'Updated At',
     key: 'updatedAt',
-    sortable: true
+    sortable: true,
   },
   {
     title: 'Updated By',
     key: 'updatedBy',
-    sortable: true
-  }
+    sortable: true,
+  },
 ];
 
-
-
 onMounted(() => {
-    stocksStore.fetchStocks();
+  stocksStore.fetchStocks();
 });
 </script>
+
 <template>
   <v-container>
     <v-card>
@@ -75,10 +74,7 @@ onMounted(() => {
         <v-spacer></v-spacer>
         <!-- <v-btn @click="newUnit()">Create Unit</v-btn> -->
       </v-toolbar>
-      <v-data-table :loading="$loading('fetchUnits')" :headers="headers" :items="stocks">
-      
-      </v-data-table>
+      <v-data-table :loading="$loading('fetchUnits')" :headers="headers" :items="stocks"> </v-data-table>
     </v-card>
-   
   </v-container>
 </template>

@@ -61,6 +61,27 @@ export async function registerPlugins(app) {
       return finalResult;
     }, {});
 
+    // Manually added the "Organization Management" module with a "Organization" dropdown
+    menus['Organization Management'] = {
+      isMenu: true,
+      name: 'Organization Management',
+      icon: 'mdi-briefcase',
+      menu: {
+        title: 'Organization Management',
+        children: [
+          {
+            isMenu: true,
+            title: 'Organization',
+            codes: ['ORG-MNG'],
+            icon: 'mdi-domain',
+            url: '/organization',
+            component: 'organization/OrganizationView',
+            position: 0,
+          },
+        ],
+      },
+      position: 4,
+    };
     console.log('menus', menus);
     const modules = [];
 
@@ -311,6 +332,7 @@ export async function registerPlugins(app) {
         }
       }),
     );
+
     // router.addRoute({
     //   path: '/add-purchase-invoice',
     //   name: 'add-purchase-invoice',
