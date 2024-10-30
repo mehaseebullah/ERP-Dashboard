@@ -21,6 +21,16 @@ const headers = [
     sortable: true,
   },
   {
+    title: 'Created',
+    key: 'createdBy',
+    sortable: true,
+  },
+  {
+    title: 'Modified',
+    key: 'updatedBy',
+    sortable: true,
+  },
+  {
     title: 'Actions',
     key: 'actions',
   },
@@ -70,7 +80,8 @@ async function deleteUnit(id) {
 }
 
 onMounted(() => {
-  unitStore.fetchUnits();
+  // unitStore.fetchUnits();
+  unitStore.fetchPaginatedUnits();
 });
 </script>
 <template>
@@ -80,7 +91,19 @@ onMounted(() => {
         <v-spacer></v-spacer>
         <v-btn @click="newUnit()">Create Unit</v-btn>
       </v-toolbar>
-      <v-data-table :loading="$loading('fetchUnits')" :headers="headers" :items="units">
+      <v-data-table :loading="$loading('fetchPaginatedUnits')" :headers="headers" :items="units">
+        <template v-slot:item.createdBy="{ item }">
+          <v-row no-gutters>
+            <v-col cols="12">{{ item.createdBy }}</v-col>
+            <v-col cols="12">{{ item.createdAt }}</v-col>
+          </v-row>
+        </template>
+        <template v-slot:item.updatedBy="{ item }">
+          <v-row no-gutters>
+            <v-col cols="12">{{ item.updatedBy }}</v-col>
+            <v-col cols="12">{{ item.updatedAt }}</v-col>
+          </v-row>
+        </template>
         <template v-slot:item.actions="{ item }">
           <v-icon class="me-2" size="small" @click="editUnit(item)"> mdi-pencil </v-icon>
           <v-icon size="small" @click="deleteUnit(item.id)"> mdi-delete </v-icon>

@@ -63,10 +63,20 @@ const headers = [
     sortable: true,
   },
   {
+    title: 'Created',
+    key: 'createdBy',
+    sortable: true,
+  },
+  {
+    title: 'Modified',
+    key: 'updatedBy',
+    sortable: true,
+  },
+  {
     title: 'Image',
-    // key: 'filePath',
     key: 'fileBase64',
   },
+
   {
     title: 'Actions',
     key: 'actions',
@@ -151,12 +161,25 @@ onMounted(async () => {
         <template v-slot:item.fileBase64="{ item }">
           <v-img :src="item.fileBase64" alt="Product Image" max-width="100" max-height="100" contain />
         </template>
+        <template v-slot:item.createdBy="{ item }">
+          <v-row no-gutters>
+            <v-col cols="12">{{ item.createdBy }}</v-col>
+            <v-col cols="12">{{ item.createdAt }}</v-col>
+          </v-row>
+        </template>
+        <template v-slot:item.updatedBy="{ item }">
+          <v-row no-gutters>
+            <v-col cols="12">{{ item.updatedBy }}</v-col>
+            <v-col cols="12">{{ item.updatedAt }}</v-col>
+          </v-row>
+        </template>
         <template v-slot:item.actions="{ item }">
           <v-icon class="me-2" size="small" @click="editProduct(item)"> mdi-pencil </v-icon>
           <v-icon size="small" @click="deleteProduct(item.id)"> mdi-delete </v-icon>
         </template>
       </v-data-table>
     </v-card>
+
     <main-drawer v-model="showDrawer" width="800" title="CREATE PRODUCT" :toolbar="{ color: 'primary' }">
       <v-form class="pa-5" @submit.prevent="isEdit ? updateProduct() : createProduct()">
         <v-text-field v-model="formData.title" label="Title" variant="outlined"></v-text-field>

@@ -11,7 +11,6 @@ const { organizations } = storeToRefs(organizationStore);
 
 const userStore = useUserStore();
 const { users } = storeToRefs(userStore);
-const { userRoles } = storeToRefs(userStore);
 const { pRoleUsers } = storeToRefs(userStore);
 const { userPermissions } = storeToRefs(userStore);
 const { userCountries } = storeToRefs(userStore);
@@ -19,10 +18,12 @@ const { userGenders } = storeToRefs(userStore);
 const { userStates } = storeToRefs(userStore);
 const { userCities } = storeToRefs(userStore);
 const { organizationRoles } = storeToRefs(userStore);
+const { timeZones } = storeToRefs(userStore);
+const { dateFormats } = storeToRefs(userStore);
 
 const swal = useSwal();
 const selectedCodes = ref([]);
-const showUserDialog = ref(false);
+// const showUserDialog = ref(false);
 
 const tab = ref(null);
 const showEdit = ref(false);
@@ -109,7 +110,7 @@ const formModal = {
 
 const formData = ref({ ...formModal });
 
-const defaultProfileData = {
+const profileModal = {
   id: '',
   username: '',
   email: '',
@@ -130,9 +131,12 @@ const defaultProfileData = {
   genderId: null,
   bio: '',
   preferences: '',
+  timezoneName: '',
+  timezoneOffset: null,
+  dateTimeFormat: '',
 };
 
-const profileData = ref({ ...defaultProfileData });
+const profileData = ref({ ...profileModal });
 
 const imgUploadData = ref({
   Id: null,
@@ -156,15 +160,15 @@ const handleImageUpload = (event) => {
 };
 
 const cancelEdit = () => {
-  console.log('cancel');
-
   selectedCodes.value = [];
   userPermissions.value = [];
   loadingPermissions.value = true;
   selectedImage.value = null; // Reset selected image
   tab.value = 'option-1';
   formData.value = { ...formModal };
-  profileData.value = { ...defaultProfileData };
+  profileData.value = { ...profileModal };
+  timeZones.value = [];
+  dateFormats.value = [];
   oldPassword.value = '';
   newPassword.value = '';
   showEdit.value = false; // Hide edit mode
@@ -208,8 +212,6 @@ async function fetchUsers() {
 }
 
 async function openEditUserDialog(user) {
-  console.log('user', user);
-
   showEdit.value = true;
 
   if (user.organizationId) {
@@ -221,11 +223,12 @@ async function openEditUserDialog(user) {
       await fetchStateByCountryId(user.countryId);
       if (user.stateId) await fetchCitiesByStateId(user.stateId);
     }
+    await userStore.fetchTimeZones();
+    await userStore.fetchDateFormats();
   }
-  ///need to be tested.....
 
   profileData.value = { ...user }; //to populate user data
-  showUserDialog.value = true; // Show the UserProfileUpdate dialog
+  // showUserDialog.value = true; // Show the UserProfileUpdate dialog
 }
 
 async function updateUser() {
@@ -277,9 +280,9 @@ async function newUser() {
   fetchOrganizations();
 }
 
-async function fetchUserRoles() {
-  await userStore.fetchUserRoles();
-}
+// async function fetchUserRoles() {
+//   await userStore.fetchUserRoles();
+// }
 
 async function fetchUserCountries(organizationId) {
   await userStore.fetchUserCountries(organizationId);
@@ -312,11 +315,19 @@ const fetchCitiesByStateId = (id) => {
     swal.error('Plz select state first');
   }
 };
+const SetTimeFormat = (timeZoneName) => {
+  if (timeZoneName) {
+    let utcOffsetMinutes = timeZones.value.find((x) => x.timeZoneName == timeZoneName).utcOffsetMinutes;
+    if (utcOffsetMinutes) {
+      profileData.value.timezoneOffset = utcOffsetMinutes;
+    }
+  }
+};
 
 async function fetchPermissions(UserId) {
   await userStore.fetchPermissions(UserId);
   loadingPermissions.value = false;
-  // Pre-select checkboxes where isPermission === 1
+  // For Pre-selected checkboxes where isPermission === 1
   userPermissions.value.forEach((feature) => {
     if (feature.isPermission === 1 && !selectedCodes.value.includes(feature.code)) {
       selectedCodes.value.push(feature.code); // Add the feature code to selectedCodes
@@ -325,12 +336,10 @@ async function fetchPermissions(UserId) {
 }
 async function GetUserByParentRoleId(roleId) {
   profileData.value.reportToId = null;
-  // let pRoleId = userRoles.value.find((x) => x.roleId == roleId).pRoleId;
   let pRoleId = organizationRoles.value.find((x) => x.roleId == roleId).pRoleId;
   if (pRoleId) await userStore.GetUserByParentRoleId(pRoleId);
 }
 async function GetRolesByOrganizationId(OrganizationId) {
-  console.log('here', OrganizationId);
   await userStore.GetRolesByOrganizationId(OrganizationId);
 }
 async function updateUserPassword(userId) {
@@ -339,16 +348,13 @@ async function updateUserPassword(userId) {
 }
 
 async function invokeUserPermission(UserId, OrganizationId) {
-  // console.log('roleId', RoleId);
-  // console.log('codes', selectedCodes.value);
-
   await userStore.invokeUserPermission(UserId, OrganizationId, selectedCodes.value);
   userPermissions.value.forEach((feature) => {
     if (feature.isPermission === 1 && !selectedCodes.value.includes(feature.code)) {
       selectedCodes.value.push(feature.code); // Add the feature code to selectedCodes
     }
   });
-  showUserDialog.value = false;
+  // showUserDialog.value = false;
   fetchUsers();
 }
 onMounted(async () => {
@@ -580,7 +586,7 @@ onMounted(async () => {
                             />
                           </v-col>
 
-                          <v-col cols="12" md="6">
+                          <v-col v-if="profileData.roles != 'Super Administrator'" cols="12" md="6">
                             <v-select
                               :loading="$loading('GetUserByParentRoleId')"
                               v-model="profileData.reportToId"
@@ -672,6 +678,36 @@ onMounted(async () => {
                               label="Zip Code"
                               type="number"
                               :rules="[rules.required]"
+                            />
+                          </v-col>
+                        </v-row>
+                      </v-card-text>
+                    </v-card>
+
+                    <!-- Time Zone and Date Format Section -->
+                    <v-card class="mb-6">
+                      <v-card-title>Regional Date & Time Preferences</v-card-title>
+                      <v-card-text>
+                        <v-row>
+                          <v-col cols="12" md="6">
+                            <v-select
+                              :loading="$loading('fetchTimeZones')"
+                              v-model="profileData.timezoneName"
+                              :items="timeZones"
+                              item-title="timeZoneName"
+                              item-value="timeZoneName"
+                              label="Select Time Zone"
+                              placeholder="Select Time Zone"
+                              @update:model-value="SetTimeFormat"
+                            />
+                          </v-col>
+                          <v-col cols="12" md="6">
+                            <v-select
+                              :loading="$loading('fetchDateFormats')"
+                              :items="dateFormats"
+                              v-model="profileData.dateTimeFormat"
+                              label="Select a date format"
+                              placeholder="Select a date format"
                             />
                           </v-col>
                         </v-row>
@@ -791,63 +827,6 @@ onMounted(async () => {
                       <v-btn type="submit" color="primary">Update</v-btn>
                     </div>
                   </v-form>
-                  <!-- <v-form>
-                    <v-card class="mb-2">
-                      <v-card-text>
-                        <v-row class="align-items-center">
-                          <v-col cols="12" md="10">
-                            <div class="d-flex flex-column justify-center align-start">
-                              <h2 class="mb-3">Username: {{ profileData.username || 'Username' }}</h2>
-                              <h3 class="mb-3">Email: {{ profileData.email }}</h3>
-                              <h3>ID: {{ profileData.id }}</h3>
-                            </div>
-                          </v-col>
-
-                          <v-col cols="12" md="6">
-                            <v-text-field
-                              v-model="profileData.firstName"
-                              label="First Name"
-                              :rules="[rules.required, rules.minLength(2)]"
-                            />
-                          </v-col>
-                          <v-col cols="12" md="6">
-                            <v-text-field
-                              v-model="profileData.lastName"
-                              label="Last Name"
-                              :rules="[rules.required, rules.minLength(2)]"
-                            />
-                          </v-col>
-                          <v-col cols="12" md="6">
-                            <v-select
-                              v-model="profileData.genderId"
-                              :items="userGenders"
-                              item-title="title"
-                              item-value="id"
-                              label="Select Gender"
-                              placeholder="Select Gender"
-                              :rules="[rules.required]"
-                            />
-                          </v-col>
-                          <v-col cols="12" md="6">
-                            <v-text-field v-model="profileData.roles" label="Role" readonly />
-                          </v-col>
-                          <v-col cols="12" md="6">
-                            <v-text-field v-model="profileData.bio" label="Bio" :rules="[rules.required]" />
-                          </v-col>
-                          <v-col cols="12" md="6">
-                            <v-text-field
-                              v-model="profileData.preferences"
-                              label="Preferences"
-                              :rules="[rules.required]"
-                            />
-                          </v-col>
-                        </v-row>
-                      </v-card-text>
-                    </v-card>
-
-                    <v-btn @click="updateUser" color="primary">Update</v-btn>
-                    <v-btn @click="cancelEdit" color="primary" class="ml-4">Cancel</v-btn>
-                  </v-form> -->
                 </v-card-text>
               </v-card>
             </v-tabs-window-item>

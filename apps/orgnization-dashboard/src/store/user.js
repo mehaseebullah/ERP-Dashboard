@@ -5,7 +5,7 @@ export const useUserStore = defineStore({
   id: 'userStore',
   state: () => ({
     users: [],
-    userRoles: [],
+    // userRoles: [],
     organizationRoles: [],
     pRoleUsers: [],
     userPermissions: [],
@@ -13,6 +13,8 @@ export const useUserStore = defineStore({
     userStates: [],
     userCities: [],
     userGenders: [],
+    timeZones: [],
+    dateFormats: [],
   }),
   actions: {
     async fetchUsers() {
@@ -54,11 +56,11 @@ export const useUserStore = defineStore({
       this.fetchUsers();
       return data?.data;
     },
-    async fetchUserRoles() {
-      const { data } = await api.get('/Tenant/User/AllRoles');
-      this.userRoles = data?.data || [];
-      return this.userRoles;
-    },
+    // async fetchUserRoles() {
+    //   const { data } = await api.get('/Tenant/User/AllRoles');
+    //   this.userRoles = data?.data || [];
+    //   return this.userRoles;
+    // },
 
     async fetchPermissions(UserId) {
       const { data } = await api.get(`/Tenant/Account/GetUserPermissions/${UserId}`);
@@ -122,6 +124,16 @@ export const useUserStore = defineStore({
       );
 
       return data?.data;
+    },
+    async fetchTimeZones() {
+      const { data } = await api.get('/api/Common/GetTimezones');
+      this.timeZones = data || [];
+      return this.timeZones;
+    },
+    async fetchDateFormats() {
+      const { data } = await api.get('/api/Common/GetDateFormats');
+      this.dateFormats = data || [];
+      return this.dateFormats;
     },
   },
 });

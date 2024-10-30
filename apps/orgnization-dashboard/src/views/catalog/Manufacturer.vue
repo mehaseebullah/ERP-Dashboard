@@ -21,6 +21,16 @@ const headers = [
     sortable: true,
   },
   {
+    title: 'Created',
+    key: 'createdBy',
+    sortable: true,
+  },
+  {
+    title: 'Modified',
+    key: 'updatedBy',
+    sortable: true,
+  },
+  {
     title: 'Actions',
     key: 'actions',
   },
@@ -42,7 +52,7 @@ async function newManufacturer() {
 
 async function createManufacturer() {
   await manufacturerStore.createManufacturer(formData.value);
-  console.log('manu')
+  console.log('manu');
   showDrawer.value = false;
   formData.value = { ...formModal };
   isEdit.value = false;
@@ -71,7 +81,7 @@ async function deleteManufacturer(id) {
 }
 
 onMounted(() => {
-    manufacturerStore.fetchManufacturers();
+  manufacturerStore.fetchPaginatedManufacturers();
 });
 </script>
 <template>
@@ -81,7 +91,19 @@ onMounted(() => {
         <v-spacer></v-spacer>
         <v-btn @click="newManufacturer()">Create Manufacturer</v-btn>
       </v-toolbar>
-      <v-data-table :loading="$loading('fetchManufacturers')" :headers="headers" :items="manufacturers">
+      <v-data-table :loading="$loading('fetchPaginatedManufacturers')" :headers="headers" :items="manufacturers">
+        <template v-slot:item.createdBy="{ item }">
+          <v-row no-gutters>
+            <v-col cols="12">{{ item.createdBy }}</v-col>
+            <v-col cols="12">{{ item.createdAt }}</v-col>
+          </v-row>
+        </template>
+        <template v-slot:item.updatedBy="{ item }">
+          <v-row no-gutters>
+            <v-col cols="12">{{ item.updatedBy }}</v-col>
+            <v-col cols="12">{{ item.updatedAt }}</v-col>
+          </v-row>
+        </template>
         <template v-slot:item.actions="{ item }">
           <v-icon class="me-2" size="small" @click="editManufacturer(item)"> mdi-pencil </v-icon>
           <v-icon size="small" @click="deleteManufacturer(item.id)"> mdi-delete </v-icon>
