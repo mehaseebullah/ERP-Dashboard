@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { http } from '@/helpers/http';
 import { useSwal } from '@/composables/useSwal';
-const swal=useSwal();
+const swal = useSwal();
 export const useAuthStore = defineStore({
   id: 'authStore',
   state: () => ({
@@ -16,15 +16,14 @@ export const useAuthStore = defineStore({
         this.$router.push('/login');
       }
     },
-    async login({username,password,domain }) {
-      const { data } = await http.post('/Tenant/Account/Login', { username,password,domain });
-      console.log(data.data)
-      if(!data.status)
-      {
+    async login({ username, password, domain }) {
+      const { data } = await http.post('/Tenant/Account/Login', { username, password, domain });
+      console.log(data.data);
+      if (!data.status) {
         swal.error(data.message);
         return;
       }
-        
+
       localStorage.setItem('access_token', data?.data);
       window.location.reload();
     },
