@@ -11,6 +11,8 @@ const swal = useSwal();
 const expandedItemLength = ref(0);
 const expanded = ref([]);
 const router = useRouter();
+const showDrawer = ref(false);
+
 const headers = [
   { title: '', key: 'data-table-expand' },
   {
@@ -75,10 +77,18 @@ async function newPurchaseOrder() {
 async function deletePurchaseOrder(id) {
   swal.confirm('Are you sure you want to delete this unit?').then(async (result) => {
     if (result.isConfirmed) {
-      await purchaseOrdersStore.deletePurchaseOrdre({ id });
-      showDrawer.value = false;
+      await purchaseOrdersStore.deletePurchaseOrder({ id });
+      // showDrawer.value = false;
     }
   });
+}
+async function updatePurchaseOrder() {
+  // await purchaseOrdersStore.updatePurchaseOrder(item.id, item.description);
+  showDrawer.value = false;
+}
+async function openEditPurchaseOrderDialog(item) {
+  showDrawer.value = true;
+  // purchaseOrderData.value = { ...item }; //to populate user data
 }
 
 async function handleClick(items) {
@@ -179,11 +189,30 @@ onMounted(async () => {
           {{ item.supplierName }}
         </template>
         <template v-slot:item.actions="{ item }">
-          <v-icon class="me-2" size="small" @click="editPurchaseOrder(item)"> mdi-pencil </v-icon>
+          <v-icon class="me-2" size="small" @click="openEditPurchaseOrderDialog(item)"> mdi-pencil </v-icon>
           <v-icon size="small" @click="deletePurchaseOrder(item.id)"> mdi-delete </v-icon>
         </template>
       </v-data-table>
     </v-card>
+
+    <main-drawer v-model="showDrawer" width="800" title="UPDATE PURCHASE ORDER" :toolbar="{ color: 'primary' }">
+      <v-form class="pa-5">
+        <v-row>
+          <!-- <v-col>
+            <v-text-field
+              v-model="purchasOrderData.description"
+              label="Description"
+              variant="outlined"
+              :rules="[rules.required]"
+            ></v-text-field>
+          </v-col> -->
+        </v-row>
+
+        <div class="d-flex justify-end mt-5">
+          <v-btn @click="updatePurchaseOrder" type="submit" color="primary">Update</v-btn>
+        </div>
+      </v-form>
+    </main-drawer>
   </v-container>
 </template>
 <!-- <file-upload title="Upload Files" v-model="state.files" multiple></file-upload> -->

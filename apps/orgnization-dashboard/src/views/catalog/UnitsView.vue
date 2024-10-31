@@ -1,13 +1,15 @@
 <script setup>
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useUnitStore } from '@/store/unit';
 import { useSwal } from '@/composables/useSwal';
 import { storeToRefs } from 'pinia';
+import rules from '@/helpers/rules';
 
 const unitStore = useUnitStore();
 const { units } = storeToRefs(unitStore);
 
 const swal = useSwal();
+const drawerTitle = computed(() => (isEdit.value ? 'UPDATE UNIT' : 'CREATE UNIT'));
 
 const headers = [
   {
@@ -110,10 +112,20 @@ onMounted(() => {
         </template>
       </v-data-table>
     </v-card>
-    <main-drawer v-model="showDrawer" width="800" title="CREATE Unit" :toolbar="{ color: 'primary' }">
+    <main-drawer v-model="showDrawer" width="800" :title="drawerTitle" :toolbar="{ color: 'primary' }">
       <v-form class="pa-5" @submit.prevent="isEdit ? updateUnit() : createUnit()">
-        <v-text-field v-model="formData.title" label="Title" variant="outlined"></v-text-field>
-        <v-textarea v-model="formData.description" label="Description" variant="outlined"></v-textarea>
+        <v-text-field
+          v-model="formData.title"
+          label="Title"
+          variant="outlined"
+          :rules="[rules.required]"
+        ></v-text-field>
+        <v-textarea
+          v-model="formData.description"
+          label="Description"
+          variant="outlined"
+          :rules="[rules.required]"
+        ></v-textarea>
         <div class="d-flex justify-end">
           <v-btn v-if="isEdit" :loading="$loading('updateUnit')" type="submit" color="primary">Update</v-btn>
           <v-btn v-else :loading="$loading('createUnit')" type="submit" color="primary">Create</v-btn>

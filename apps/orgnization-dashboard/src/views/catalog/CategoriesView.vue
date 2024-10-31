@@ -1,13 +1,15 @@
 <script setup>
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useProductCategoryStore } from '@/store/product_category';
 import { useSwal } from '@/composables/useSwal';
 import { storeToRefs } from 'pinia';
+import rules from '@/helpers/rules';
 
 const categoryStore = useProductCategoryStore();
 const { categories } = storeToRefs(categoryStore);
 
 const swal = useSwal();
+const drawerTitle = computed(() => (isEdit.value ? 'UPDATE CATEGORY' : 'CREATE CATEGORY'));
 
 const headers = [
   {
@@ -109,10 +111,20 @@ onMounted(() => {
         </template>
       </v-data-table>
     </v-card>
-    <main-drawer v-model="showDrawer" width="800" title="CREATE CATEGORY" :toolbar="{ color: 'primary' }">
+    <main-drawer v-model="showDrawer" width="800" :title="drawerTitle" :toolbar="{ color: 'primary' }">
       <v-form class="pa-5" @submit.prevent="isEdit ? updateProductCategory() : createProductCategory()">
-        <v-text-field v-model="formData.title" label="Title" variant="outlined"></v-text-field>
-        <v-textarea v-model="formData.description" label="Description" variant="outlined"></v-textarea>
+        <v-text-field
+          v-model="formData.title"
+          label="Title"
+          variant="outlined"
+          :rules="[rules.required]"
+        ></v-text-field>
+        <v-textarea
+          v-model="formData.description"
+          label="Description"
+          variant="outlined"
+          :rules="[rules.required]"
+        ></v-textarea>
         <div class="d-flex justify-end">
           <v-btn v-if="isEdit" :loading="$loading('updateProductCategory')" type="submit" color="primary">Update</v-btn>
           <v-btn v-else :loading="$loading('createProductCategory')" type="submit" color="primary">Create</v-btn>

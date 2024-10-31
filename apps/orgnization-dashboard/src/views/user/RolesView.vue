@@ -165,20 +165,6 @@ onMounted(async () => {
               </v-col>
             </v-row>
 
-            <!-- Display selected codes -->
-            <v-divider></v-divider>
-            <v-card>
-              <v-card-title>Selected Permission Codes</v-card-title>
-              <v-card-text>
-                <div v-if="selectedCodes.length === 0">No permissions selected</div>
-                <v-row>
-                  <v-col v-for="(code, index) in selectedCodes" :key="index" cols="auto" class="d-flex align-center">
-                    <v-chip color="primary" class="ma-2">{{ code }}</v-chip>
-                  </v-col>
-                </v-row>
-              </v-card-text>
-            </v-card>
-
             <v-card>
               <v-card-text>
                 <v-form>

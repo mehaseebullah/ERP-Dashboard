@@ -40,6 +40,7 @@ const state = reactive({
 
 const oldPassword = ref('');
 const newPassword = ref('');
+const tempPassword = ref('');
 
 const form = ref();
 const updateForm = ref();
@@ -89,6 +90,16 @@ const headers = ref([
   {
     title: 'Role',
     key: 'roles',
+    sortable: true,
+  },
+  {
+    title: 'Time Zone',
+    key: 'timezoneName',
+    sortable: true,
+  },
+  {
+    title: 'Date/Time Format',
+    key: 'dateTimeFormat',
     sortable: true,
   },
 
@@ -277,6 +288,8 @@ async function newUser() {
   isEdit.value = false;
   formData.value = { ...formModal };
   showDrawer.value = true;
+  form.value.resetValidation();
+  tempPassword.value = '';
   fetchOrganizations();
 }
 
@@ -414,6 +427,7 @@ onMounted(async () => {
             ></v-text-field>
             <v-text-field
               prepend-inner-icon="mdi-key"
+              v-model="tempPassword"
               label="Confirm Password"
               variant="outlined"
               :append-inner-icon="state.showCPass ? 'mdi-eye-off' : 'mdi-eye'"
@@ -753,17 +767,6 @@ onMounted(async () => {
                       </v-col>
                     </v-row>
 
-                    <!-- Display selected codes -->
-                    <v-divider></v-divider>
-                    <v-card>
-                      <v-card-title>Selected Permission Codes</v-card-title>
-                      <v-card-text>
-                        <div v-if="selectedCodes.length === 0">No permissions selected</div>
-                        <ul>
-                          <li v-for="code in selectedCodes" :key="code">{{ code }}</li>
-                        </ul>
-                      </v-card-text>
-                    </v-card>
                     <v-card>
                       <v-card-text>
                         <v-form>
