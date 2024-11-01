@@ -25,7 +25,7 @@ const headers = [
     sortable: true,
   },
   {
-    title: 'customer',
+    title: 'Customer Name',
     key: 'customerName',
     sortable: true,
   },
@@ -42,6 +42,16 @@ const headers = [
   {
     title: 'Description',
     key: 'description',
+    sortable: true,
+  },
+  {
+    title: 'Created',
+    key: 'createdBy',
+    sortable: true,
+  },
+  {
+    title: 'Modified',
+    key: 'updatedBy',
     sortable: true,
   },
   {
@@ -197,13 +207,26 @@ onMounted(async () => {
         <v-btn @click="newInvoice()">Create Invoice</v-btn>
       </v-toolbar>
       <v-data-table
-        :loading="$loading('fetchPurchaseInvoiceList')"
+        :loading="$loading('fetchSaleInvoiceList')"
         :headers="headers"
         :items="saleInvoices"
         item-value="id"
         show-expand
         @update:expanded="handleClick"
       >
+        <template v-slot:item.createdBy="{ item }">
+          <v-row no-gutters>
+            <v-col cols="12">{{ item.createdBy }}</v-col>
+            <v-col cols="12">{{ item.createdAt }}</v-col>
+          </v-row>
+        </template>
+        <template v-slot:item.updatedBy="{ item }">
+          <v-row no-gutters>
+            <v-col cols="12">{{ item.updatedBy }}</v-col>
+            <v-col cols="12">{{ item.updatedAt }}</v-col>
+          </v-row>
+        </template>
+
         <!-- Expandable Row for Order Details   -->
         <template v-slot:expanded-row="{ columns, item }">
           <tr>

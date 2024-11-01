@@ -4,21 +4,14 @@ import { api } from '@/helpers/http';
 export const useRoleStore = defineStore({
   id: 'roleStore',
   state: () => ({
-    users: [],
-    userRolePermissions: [],
+    organizationsRoles: [],
+    organizationRolePermissions: [],
   }),
   actions: {
-    async fetchUsers() {
-      const { data } = await api.get('/Tenant/User/GetAllUsers');
-      this.users = data?.data || [];
-      return this.users;
-    },
-
     async fetchRolePermissions(RoleId) {
-      //RoleId = 1;
       const { data } = await api.get(`/Tenant/Account/GetRolePermissions/${RoleId}`);
-      this.userRolePermissions = data?.data || [];
-      return this.userRolePermissions;
+      this.organizationRolePermissions = data?.data || [];
+      return this.organizationRolePermissions;
     },
     async invokeRolePermission(RoleId, OrganizationId, selectedCodes) {
       console.log(selectedCodes);
@@ -29,6 +22,11 @@ export const useRoleStore = defineStore({
       );
 
       return data?.data;
+    },
+    async fetchAllRoles() {
+      const { data } = await api.get('/Tenant/User/AllRoles');
+      this.organizationsRoles = data?.data || [];
+      return this.organizationsRoles;
     },
   },
 });

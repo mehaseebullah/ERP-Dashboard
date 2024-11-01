@@ -31,7 +31,7 @@ export const usePurchaseOrderStore = defineStore({
       this.fetchPurchaseOrderList();
       return data?.data?.data;
     },
-    async deletePurchaseOrdre({ id }) {
+    async deletePurchaseOrder({ id }) {
       const { data } = await api.delete(`/Inventory/PurchaseOrder/Delete?Id=${id}`);
       this.fetchPurchaseOrderList();
       return data?.data?.data;

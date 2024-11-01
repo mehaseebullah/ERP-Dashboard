@@ -6,6 +6,7 @@ import { useSwal } from '@/composables/useSwal';
 import { useProductCategoryStore } from '@/store/product_category';
 import { useProductStore } from '@/store/product';
 import { useManufacturerStore } from '@/store/manufacturer';
+import rules from '@/helpers/rules';
 
 const unitStore = useUnitStore();
 const categoryStore = useProductCategoryStore();
@@ -15,7 +16,9 @@ const { units } = storeToRefs(unitStore);
 const { categories } = storeToRefs(categoryStore);
 const { products } = storeToRefs(productStore);
 const { manufacturers } = storeToRefs(manufacturerStore);
+
 const swal = useSwal();
+const drawerTitle = computed(() => (isEdit.value ? 'UPDATE PRODUCT' : 'CREATE PRODUCT'));
 
 const isEdit = ref(false);
 const showDrawer = ref(false);
@@ -63,10 +66,20 @@ const headers = [
     sortable: true,
   },
   {
+    title: 'Created',
+    key: 'createdBy',
+    sortable: true,
+  },
+  {
+    title: 'Modified',
+    key: 'updatedBy',
+    sortable: true,
+  },
+  {
     title: 'Image',
-    // key: 'filePath',
     key: 'fileBase64',
   },
+
   {
     title: 'Actions',
     key: 'actions',
@@ -151,16 +164,34 @@ onMounted(async () => {
         <template v-slot:item.fileBase64="{ item }">
           <v-img :src="item.fileBase64" alt="Product Image" max-width="100" max-height="100" contain />
         </template>
+        <template v-slot:item.createdBy="{ item }">
+          <v-row no-gutters>
+            <v-col cols="12">{{ item.createdBy }}</v-col>
+            <v-col cols="12">{{ item.createdAt }}</v-col>
+          </v-row>
+        </template>
+        <template v-slot:item.updatedBy="{ item }">
+          <v-row no-gutters>
+            <v-col cols="12">{{ item.updatedBy }}</v-col>
+            <v-col cols="12">{{ item.updatedAt }}</v-col>
+          </v-row>
+        </template>
         <template v-slot:item.actions="{ item }">
           <v-icon class="me-2" size="small" @click="editProduct(item)"> mdi-pencil </v-icon>
           <v-icon size="small" @click="deleteProduct(item.id)"> mdi-delete </v-icon>
         </template>
       </v-data-table>
     </v-card>
-    <main-drawer v-model="showDrawer" width="800" title="CREATE PRODUCT" :toolbar="{ color: 'primary' }">
+
+    <main-drawer v-model="showDrawer" width="800" :title="drawerTitle" :toolbar="{ color: 'primary' }">
       <v-form class="pa-5" @submit.prevent="isEdit ? updateProduct() : createProduct()">
-        <v-text-field v-model="formData.title" label="Title" variant="outlined"></v-text-field>
-        <v-text-field v-model="formData.sku" label="SKU" variant="outlined"></v-text-field>
+        <v-text-field
+          v-model="formData.title"
+          label="Title"
+          variant="outlined"
+          :rules="[rules.required]"
+        ></v-text-field>
+        <v-text-field v-model="formData.sku" label="SKU" variant="outlined" :rules="[rules.required]"></v-text-field>
         <v-select
           :items="manufacturers"
           item-title="title"
@@ -169,6 +200,7 @@ onMounted(async () => {
           :loading="$loading('fetchManufacturers')"
           label="Manufacturer"
           variant="outlined"
+          :rules="[rules.required]"
         ></v-select>
         <v-select
           :items="categories"
@@ -178,6 +210,7 @@ onMounted(async () => {
           :loading="$loading('fetchProductCategories')"
           label="Category"
           variant="outlined"
+          :rules="[rules.required]"
         ></v-select>
         <v-select
           :items="units"
@@ -187,8 +220,15 @@ onMounted(async () => {
           :loading="$loading('fetchUnits')"
           label="Unit"
           variant="outlined"
+          :rules="[rules.required]"
         ></v-select>
-        <v-textarea v-model="formData.description" label="Description" variant="outlined" rows="2"></v-textarea>
+        <v-textarea
+          v-model="formData.description"
+          label="Description"
+          variant="outlined"
+          rows="2"
+          :rules="[rules.required]"
+        ></v-textarea>
         <v-row>
           <v-col cols="6">
             <v-text-field
@@ -196,6 +236,7 @@ onMounted(async () => {
               type="number"
               label="Sale Price"
               variant="outlined"
+              :rules="[rules.required]"
             ></v-text-field>
           </v-col>
           <v-col cols="6">
@@ -204,6 +245,7 @@ onMounted(async () => {
               type="number"
               label="Purchase Price"
               variant="outlined"
+              :rules="[rules.required]"
             ></v-text-field>
           </v-col>
         </v-row>
