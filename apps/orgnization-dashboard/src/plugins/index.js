@@ -82,6 +82,26 @@ export async function registerPlugins(app) {
       },
       position: 4,
     };
+    menus['Account'] = {
+      isMenu: true,
+      name: 'Account Management',
+      icon: 'mdi-briefcase',
+      menu: {
+        title: 'Account Management',
+        children: [
+          {
+            isMenu: true,
+            title: 'BalanceSheet',
+            codes: ['ORG-MNG'],
+            icon: 'mdi-domain',
+            url: '/balanceSheet',
+            component: 'balanceSheet/BalanceSheetView',
+            position: 0,
+          },
+        ],
+      },
+      position: 4,
+    };
     console.log('menus', menus);
     const modules = [];
 
