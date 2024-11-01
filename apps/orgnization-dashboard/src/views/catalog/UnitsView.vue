@@ -1,13 +1,15 @@
 <script setup>
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useUnitStore } from '@/store/unit';
 import { useSwal } from '@/composables/useSwal';
 import { storeToRefs } from 'pinia';
+import rules from '@/helpers/rules';
 
 const unitStore = useUnitStore();
 const { units } = storeToRefs(unitStore);
 
 const swal = useSwal();
+const drawerTitle = computed(() => (isEdit.value ? 'UPDATE UNIT' : 'CREATE UNIT'));
 
 const headers = [
   {
@@ -18,6 +20,16 @@ const headers = [
   {
     title: 'Description',
     key: 'description',
+    sortable: true,
+  },
+  {
+    title: 'Created',
+    key: 'createdBy',
+    sortable: true,
+  },
+  {
+    title: 'Modified',
+    key: 'updatedBy',
     sortable: true,
   },
   {
@@ -70,7 +82,8 @@ async function deleteUnit(id) {
 }
 
 onMounted(() => {
-  unitStore.fetchUnits();
+  // unitStore.fetchUnits();
+  unitStore.fetchPaginatedUnits();
 });
 </script>
 <template>
@@ -80,17 +93,39 @@ onMounted(() => {
         <v-spacer></v-spacer>
         <v-btn @click="newUnit()">Create Unit</v-btn>
       </v-toolbar>
-      <v-data-table :loading="$loading('fetchUnits')" :headers="headers" :items="units">
+      <v-data-table :loading="$loading('fetchPaginatedUnits')" :headers="headers" :items="units">
+        <template v-slot:item.createdBy="{ item }">
+          <v-row no-gutters>
+            <v-col cols="12">{{ item.createdBy }}</v-col>
+            <v-col cols="12">{{ item.createdAt }}</v-col>
+          </v-row>
+        </template>
+        <template v-slot:item.updatedBy="{ item }">
+          <v-row no-gutters>
+            <v-col cols="12">{{ item.updatedBy }}</v-col>
+            <v-col cols="12">{{ item.updatedAt }}</v-col>
+          </v-row>
+        </template>
         <template v-slot:item.actions="{ item }">
           <v-icon class="me-2" size="small" @click="editUnit(item)"> mdi-pencil </v-icon>
           <v-icon size="small" @click="deleteUnit(item.id)"> mdi-delete </v-icon>
         </template>
       </v-data-table>
     </v-card>
-    <main-drawer v-model="showDrawer" width="800" title="CREATE Unit" :toolbar="{ color: 'primary' }">
+    <main-drawer v-model="showDrawer" width="800" :title="drawerTitle" :toolbar="{ color: 'primary' }">
       <v-form class="pa-5" @submit.prevent="isEdit ? updateUnit() : createUnit()">
-        <v-text-field v-model="formData.title" label="Title" variant="outlined"></v-text-field>
-        <v-textarea v-model="formData.description" label="Description" variant="outlined"></v-textarea>
+        <v-text-field
+          v-model="formData.title"
+          label="Title"
+          variant="outlined"
+          :rules="[rules.required]"
+        ></v-text-field>
+        <v-textarea
+          v-model="formData.description"
+          label="Description"
+          variant="outlined"
+          :rules="[rules.required]"
+        ></v-textarea>
         <div class="d-flex justify-end">
           <v-btn v-if="isEdit" :loading="$loading('updateUnit')" type="submit" color="primary">Update</v-btn>
           <v-btn v-else :loading="$loading('createUnit')" type="submit" color="primary">Create</v-btn>

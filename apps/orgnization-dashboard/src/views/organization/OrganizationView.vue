@@ -25,13 +25,9 @@ const updateForm = ref();
 const headers = ref([
   {
     title: '',
-    key: 'filePath',
+    key: 'fileBase64',
   },
-  {
-    title: 'Id',
-    key: 'id',
-    sortable: true,
-  },
+
   {
     title: 'Title',
     key: 'title',
@@ -77,17 +73,6 @@ const profileData = ref({
   filePath: null,
   File: null,
 });
-
-const booleanOptions = [
-  {
-    title: 'True',
-    value: true,
-  },
-  {
-    title: 'False',
-    value: false,
-  },
-];
 
 const selectedImage = ref(null); // Temporary variable to store selected image
 const fileInput = ref(null);
@@ -213,9 +198,9 @@ onMounted(async () => {
       </v-toolbar>
       <v-table>
         <v-data-table :loading="$loading('fetchOrganizations')" :headers="headers" :items="organizations">
-          <template v-slot:item.filePath="{ item }">
+          <template v-slot:item.fileBase64="{ item }">
             <v-avatar size="60">
-              <v-img :src="item.filePath || '/default_organization_logo.jpg'" />
+              <v-img :src="item.fileBase64 || '/default_organization_logo.jpg'" />
             </v-avatar>
           </template>
 
@@ -299,7 +284,9 @@ onMounted(async () => {
                         <v-row class="align-items-center">
                           <v-col cols="12" md="2" class="d-flex flex-column align-items-center position-relative">
                             <v-avatar size="100">
-                              <v-img :src="selectedImage || profileData.filePath || '/default_organization_logo.jpg'" />
+                              <v-img
+                                :src="selectedImage || profileData.fileBase64 || '/default_organization_logo.jpg'"
+                              />
                               <v-icon
                                 @click="triggerFileInput"
                                 class="position-absolute"
@@ -336,9 +323,6 @@ onMounted(async () => {
                           </v-col>
 
                           <v-col cols="12" md="12">
-                            <v-text-field v-model="profileData.id" label="ID" readonly />
-                          </v-col>
-                          <v-col cols="12" md="12">
                             <v-text-field
                               v-model="profileData.title"
                               label="Title"
@@ -356,18 +340,7 @@ onMounted(async () => {
                             ></v-textarea>
                           </v-col>
                           <v-col cols="12" md="6">
-                            <v-select
-                              v-model="profileData.isActive"
-                              :items="booleanOptions"
-                              item-title="title"
-                              item-value="value"
-                              label="Is Active"
-                              placeholder="Select"
-                              required
-                            />
-                          </v-col>
-                          <v-col cols="12" md="12">
-                            <v-text-field v-model="profileData.isDeleted" label="Is Deleted" readonly />
+                            <v-checkbox v-model="profileData.isActive" label="Is Active"></v-checkbox>
                           </v-col>
                         </v-row>
                       </v-card-text>

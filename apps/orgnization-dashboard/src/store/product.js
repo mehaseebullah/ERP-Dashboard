@@ -8,13 +8,7 @@ export const useProductStore = defineStore({
   }),
   actions: {
     async fetchProducts() {
-      // const { data } = await api.get('/Inventory/Products/GetAllProducts');
       const { data } = await api.get('/Inventory/Products/GetPaginatedProducts');
-      this.products = data?.data?.data;
-      return this.products;
-    },
-    async fetchPaginatedProducts() {
-      const { data } = await api.get('/Inventory/Products/GetPaginatedProducts?PageSize=1000&PageNumber=0');
       this.products = data?.data?.data;
       return this.products;
     },

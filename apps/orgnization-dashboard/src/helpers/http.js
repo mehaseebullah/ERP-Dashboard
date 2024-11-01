@@ -3,6 +3,27 @@ import cfg from '../config';
 import { useAuthStore } from '@/store/auth';
 import { useSwal } from '@/composables/useSwal';
 
+const tempApi = axios.create({
+  baseURL: 'http://phub.pp.ua:5007',
+  headers: {
+    'Cache-Control': 'max-age=0',
+    Authorization: localStorage.getItem('access_token'),
+  },
+});
+tempApi.interceptors.request.use(
+  (config) => {
+    let token = localStorage.getItem('access_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+      // config.headers.common['Authorization'] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  },
+);
+
 const api = axios.create({
   baseURL: cfg.apiUrl,
   headers: {
@@ -58,4 +79,4 @@ api.interceptors.response.use(
   },
 );
 
-export { http, api };
+export { http, api, tempApi };
