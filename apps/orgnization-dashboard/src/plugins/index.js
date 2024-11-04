@@ -85,7 +85,7 @@ export async function registerPlugins(app) {
     menus['Account'] = {
       isMenu: true,
       name: 'Account Management',
-      icon: 'mdi-briefcase',
+      icon: 'mdi-account-cog',
       menu: {
         title: 'Account Management',
         children: [
@@ -93,7 +93,7 @@ export async function registerPlugins(app) {
             isMenu: true,
             title: 'BalanceSheet',
             codes: ['ORG-MNG'],
-            icon: 'mdi-domain',
+            icon: 'mdi-file-chart',
             url: '/balanceSheet',
             component: 'balanceSheet/BalanceSheetView',
             position: 0,

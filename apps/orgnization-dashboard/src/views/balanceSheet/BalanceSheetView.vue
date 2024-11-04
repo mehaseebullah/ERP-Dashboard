@@ -79,6 +79,41 @@ const subNestedHeaders = () => [
   },
 ];
 
+const ledgerHeaders = [
+  {
+    title: '',
+    key: '',
+  },
+  {
+    title: 'Charts of Account',
+    key: 'chartsOfAccount',
+  },
+  {
+    title: 'Account Group',
+    key: 'accountGroup',
+  },
+  {
+    title: 'Account Type',
+    key: 'accountType',
+  },
+  {
+    title: 'Transction Date',
+    key: 'tranactionDate',
+  },
+  {
+    title: 'Debit',
+    key: 'debit',
+  },
+  {
+    title: 'Credit',
+    key: 'credit',
+  },
+  {
+    title: 'Balance',
+    key: 'balance',
+  },
+];
+
 const formModal = {
   accountType: '',
   accountTypeCode: null,
@@ -168,6 +203,15 @@ async function subNestedHandleClick(items) {
     );
 }
 
+// Function to calculate the total for fields (like 'debit' etc)
+function calculateTotal(items, field) {
+  // Check if the items array exists and is not empty
+  if (!items || items.length === 0) {
+    return 0;
+  }
+  return items.reduce((sum, item) => sum + (item[field] || 0), 0);
+}
+
 onMounted(async () => {
   await balanceSheetStore.fetchBalanceSheets();
 });
@@ -240,29 +284,31 @@ onMounted(async () => {
         <v-card-title class="text-h5">Ledgers Details</v-card-title>
 
         <v-card-text>
-          <v-row>
-            <!-- Loop through each transaction in ledgerDetails -->
-            <v-col cols="12" md="6" v-for="(transaction, index) in ledgerDetails" :key="index">
-              <v-expansion-panels>
-                <v-expansion-panel>
-                  <v-expansion-panel-title>
-                    {{ transaction.chartsOfAccount }} - {{ transaction.tranactionDate }}
-                  </v-expansion-panel-title>
-                  <v-expansion-panel-text>
-                    <v-card>
-                      <v-card-text>
-                        <div><strong>Account Group:</strong> {{ transaction.accountGroup }}</div>
-                        <div><strong>Account Type:</strong> {{ transaction.accountType }}</div>
-                        <div><strong>Debit:</strong> {{ transaction.debit }}</div>
-                        <div><strong>Credit:</strong> {{ transaction.credit }}</div>
-                        <div><strong>Balance:</strong> {{ transaction.balance }}</div>
-                      </v-card-text>
-                    </v-card>
-                  </v-expansion-panel-text>
-                </v-expansion-panel>
-              </v-expansion-panels>
-            </v-col>
-          </v-row>
+          <v-data-table
+            :loading="$loading('fetchLedgerDetails')"
+            :headers="ledgerHeaders"
+            :items="ledgerDetails"
+            item-value="accountTypeCode"
+          >
+            <template v-slot:body.append>
+              <tr>
+                <td><strong>Total</strong></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>
+                  <strong>{{ calculateTotal(ledgerDetails, 'debit') }}</strong>
+                </td>
+                <td>
+                  <strong>{{ calculateTotal(ledgerDetails, 'credit') }}</strong>
+                </td>
+                <td>
+                  <strong>{{ calculateTotal(ledgerDetails, 'balance') }}</strong>
+                </td>
+              </tr>
+            </template>
+          </v-data-table>
 
           <v-card-actions>
             <v-spacer></v-spacer>
