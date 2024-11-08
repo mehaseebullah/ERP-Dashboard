@@ -1,8 +1,20 @@
 <script setup>
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useStocks } from '@/store/stocks';
 import { useSwal } from '@/composables/useSwal';
 import { storeToRefs } from 'pinia';
+import rules from '@/helpers/rules';
+import { useRoute } from 'vue-router';
+import { hasPermission } from '@/helpers/utils';
+
+const route = useRoute();
+const permissionCodes = route.meta.permissionCodes || [];
+
+// to check permissions based on action type
+const canCreate = computed(() => hasPermission('Create', permissionCodes));
+const canRead = computed(() => hasPermission('Read', permissionCodes));
+const canUpdate = computed(() => hasPermission('Update', permissionCodes));
+const canDelete = computed(() => hasPermission('Delete', permissionCodes));
 
 const stocksStore = useStocks();
 const { stocks } = storeToRefs(stocksStore);
@@ -53,17 +65,17 @@ const headers = [
 ];
 
 onMounted(() => {
-  stocksStore.fetchStocks();
+  if (canRead.value) stocksStore.fetchStocks();
 });
 </script>
 
 <template>
   <v-container>
     <v-card>
-      <v-toolbar color="secondary" density="compact">
+      <v-toolbar title="STOCKS" color="secondary" density="compact">
         <v-spacer></v-spacer>
       </v-toolbar>
-      <v-data-table :loading="$loading('fetchStocks')" :headers="headers" :items="stocks">
+      <v-data-table v-if="canRead" :loading="$loading('fetchStocks')" :headers="headers" :items="stocks">
         <template v-slot:item.createdBy="{ item }">
           <v-row no-gutters>
             <v-col cols="12">{{ item.createdBy }}</v-col>
@@ -77,6 +89,15 @@ onMounted(() => {
           </v-row>
         </template>
       </v-data-table>
+      <!-- Show message if user does not have read permissions -->
+      <v-card-text
+        v-if="!canRead"
+        class="d-flex flex-column justify-center align-center text-center"
+        style="height: 300px"
+      >
+        <v-icon size="48" class="mb-4">mdi-lock</v-icon>
+        <h1>You do not have permission to read this content</h1>
+      </v-card-text>
     </v-card>
   </v-container>
 </template>

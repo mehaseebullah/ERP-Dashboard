@@ -3,6 +3,17 @@ import { ref, onMounted, computed, watch } from 'vue';
 import { useSwal } from '@/composables/useSwal';
 import { storeToRefs } from 'pinia';
 import { useBalanceSheetStore } from '@/store/balanceSheet';
+import { useRoute } from 'vue-router';
+import { hasPermission } from '@/helpers/utils';
+
+const route = useRoute();
+const permissionCodes = route.meta.permissionCodes || [];
+
+// to check permissions based on action type
+const canCreate = computed(() => hasPermission('Create', permissionCodes));
+const canRead = computed(() => hasPermission('Read', permissionCodes));
+const canUpdate = computed(() => hasPermission('Update', permissionCodes));
+const canDelete = computed(() => hasPermission('Delete', permissionCodes));
 
 const balanceSheetStore = useBalanceSheetStore();
 const { balanceSheets } = storeToRefs(balanceSheetStore);
@@ -114,46 +125,50 @@ const ledgerHeaders = [
   },
 ];
 
-const formModal = {
-  accountType: '',
-  accountTypeCode: null,
-  debit: null,
-  credit: null,
-  balance: null,
-  accountTypeDetails: [
-    {
-      accountType: '',
-      accountGroup: '',
-      accountTypeCode: null,
-      acccountGroupCode: null,
-      lastTranactionDate: '',
-      debit: null,
-      credit: null,
-      balance: null,
-      accountGroupDetails: [
-        {
-          accountType: '',
-          accountGroup: '',
-          chartsOfAccount: '',
-          acccountGroupCode: null,
-          accountTypeCode: null,
-          acccountCode: null,
-          accountId: null,
-          lastTranactionDate: '',
-          debit: null,
-          credit: null,
-          balance: null,
-        },
-      ],
-    },
-  ],
-};
+// const formModal = {
+//   accountType: '',
+//   accountTypeCode: null,
+//   debit: null,
+//   credit: null,
+//   balance: null,
+//   accountTypeDetails: [
+//     {
+//       accountType: '',
+//       accountGroup: '',
+//       accountTypeCode: null,
+//       acccountGroupCode: null,
+//       lastTranactionDate: '',
+//       debit: null,
+//       credit: null,
+//       balance: null,
+//       accountGroupDetails: [
+//         {
+//           accountType: '',
+//           accountGroup: '',
+//           chartsOfAccount: '',
+//           acccountGroupCode: null,
+//           accountTypeCode: null,
+//           acccountCode: null,
+//           accountId: null,
+//           lastTranactionDate: '',
+//           debit: null,
+//           credit: null,
+//           balance: null,
+//         },
+//       ],
+//     },
+//   ],
+// };
 
 async function fetchLedgerDetails(ChartsOfAccountId) {
   dialog.value = true;
   await balanceSheetStore.fetchLedgerDetails(ChartsOfAccountId);
 }
+
 async function handleClick(items) {
+  nestedexpanded.value = []; //to collasp all subnested grids when we expand/collasp any parent grid
+  nestedExpandedItemLength.value = 0;
+
   const lastItem = items[items.length - 1];
   const accountTypeCode = lastItem;
 
@@ -171,6 +186,7 @@ async function handleClick(items) {
     );
   }
 }
+
 async function subNestedHandleClick(items) {
   const lastItem = items[items.length - 1];
   const acccountGroupCode = lastItem;
@@ -213,7 +229,7 @@ function calculateTotal(items, field) {
 }
 
 onMounted(async () => {
-  await balanceSheetStore.fetchBalanceSheets();
+  if (canRead.value) await balanceSheetStore.fetchBalanceSheets();
 });
 </script>
 
@@ -224,6 +240,7 @@ onMounted(async () => {
         <v-spacer></v-spacer>
       </v-toolbar>
       <v-data-table
+        v-if="canRead"
         :loading="$loading('fetchBalanceSheets')"
         :headers="headers"
         :items="balanceSheets"
@@ -275,8 +292,17 @@ onMounted(async () => {
           </tr>
         </template>
       </v-data-table>
+      <v-card-text
+        v-if="!canRead"
+        class="d-flex flex-column justify-center align-center text-center"
+        style="height: 300px"
+      >
+        <v-icon size="48" class="mb-4">mdi-lock</v-icon>
+        <h1>You do not have permission to read this content</h1>
+      </v-card-text>
     </v-card>
   </v-container>
+
   <v-container>
     <!-- Popup dialog -->
     <v-dialog v-model="dialog" max-width="100vw" max-height="100vh">

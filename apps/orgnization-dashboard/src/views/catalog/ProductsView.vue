@@ -7,6 +7,17 @@ import { useProductCategoryStore } from '@/store/product_category';
 import { useProductStore } from '@/store/product';
 import { useManufacturerStore } from '@/store/manufacturer';
 import rules from '@/helpers/rules';
+import { useRoute } from 'vue-router';
+import { hasPermission } from '@/helpers/utils';
+
+const route = useRoute();
+const permissionCodes = route.meta.permissionCodes || [];
+
+// to check permissions based on action type
+const canCreate = computed(() => hasPermission('Create', permissionCodes));
+const canRead = computed(() => hasPermission('Read', permissionCodes));
+const canUpdate = computed(() => hasPermission('Update', permissionCodes));
+const canDelete = computed(() => hasPermission('Delete', permissionCodes));
 
 const unitStore = useUnitStore();
 const categoryStore = useProductCategoryStore();
@@ -147,10 +158,12 @@ const triggerFileInput = () => {
 };
 
 onMounted(async () => {
-  unitStore.fetchUnits();
-  categoryStore.fetchProductCategories();
-  productStore.fetchProducts();
-  manufacturerStore.fetchManufacturers();
+  if (canRead.value) productStore.fetchProducts();
+  if (canCreate.value || canUpdate.value) {
+    unitStore.fetchUnits();
+    categoryStore.fetchProductCategories();
+    manufacturerStore.fetchManufacturers();
+  }
 });
 </script>
 <template>
@@ -158,9 +171,9 @@ onMounted(async () => {
     <v-card>
       <v-toolbar color="secondary" density="compact">
         <v-spacer></v-spacer>
-        <v-btn @click="newProduct()">Create Product</v-btn>
+        <v-btn v-if="canCreate" @click="newProduct()">Create Product</v-btn>
       </v-toolbar>
-      <v-data-table :loading="$loading('fetchProducts')" :headers="headers" :items="products">
+      <v-data-table v-if="canRead" :loading="$loading('fetchProducts')" :headers="headers" :items="products">
         <template v-slot:item.fileBase64="{ item }">
           <v-img :src="item.fileBase64" alt="Product Image" max-width="100" max-height="100" contain />
         </template>
@@ -177,10 +190,19 @@ onMounted(async () => {
           </v-row>
         </template>
         <template v-slot:item.actions="{ item }">
-          <v-icon class="me-2" size="small" @click="editProduct(item)"> mdi-pencil </v-icon>
-          <v-icon size="small" @click="deleteProduct(item.id)"> mdi-delete </v-icon>
+          <v-icon v-if="canUpdate" class="me-2" size="small" @click="editProduct(item)"> mdi-pencil </v-icon>
+          <v-icon v-if="canDelete" size="small" @click="deleteProduct(item.id)"> mdi-delete </v-icon>
         </template>
       </v-data-table>
+      <!-- Show message if user does not have read permissions -->
+      <v-card-text
+        v-if="!canRead"
+        class="d-flex flex-column justify-center align-center text-center"
+        style="height: 300px"
+      >
+        <v-icon size="48" class="mb-4">mdi-lock</v-icon>
+        <h1>You do not have permission to read this content</h1>
+      </v-card-text>
     </v-card>
 
     <main-drawer v-model="showDrawer" width="800" :title="drawerTitle" :toolbar="{ color: 'primary' }">

@@ -7,6 +7,19 @@ import { useSupplierStore } from '@/store/supplier';
 import { useGenerateInoiceNumber } from '@/store/generate_invoice_number';
 import { usePurchaseInvoiceStore } from '@/store/purchase_invoice';
 import { useRouter } from 'vue-router';
+import rules from '@/helpers/rules';
+import { useRoute } from 'vue-router';
+import { hasPermission } from '@/helpers/utils';
+
+const route = useRoute();
+const permissionCodes = route.meta.permissionCodes || [];
+
+// to check permissions based on action type
+const canCreate = computed(() => hasPermission('Create', permissionCodes));
+const canRead = computed(() => hasPermission('Read', permissionCodes));
+const canUpdate = computed(() => hasPermission('Update', permissionCodes));
+const canDelete = computed(() => hasPermission('Delete', permissionCodes));
+
 const productStore = useProductStore();
 const supplierStore = useSupplierStore();
 const purchaseInvoiceStore = usePurchaseInvoiceStore();
@@ -19,6 +32,7 @@ const expandedItemLength = ref(0);
 const expanded = ref([]);
 const swal = useSwal();
 const router = useRouter();
+
 const headers = [
   { title: '', key: 'data-table-expand' },
   {
@@ -184,9 +198,9 @@ function calculateTotal(items, field) {
   return items.reduce((sum, item) => sum + (item[field] || 0), 0);
 }
 onMounted(async () => {
-  supplierStore.fetchSuppliers();
-  productStore.fetchProducts();
-  purchaseInvoiceStore.fetchPurchaseInvoiceList();
+  if (canRead.value) purchaseInvoiceStore.fetchPurchaseInvoiceList();
+  if (canUpdate.value) supplierStore.fetchSuppliers();
+  // productStore.fetchProducts();
 });
 </script>
 <template>
@@ -194,9 +208,10 @@ onMounted(async () => {
     <v-card>
       <v-toolbar title="PURCHASE INVOICE" color="secondary" density="compact">
         <v-spacer></v-spacer>
-        <v-btn @click="newInvoice()">Create Invoice</v-btn>
+        <v-btn v-if="canCreate" @click="newInvoice()">Create Invoice</v-btn>
       </v-toolbar>
       <v-data-table
+        v-if="canRead"
         :loading="$loading('fetchPurchaseInvoiceList')"
         v-model:expanded="expanded"
         :headers="headers"
@@ -224,7 +239,11 @@ onMounted(async () => {
             <td :colspan="columns.length">
               <v-card flat>
                 <v-card-text>
-                  <v-data-table :headers="getItemHeaders()" :items="item.piDetails">
+                  <v-data-table
+                    :loading="$loading('fetchPurchaseInvoiceListDetails')"
+                    :headers="getItemHeaders()"
+                    :items="item.piDetails"
+                  >
                     <template v-slot:item.productId="{ item }">{{ item.productId }} </template>
                     <!-- Totals row at the bottom -->
                     <template v-slot:body.append>
@@ -256,10 +275,19 @@ onMounted(async () => {
           {{ suppliers.find((s) => s.id == item.supplierId)?.fullName }}
         </template>
         <template v-slot:item.actions="{ item }">
-          <v-icon class="me-2" size="small" @click="editInvoice(item)"> mdi-pencil </v-icon>
-          <v-icon size="small" @click="deleteInvoice(item.id)"> mdi-delete </v-icon>
+          <v-icon v-if="canUpdate" class="me-2" size="small" @click="editInvoice(item)"> mdi-pencil </v-icon>
+          <v-icon v-if="canDelete" size="small" @click="deleteInvoice(item.id)"> mdi-delete </v-icon>
         </template>
       </v-data-table>
+      <!-- Show message if user does not have read permissions -->
+      <v-card-text
+        v-if="!canRead"
+        class="d-flex flex-column justify-center align-center text-center"
+        style="height: 300px"
+      >
+        <v-icon size="48" class="mb-4">mdi-lock</v-icon>
+        <h1>You do not have permission to read this content</h1>
+      </v-card-text>
     </v-card>
     <main-drawer v-model="showDrawer" width="800" title="PURCHASE INVOICE" :toolbar="{ color: 'primary' }">
       <v-form class="pa-5" @submit.prevent="isEdit ? updateInvoice() : createInvoice()">

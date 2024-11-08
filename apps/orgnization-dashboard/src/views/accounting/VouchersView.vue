@@ -5,6 +5,18 @@ import { useChartOfAccounts } from '@/store/chart_of_accounts';
 import { useSwal } from '@/composables/useSwal';
 import { storeToRefs } from 'pinia';
 import { parseTitle } from '@/helpers/utils';
+import rules from '@/helpers/rules';
+import { useRoute } from 'vue-router';
+import { hasPermission } from '@/helpers/utils';
+
+const route = useRoute();
+const permissionCodes = route.meta.permissionCodes || [];
+
+// to check permissions based on action type
+const canCreate = computed(() => hasPermission('Create', permissionCodes));
+const canRead = computed(() => hasPermission('Read', permissionCodes));
+const canUpdate = computed(() => hasPermission('Update', permissionCodes));
+const canDelete = computed(() => hasPermission('Delete', permissionCodes));
 
 const coaStore = useChartOfAccounts();
 const { accounts } = storeToRefs(coaStore);
@@ -14,6 +26,8 @@ const swal = useSwal();
 const drawerTitle = computed(() => (isEdit.value ? 'UPDATE VOUCHER' : 'CREATE VOUCHER'));
 const expandedItemLength = ref(0);
 const expanded = ref([]);
+
+// const permissionCodes = this.$route.meta.permissionCodes; //new
 
 const headers = [
   { title: '', key: 'data-table-expand' },
@@ -157,9 +171,9 @@ function calculateTotal(items, field) {
 }
 
 onMounted(async () => {
-  voucherStore.fetchVoucherList();
-  voucherStore.fetchVoucherTypes();
-  coaStore.fetchAllChartOfAccounts();
+  if (canRead.value) voucherStore.fetchVoucherList();
+  if (canCreate.value || canUpdate.value) voucherStore.fetchVoucherTypes();
+  // coaStore.fetchAllChartOfAccounts();
 });
 </script>
 <template>
@@ -167,9 +181,10 @@ onMounted(async () => {
     <v-card>
       <v-toolbar color="secondary" density="compact">
         <v-spacer></v-spacer>
-        <v-btn @click="newVoucher()">Create Voucher</v-btn>
+        <v-btn v-if="canCreate" @click="newVoucher()">Create Voucher</v-btn>
       </v-toolbar>
       <v-data-table
+        v-if="canRead"
         :loading="$loading('fetchVoucherList')"
         :headers="headers"
         :items="vouchers"
@@ -182,7 +197,11 @@ onMounted(async () => {
             <td :colspan="columns.length">
               <v-card flat>
                 <v-card-text>
-                  <v-data-table :headers="getItemHeaders()" :items="item.ledgerDetailDTO">
+                  <v-data-table
+                    :loading="$loading('fetchLedgersByVoucherId')"
+                    :headers="getItemHeaders()"
+                    :items="item.ledgerDetailDTO"
+                  >
                     <template v-slot:item.createdBy="{ item }">
                       <v-row no-gutters>
                         <v-col cols="12">{{ item.createdBy }}</v-col>
@@ -219,9 +238,17 @@ onMounted(async () => {
         </template>
 
         <template v-slot:item.actions="{ item }">
-          <v-btn size="small" variant="text" :disabled="item.is_system" @click="editVoucher(item)" icon="mdi-pencil">
+          <v-btn
+            v-if="canUpdate"
+            size="small"
+            variant="text"
+            :disabled="item.is_system"
+            @click="editVoucher(item)"
+            icon="mdi-pencil"
+          >
           </v-btn>
           <v-btn
+            v-if="canDelete"
             size="small"
             variant="text"
             :disabled="item.isSystem"
@@ -231,6 +258,15 @@ onMounted(async () => {
           </v-btn>
         </template>
       </v-data-table>
+      <!-- Show message if user does not have read permissions -->
+      <v-card-text
+        v-if="!canRead"
+        class="d-flex flex-column justify-center align-center text-center"
+        style="height: 300px"
+      >
+        <v-icon size="48" class="mb-4">mdi-lock</v-icon>
+        <h1>You do not have permission to read this content</h1>
+      </v-card-text>
     </v-card>
 
     <main-drawer v-model="showDrawer" width="800" :title="drawerTitle" :toolbar="{ color: 'primary' }">
@@ -320,3 +356,8 @@ onMounted(async () => {
     </main-drawer>
   </v-container>
 </template>
+<style scoped>
+/* :deep(.custom-header) {
+  background-color: rgb(166, 166, 207);
+} */
+</style>

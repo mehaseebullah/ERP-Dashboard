@@ -1,9 +1,21 @@
 <script setup>
-import { onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useCustomerStore } from '@/store/customer';
 import { useSwal } from '@/composables/useSwal';
 import { storeToRefs } from 'pinia';
 import { useBalanceSheetStore } from '@/store/balanceSheet';
+import rules from '@/helpers/rules';
+import { useRoute } from 'vue-router';
+import { hasPermission } from '@/helpers/utils';
+
+const route = useRoute();
+const permissionCodes = route.meta.permissionCodes || [];
+
+// to check permissions based on action type
+const canCreate = computed(() => hasPermission('Create', permissionCodes));
+const canRead = computed(() => hasPermission('Read', permissionCodes));
+const canUpdate = computed(() => hasPermission('Update', permissionCodes));
+const canDelete = computed(() => hasPermission('Delete', permissionCodes));
 
 const balanceSheetStore = useBalanceSheetStore();
 const customerStore = useCustomerStore();
@@ -12,6 +24,7 @@ const { ledgerDetails } = storeToRefs(balanceSheetStore);
 
 const swal = useSwal();
 const dialog = ref(false);
+const drawerTitle = computed(() => (isEdit.value ? 'UPDATE CUSTOMER' : 'CREATE CUSTOMER'));
 
 const cancelDialog = () => {
   ledgerDetails.value = [];
@@ -149,7 +162,7 @@ function calculateTotal(items, field) {
 }
 
 onMounted(() => {
-  customerStore.fetchCustomers();
+  if (canRead.value) customerStore.fetchCustomers();
 });
 </script>
 <template>
@@ -157,17 +170,26 @@ onMounted(() => {
     <v-card>
       <v-toolbar color="secondary" density="compact">
         <v-spacer></v-spacer>
-        <v-btn @click="newCustomer()">Create Customer</v-btn>
+        <v-btn v-if="canCreate" @click="newCustomer()">Create Customer</v-btn>
       </v-toolbar>
-      <v-data-table :loading="$loading('fetchCustomers')" :headers="headers" :items="customers">
+      <v-data-table v-if="canRead" :loading="$loading('fetchCustomers')" :headers="headers" :items="customers">
         <template v-slot:item.actions="{ item }">
-          <v-icon class="me-2" size="small" @click="editCustomer(item)"> mdi-pencil </v-icon>
-          <v-icon class="me-2" size="small" @click="deleteCustomer(item.id)"> mdi-delete </v-icon>
+          <v-icon v-if="canUpdate" class="me-2" size="small" @click="editCustomer(item)"> mdi-pencil </v-icon>
+          <v-icon v-if="canDelete" class="me-2" size="small" @click="deleteCustomer(item.id)"> mdi-delete </v-icon>
           <v-icon size="small" @click="fetchCustomerTranstionDetails(item.accountId)">mdi-cash-multiple</v-icon>
         </template>
       </v-data-table>
+      <!-- Show message if user does not have read permissions -->
+      <v-card-text
+        v-if="!canRead"
+        class="d-flex flex-column justify-center align-center text-center"
+        style="height: 300px"
+      >
+        <v-icon size="48" class="mb-4">mdi-lock</v-icon>
+        <h1>You do not have permission to read this content</h1>
+      </v-card-text>
     </v-card>
-    <main-drawer v-model="showDrawer" width="800" title="CREATE CUSTOMER" :toolbar="{ color: 'primary' }">
+    <main-drawer v-model="showDrawer" width="800" :title="drawerTitle" :toolbar="{ color: 'primary' }">
       <v-form class="pa-5" @submit.prevent="isEdit ? updateCustomer() : createCustomer()">
         <v-text-field v-model="formData.firstName" label="First Name" variant="outlined"></v-text-field>
         <v-text-field v-model="formData.lastName" label="Last Name" variant="outlined"></v-text-field>

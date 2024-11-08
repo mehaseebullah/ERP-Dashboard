@@ -5,6 +5,17 @@ import { useSwal } from '@/composables/useSwal';
 import { storeToRefs } from 'pinia';
 import { useUserStore } from '@/store/user';
 import { useOrganizationStore } from '@/store/organization';
+import { useRoute } from 'vue-router';
+import { hasPermission } from '@/helpers/utils';
+
+const route = useRoute();
+const permissionCodes = route.meta.permissionCodes || [];
+
+// to check permissions based on action type
+const canCreate = computed(() => hasPermission('Create', permissionCodes));
+const canRead = computed(() => hasPermission('Read', permissionCodes));
+const canUpdate = computed(() => hasPermission('Update', permissionCodes));
+const canDelete = computed(() => hasPermission('Delete', permissionCodes));
 
 const organizationStore = useOrganizationStore();
 const { organizations } = storeToRefs(organizationStore);
@@ -239,6 +250,7 @@ async function openEditUserDialog(user) {
   }
 
   profileData.value = { ...user }; //to populate user data
+
   // showUserDialog.value = true; // Show the UserProfileUpdate dialog
 }
 
@@ -292,10 +304,6 @@ async function newUser() {
   tempPassword.value = '';
   fetchOrganizations();
 }
-
-// async function fetchUserRoles() {
-//   await userStore.fetchUserRoles();
-// }
 
 async function fetchUserCountries(organizationId) {
   await userStore.fetchUserCountries(organizationId);
@@ -371,7 +379,7 @@ async function invokeUserPermission(UserId, OrganizationId) {
   fetchUsers();
 }
 onMounted(async () => {
-  await fetchUsers();
+  if (canRead.value) await fetchUsers();
 });
 </script>
 <template>
@@ -379,9 +387,9 @@ onMounted(async () => {
     <v-card>
       <v-toolbar color="secondary" density="compact">
         <v-spacer></v-spacer>
-        <v-btn @click="newUser">Create User</v-btn>
+        <v-btn v-if="canCreate" @click="newUser">Create User</v-btn>
       </v-toolbar>
-      <v-table>
+      <v-table v-if="canRead">
         <v-data-table :loading="$loading('fetchUsers')" :headers="headers" :items="users">
           <template v-slot:item.fileBase64="{ item }">
             <v-avatar size="60">
@@ -390,11 +398,20 @@ onMounted(async () => {
           </template>
 
           <template v-slot:item.actions="{ item }">
-            <v-icon class="me-2" size="small" @click="openEditUserDialog(item)"> mdi-pencil </v-icon>
-            <v-icon size="small" @click="deleteUser(item.id)"> mdi-delete </v-icon>
+            <v-icon v-if="canUpdate" class="me-2" size="small" @click="openEditUserDialog(item)"> mdi-pencil </v-icon>
+            <v-icon v-if="canDelete" size="small" @click="deleteUser(item.id)"> mdi-delete </v-icon>
           </template>
         </v-data-table>
       </v-table>
+      <!-- Show message if user does not have read permissions -->
+      <v-card-text
+        v-if="!canRead"
+        class="d-flex flex-column justify-center align-center text-center"
+        style="height: 300px"
+      >
+        <v-icon size="48" class="mb-4">mdi-lock</v-icon>
+        <h1>You do not have permission to read this content</h1>
+      </v-card-text>
     </v-card>
 
     <main-drawer v-model="showDrawer" width="800" title="CREATE USER" :toolbar="{ color: 'primary' }">
