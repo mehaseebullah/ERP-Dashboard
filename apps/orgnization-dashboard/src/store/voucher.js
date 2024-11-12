@@ -20,7 +20,7 @@ export const useVoucherStore = defineStore({
     async fetchLedgersByVoucherId(VoucherId, item) {
       //console.log('vouc id', VoucherId, 'item is ', item);
 
-      // const { data } = await api.get('/Finance/Ledgers/GetLedgersByVoucherId/VoucherId', { VoucherId });
+      // const { data } = await api.get(`/Finance/Ledgers/GetLedgersByVoucherId/VoucherId?VoucherId=${VoucherId}`);
       const { data } = await tempApi.get(`/Finance/Ledgers/GetLedgersByVoucherId/VoucherId?VoucherId=${VoucherId}`);
 
       item['ledgerDetailDTO'] = data?.data || [];

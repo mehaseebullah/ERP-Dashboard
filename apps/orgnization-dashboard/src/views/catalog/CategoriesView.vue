@@ -4,6 +4,17 @@ import { useProductCategoryStore } from '@/store/product_category';
 import { useSwal } from '@/composables/useSwal';
 import { storeToRefs } from 'pinia';
 import rules from '@/helpers/rules';
+import { useRoute } from 'vue-router';
+import { hasPermission } from '@/helpers/utils';
+
+const route = useRoute();
+const permissionCodes = route.meta.permissionCodes || [];
+
+// to check permissions based on action type
+const canCreate = computed(() => hasPermission('Create', permissionCodes));
+const canRead = computed(() => hasPermission('Read', permissionCodes));
+const canUpdate = computed(() => hasPermission('Update', permissionCodes));
+const canDelete = computed(() => hasPermission('Delete', permissionCodes));
 
 const categoryStore = useProductCategoryStore();
 const { categories } = storeToRefs(categoryStore);
@@ -82,7 +93,7 @@ async function deleteProductCategory(id) {
 }
 
 onMounted(() => {
-  categoryStore.fetchPaginatedProductCategories();
+  if (canRead.value) categoryStore.fetchPaginatedProductCategories();
 });
 </script>
 <template>
@@ -90,9 +101,14 @@ onMounted(() => {
     <v-card>
       <v-toolbar color="secondary" density="compact">
         <v-spacer></v-spacer>
-        <v-btn @click="newProductCategory()">Create Category</v-btn>
+        <v-btn v-if="canCreate" @click="newProductCategory()">Create Category</v-btn>
       </v-toolbar>
-      <v-data-table :loading="$loading('fetchPaginatedProductCategories')" :headers="headers" :items="categories">
+      <v-data-table
+        v-if="canRead"
+        :loading="$loading('fetchPaginatedProductCategories')"
+        :headers="headers"
+        :items="categories"
+      >
         <template v-slot:item.createdBy="{ item }">
           <v-row no-gutters>
             <v-col cols="12">{{ item.createdBy }}</v-col>
@@ -106,10 +122,19 @@ onMounted(() => {
           </v-row>
         </template>
         <template v-slot:item.actions="{ item }">
-          <v-icon class="me-2" size="small" @click="editProductCategory(item)"> mdi-pencil </v-icon>
-          <v-icon size="small" @click="deleteProductCategory(item.id)"> mdi-delete </v-icon>
+          <v-icon v-if="canUpdate" class="me-2" size="small" @click="editProductCategory(item)"> mdi-pencil </v-icon>
+          <v-icon v-if="canDelete" size="small" @click="deleteProductCategory(item.id)"> mdi-delete </v-icon>
         </template>
       </v-data-table>
+      <!-- Show message if user does not have read permissions -->
+      <v-card-text
+        v-if="!canRead"
+        class="d-flex flex-column justify-center align-center text-center"
+        style="height: 300px"
+      >
+        <v-icon size="48" class="mb-4">mdi-lock</v-icon>
+        <h1>You do not have permission to read this content</h1>
+      </v-card-text>
     </v-card>
     <main-drawer v-model="showDrawer" width="800" :title="drawerTitle" :toolbar="{ color: 'primary' }">
       <v-form class="pa-5" @submit.prevent="isEdit ? updateProductCategory() : createProductCategory()">

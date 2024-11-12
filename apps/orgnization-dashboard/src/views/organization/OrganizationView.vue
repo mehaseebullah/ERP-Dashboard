@@ -1,9 +1,20 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue';
+import { computed, ref, onMounted, watch } from 'vue';
 import rules from '@/helpers/rules';
 import { useSwal } from '@/composables/useSwal';
 import { storeToRefs } from 'pinia';
 import { useOrganizationStore } from '@/store/organization';
+import { useRoute } from 'vue-router';
+import { hasPermission } from '@/helpers/utils';
+
+const route = useRoute();
+const permissionCodes = route.meta.permissionCodes || [];
+
+// to check permissions based on action type
+const canCreate = computed(() => hasPermission('Create', permissionCodes));
+const canRead = computed(() => hasPermission('Read', permissionCodes));
+const canUpdate = computed(() => hasPermission('Update', permissionCodes));
+const canDelete = computed(() => hasPermission('Delete', permissionCodes));
 
 const organizationStore = useOrganizationStore();
 const { organizations } = storeToRefs(organizationStore);
@@ -186,7 +197,7 @@ async function openEditOrganizationDialog(user) {
 }
 
 onMounted(async () => {
-  await fetchOrganizations();
+  if (canRead.value) await fetchOrganizations();
 });
 </script>
 <template>
@@ -194,9 +205,9 @@ onMounted(async () => {
     <v-card>
       <v-toolbar color="secondary" density="compact">
         <v-spacer></v-spacer>
-        <v-btn @click="newUser">Create Organization</v-btn>
+        <v-btn v-if="canCreate" @click="newUser">Create Organization</v-btn>
       </v-toolbar>
-      <v-table>
+      <v-table v-if="canRead">
         <v-data-table :loading="$loading('fetchOrganizations')" :headers="headers" :items="organizations">
           <template v-slot:item.fileBase64="{ item }">
             <v-avatar size="60">
@@ -205,11 +216,22 @@ onMounted(async () => {
           </template>
 
           <template v-slot:item.actions="{ item }">
-            <v-icon class="me-2" size="small" @click="openEditOrganizationDialog(item)"> mdi-pencil </v-icon>
-            <v-icon size="small" @click="deleteOrganization(item.id)"> mdi-delete </v-icon>
+            <v-icon v-if="canUpdate" class="me-2" size="small" @click="openEditOrganizationDialog(item)">
+              mdi-pencil
+            </v-icon>
+            <v-icon v-if="canDelete" size="small" @click="deleteOrganization(item.id)"> mdi-delete </v-icon>
           </template>
         </v-data-table>
       </v-table>
+      <!-- Show message if user does not have read permissions -->
+      <v-card-text
+        v-if="!canRead"
+        class="d-flex flex-column justify-center align-center text-center"
+        style="height: 300px"
+      >
+        <v-icon size="48" class="mb-4">mdi-lock</v-icon>
+        <h1>You do not have permission to read this content</h1>
+      </v-card-text>
     </v-card>
 
     <main-drawer v-model="showDrawer" width="800" title="CREATE ORGANIZATION" :toolbar="{ color: 'primary' }">

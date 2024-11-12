@@ -6,6 +6,19 @@ import { useProductStore } from '@/store/product';
 import { useSaleInvoiceStore } from '@/store/sale_invoice';
 import { useCustomerStore } from '@/store/customer';
 import { useRouter } from 'vue-router';
+import rules from '@/helpers/rules';
+import { useRoute } from 'vue-router';
+import { hasPermission } from '@/helpers/utils';
+
+const route = useRoute();
+const permissionCodes = route.meta.permissionCodes || [];
+
+// to check permissions based on action type
+const canCreate = computed(() => hasPermission('Create', permissionCodes));
+const canRead = computed(() => hasPermission('Read', permissionCodes));
+const canUpdate = computed(() => hasPermission('Update', permissionCodes));
+const canDelete = computed(() => hasPermission('Delete', permissionCodes));
+
 const productStore = useProductStore();
 const customerStore = useCustomerStore();
 const saleInvoiceStore = useSaleInvoiceStore();
@@ -20,18 +33,23 @@ const router = useRouter();
 const headers = [
   { title: '', key: 'data-table-expand' },
   {
-    title: 'invoice No',
+    title: 'Invoice No',
     key: 'invoiceNo',
     sortable: true,
   },
   {
-    title: 'Customer Name',
-    key: 'customerName',
+    title: 'Supplier Name',
+    key: 'supplierName',
     sortable: true,
   },
   {
-    title: 'Date',
+    title: 'Invoice Date',
     key: 'invoiceDate',
+    sortable: true,
+  },
+  {
+    title: 'Sub Total Amount',
+    key: 'subTotal',
     sortable: true,
   },
   {
@@ -194,9 +212,11 @@ function calculateTotal(items, field) {
   return items.reduce((sum, item) => sum + (item[field] || 0), 0);
 }
 onMounted(async () => {
-  customerStore.fetchCustomers();
-  productStore.fetchProducts();
-  saleInvoiceStore.fetchSaleInvoiceList();
+  if (canRead.value) saleInvoiceStore.fetchSaleInvoiceList();
+  if (canCreate.value || canUpdate.value) {
+    customerStore.fetchCustomers();
+    productStore.fetchProducts();
+  }
 });
 </script>
 <template>
@@ -204,9 +224,10 @@ onMounted(async () => {
     <v-card>
       <v-toolbar title="SALE INVOICE" color="secondary" density="compact">
         <v-spacer></v-spacer>
-        <v-btn @click="newInvoice()">Create Invoice</v-btn>
+        <v-btn v-if="canCreate" @click="newInvoice()">Create Invoice</v-btn>
       </v-toolbar>
       <v-data-table
+        v-if="canRead"
         :loading="$loading('fetchSaleInvoiceList')"
         :headers="headers"
         :items="saleInvoices"
@@ -233,7 +254,11 @@ onMounted(async () => {
             <td :colspan="columns.length">
               <v-card flat>
                 <v-card-text>
-                  <v-data-table :headers="getItemHeaders()" :items="item.siDetails">
+                  <v-data-table
+                    :loading="$loading('fetchSaleInvoiceListDetails')"
+                    :headers="getItemHeaders()"
+                    :items="item.siDetails"
+                  >
                     <template v-slot:item.productId="{ item }">{{ item.productId }} </template>
                     <!-- Totals row at the bottom -->
                     <template v-slot:body.append>
@@ -264,10 +289,19 @@ onMounted(async () => {
           {{ suppliers.find((s) => s.id == item.supplierId)?.fullName }}
         </template>
         <template v-slot:item.actions="{ item }">
-          <v-icon class="me-2" size="small" @click="editInvoice(item)"> mdi-pencil </v-icon>
-          <v-icon size="small" @click="deleteInvoice(item.id)"> mdi-delete </v-icon>
+          <v-icon v-if="canUpdate" class="me-2" size="small" @click="editInvoice(item)"> mdi-pencil </v-icon>
+          <v-icon v-if="canDelete" size="small" @click="deleteInvoice(item.id)"> mdi-delete </v-icon>
         </template>
       </v-data-table>
+      <!-- Show message if user does not have read permissions -->
+      <v-card-text
+        v-if="!canRead"
+        class="d-flex flex-column justify-center align-center text-center"
+        style="height: 300px"
+      >
+        <v-icon size="48" class="mb-4">mdi-lock</v-icon>
+        <h1>You do not have permission to read this content</h1>
+      </v-card-text>
     </v-card>
     <main-drawer v-model="showDrawer" width="800" title="SALE INVOICE" :toolbar="{ color: 'primary' }">
       <v-form class="pa-5" @submit.prevent="isEdit ? updateInvoice() : createInvoice()">

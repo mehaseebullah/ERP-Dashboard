@@ -11,3 +11,16 @@ export function parseTitle(string) {
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
 }
+
+export function hasPermission(permissionType, permissionCodes) {
+  const permissionSuffix = {
+    Create: '-C',
+    Read: '-R',
+    Update: '-U',
+    Delete: '-D',
+  };
+
+  const suffix = permissionSuffix[permissionType]; //suffix
+  // Check if any permission code ends with the required suffix
+  return permissionCodes.some((code) => code.endsWith(suffix));
+}
