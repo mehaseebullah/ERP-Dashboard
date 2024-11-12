@@ -15,26 +15,27 @@ export const useChartOfAccounts = defineStore({
     },
     async fetchAllAccountGroups() {
       const { data } = await api.get('/Finance/AccountGroups/GetAllAccountGroups');
-      console.log(data)
+      console.log(data);
       this.accountGroups = data?.data;
     },
     async fetchAllChartOfAccounts() {
       const { data } = await api.get('/Finance/ChartOfAccounts/GetAllChartOfAccounts?PageSize=10000&PageNumber=0');
       this.accounts = data?.data?.data;
+      return this.accounts;
     },
     async createAccount({ title, code, accountGroupId }) {
       const { data } = await api.post('/Finance/ChartOfAccounts/Create', { title, code, accountGroupId });
-      this.fetchAccounts();
+      // this.fetchAllChartOfAccounts();
       return data?.data?.data;
     },
     async updateAccount({ id, title, code, accountGroupId }) {
-      const { data } = await api.put('/Finance/ChartOfAccounts/Update', { id, title, code, accountGroupId  });
-      this.fetchAccounts();
+      const { data } = await api.put('/Finance/ChartOfAccounts/Update', { id, title, code, accountGroupId });
+      // this.fetchAllChartOfAccounts();
       return data?.data?.data;
     },
     async deleteAccount({ id }) {
       const { data } = await api.delete(`/Finance/ChartOfAccounts/Delete/${id}`);
-      this.fetchAccounts();
+      // this.fetchAllChartOfAccounts();
       return data?.data?.data;
     },
   },

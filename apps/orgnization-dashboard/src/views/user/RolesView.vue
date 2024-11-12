@@ -3,6 +3,17 @@ import { ref, onMounted, computed, watch } from 'vue';
 import { useSwal } from '@/composables/useSwal';
 import { storeToRefs } from 'pinia';
 import { useRoleStore } from '@/store/role';
+import { useRoute } from 'vue-router';
+import { hasPermission } from '@/helpers/utils';
+
+const route = useRoute();
+const permissionCodes = route.meta.permissionCodes || [];
+
+// to check permissions based on action type
+const canCreate = computed(() => hasPermission('Create', permissionCodes));
+const canRead = computed(() => hasPermission('Read', permissionCodes));
+const canUpdate = computed(() => hasPermission('Update', permissionCodes));
+const canDelete = computed(() => hasPermission('Delete', permissionCodes));
 
 const roleStore = useRoleStore();
 const { organizationsRoles } = storeToRefs(roleStore);
@@ -115,13 +126,16 @@ const groupedFeatures = computed(() => {
 });
 
 onMounted(async () => {
-  await fetchAllRoles();
+  if (canRead.value) await fetchAllRoles();
 });
 </script>
 <template>
   <v-container>
     <v-card>
-      <v-table>
+      <v-toolbar color="secondary" density="compact">
+        <v-spacer></v-spacer>
+      </v-toolbar>
+      <v-table v-if="canRead">
         <v-data-table
           :loading="$loading('fetchAllRoles')"
           :headers="headers"
@@ -135,6 +149,14 @@ onMounted(async () => {
           </template>
         </v-data-table>
       </v-table>
+      <v-card-text
+        v-if="!canRead"
+        class="d-flex flex-column justify-center align-center text-center"
+        style="height: 300px"
+      >
+        <v-icon size="48" class="mb-4">mdi-lock</v-icon>
+        <h1>You do not have permission to read this content</h1>
+      </v-card-text>
     </v-card>
 
     <main-drawer v-model="showRoles" width="1025" title="Invoke Permissions" :toolbar="{ color: 'primary' }">

@@ -72,10 +72,30 @@ export async function registerPlugins(app) {
           {
             isMenu: true,
             title: 'Organization',
-            codes: ['ORG-MNG'],
+            codes: ['ORG-R', 'ORG-C'],
             icon: 'mdi-domain',
             url: '/organization',
             component: 'organization/OrganizationView',
+            position: 0,
+          },
+        ],
+      },
+      position: 4,
+    };
+    menus['Account'] = {
+      isMenu: true,
+      name: 'Account Management',
+      icon: 'mdi-account-cog',
+      menu: {
+        title: 'Account Management',
+        children: [
+          {
+            isMenu: true,
+            title: 'BalanceSheet',
+            codes: ['BLS-R'],
+            icon: 'mdi-file-chart',
+            url: '/balanceSheet',
+            component: 'balanceSheet/BalanceSheetView',
             position: 0,
           },
         ],
@@ -311,17 +331,20 @@ export async function registerPlugins(app) {
           }
           route.meta = module.menu?.meta ?? {
             requiresAuth: true,
+
             layout: 'DashboardLayout',
           };
           if (module?.menu?.children) {
             route.children = await Promise.all(
               module.menu.children.map(async (child) => {
+                const permissionCodes = Array.isArray(child.codes) ? child.codes : child.codes ? [child.codes] : [];
                 return {
                   path: `${child.url}`,
                   name: `${child.title}`,
                   component: comps[`../views/${child.component}.vue`],
                   meta: child.meta ?? {
                     requiresAuth: true,
+                    permissionCodes: permissionCodes,
                     layout: 'DashboardLayout',
                   },
                 };

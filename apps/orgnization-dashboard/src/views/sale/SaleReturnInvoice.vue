@@ -4,6 +4,18 @@ import { storeToRefs } from 'pinia';
 import { useSwal } from '@/composables/useSwal';
 import { useReturnSaleInvoiceStore } from '@/store/sale_return_invoice';
 import { useRouter } from 'vue-router';
+import rules from '@/helpers/rules';
+import { useRoute } from 'vue-router';
+import { hasPermission } from '@/helpers/utils';
+
+const route = useRoute();
+const permissionCodes = route.meta.permissionCodes || [];
+
+// to check permissions based on action type
+const canCreate = computed(() => hasPermission('Create', permissionCodes));
+const canRead = computed(() => hasPermission('Read', permissionCodes));
+const canUpdate = computed(() => hasPermission('Update', permissionCodes));
+const canDelete = computed(() => hasPermission('Delete', permissionCodes));
 
 const returnSaleInvoiceStore = useReturnSaleInvoiceStore();
 const { saleReturnInvoices } = storeToRefs(returnSaleInvoiceStore);
@@ -102,7 +114,7 @@ function calculateTotal(items, field) {
   return items.reduce((sum, item) => sum + (item[field] || 0), 0);
 }
 onMounted(async () => {
-  returnSaleInvoiceStore.fetchReturnSaleInvoiceList();
+  if (canRead.value) returnSaleInvoiceStore.fetchReturnSaleInvoiceList();
 });
 </script>
 <template>
@@ -110,9 +122,10 @@ onMounted(async () => {
     <v-card>
       <v-toolbar title="SALE RETURN INVOICE" color="secondary" density="compact">
         <v-spacer></v-spacer>
-        <v-btn @click="createInvoice()">Create Sale Return</v-btn>
+        <v-btn v-if="canCreate" @click="createInvoice()">Create Sale Return</v-btn>
       </v-toolbar>
       <v-data-table
+        v-if="canRead"
         :loading="$loading('fetchReturnSaleList')"
         :headers="headers"
         :items="saleReturnInvoices"
@@ -139,7 +152,11 @@ onMounted(async () => {
             <td :colspan="columns.length">
               <v-card flat>
                 <v-card-text>
-                  <v-data-table :headers="getItemHeaders()" :items="item.rsiDetails">
+                  <v-data-table
+                    :loading="$loading('fetchReturnSaleInvoiceListDetails')"
+                    :headers="getItemHeaders()"
+                    :items="item.rsiDetails"
+                  >
                     <template v-slot:item.productId="{ item }">{{ item.productId }} </template>
                     <!-- Totals row at the bottom -->
                     <template v-slot:body.append>
@@ -170,10 +187,19 @@ onMounted(async () => {
           </tr>
         </template>
         <template v-slot:item.actions="{ item }">
-          <v-icon class="me-2" size="small" @click="editInvoice(item)"> mdi-pencil </v-icon>
-          <v-icon size="small" @click="deleteInvoice(item.id)"> mdi-delete </v-icon>
+          <v-icon v-if="canUpdate" class="me-2" size="small" @click="editInvoice(item)"> mdi-pencil </v-icon>
+          <v-icon v-if="canDelete" size="small" @click="deleteInvoice(item.id)"> mdi-delete </v-icon>
         </template>
       </v-data-table>
+      <!-- Show message if user does not have read permissions -->
+      <v-card-text
+        v-if="!canRead"
+        class="d-flex flex-column justify-center align-center text-center"
+        style="height: 300px"
+      >
+        <v-icon size="48" class="mb-4">mdi-lock</v-icon>
+        <h1>You do not have permission to read this content</h1>
+      </v-card-text>
     </v-card>
   </v-container>
 </template>
