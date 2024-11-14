@@ -8,7 +8,9 @@ import { parseTitle } from '@/helpers/utils';
 import rules from '@/helpers/rules';
 import { useRoute } from 'vue-router';
 import { hasPermission } from '@/helpers/utils';
+import { useGenerateInoiceNumber } from '@/store/generate_invoice_number';
 
+const generateInoiceNumberStore = useGenerateInoiceNumber();
 const route = useRoute();
 const permissionCodes = route.meta.permissionCodes || [];
 
@@ -95,10 +97,16 @@ watch(showDrawer, (newValue) => {
   }
 });
 
+async function newInvoiceNum() {
+  formData.value = JSON.parse(JSON.stringify({ ...formModal }));
+  formData.value.voucherNo = await generateInoiceNumberStore.fetchGenerateInvoiceNumber({ Prefix: 'VCH' });
+}
+
 async function newVoucher() {
-  formData.value = { ...formModal };
+  // formData.value = { ...formModal };
   isEdit.value = false;
   showDrawer.value = true;
+  await newInvoiceNum();
 }
 
 async function createVoucher() {
@@ -172,8 +180,10 @@ function calculateTotal(items, field) {
 
 onMounted(async () => {
   if (canRead.value) voucherStore.fetchVoucherList();
-  if (canCreate.value || canUpdate.value) voucherStore.fetchVoucherTypes();
-  // coaStore.fetchAllChartOfAccounts();
+  if (canCreate.value || canUpdate.value) {
+    voucherStore.fetchVoucherTypes();
+    coaStore.fetchAllChartOfAccounts();
+  }
 });
 </script>
 <template>
@@ -314,6 +324,15 @@ onMounted(async () => {
                 variant="outlined"
                 density="compact"
               ></v-select>
+            </v-col>
+            <v-col>
+              <v-text-field
+                type="text"
+                density="compact"
+                v-model.number="entry.remarks"
+                label="Remarks"
+                variant="outlined"
+              ></v-text-field>
             </v-col>
             <v-col>
               <v-text-field
