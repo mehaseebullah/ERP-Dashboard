@@ -3,13 +3,11 @@ import { api } from '@/helpers/http';
 
 export const useGenerateInoiceNumber = defineStore({
   id: 'generateInvoiceNumberStore',
-  state: () => ({
-  }),
+  state: () => ({}),
   actions: {
-    async fetchGenerateInvoiceNumber({Prefix}) {
+    async fetchGenerateInvoiceNumber({ Prefix }) {
       const { data } = await api.get(`/Tenant/GenerateInvoiceNumber/GenerateInvoiceNumber?Prefix=${Prefix}`);
-      console.log('test111')
       return data;
-    }
+    },
   },
 });

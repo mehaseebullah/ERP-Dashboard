@@ -56,32 +56,32 @@ const formData = ref({ ...formModal });
 const pos = ref();
 
 watchEffect(() => {
-  let total = 0, totalDiscount = 0,subTotal=0;
+  let total = 0,
+    totalDiscount = 0,
+    subTotal = 0;
   formData.value.soDetails.forEach((entry) => {
-    let perItemAmount=entry.salePrice * entry.quantity;
+    let perItemAmount = entry.salePrice * entry.quantity;
     entry.total = perItemAmount - entry.discount;
     total += entry.total || 0;
-    subTotal+=perItemAmount||0;
+    subTotal += perItemAmount || 0;
     totalDiscount += entry.discount || 0;
-    entry.purchaseTotal=entry.purchasePrice * entry.quantity || 0;
+    entry.purchaseTotal = entry.purchasePrice * entry.quantity || 0;
   });
   formData.value.total = total;
   formData.value.subTotal = subTotal;
-  formData.value.discount = totalDiscount
+  formData.value.discount = totalDiscount;
 });
 
 async function newInvoice() {
   formData.value = { ...formModal };
 }
 async function newInvoiceNum() {
-
   formData.value = JSON.parse(JSON.stringify({ ...formModal }));
   formData.value.soNo = await generateInoiceNumberStore.fetchGenerateInvoiceNumber({ Prefix: 'SO' });
 }
 async function createInvoice() {
-
-  await saleOrderStore.createSaleOrder(formData.value)
-  await newInvoice()
+  await saleOrderStore.createSaleOrder(formData.value);
+  await newInvoice();
   await newInvoiceNum();
 }
 
@@ -114,12 +114,11 @@ function addProduct(productId) {
       title: prod.title,
       quantity: 1,
       purchasePrice: prod.purchasePrice,
-      salePrice:prod.salePrice,
+      salePrice: prod.salePrice,
       total: prod.purchasePrice,
       discount: 0.0,
     });
-  }
-  else {
+  } else {
     formData.value.soDetails[currentIndex]['quantity'] += 1;
   }
 }
@@ -135,9 +134,20 @@ onMounted(async () => {
     <v-row>
       <v-col cols="8" class="bg-grey-lighten-5">
         <div>
-          <v-autocomplete :items="products" class="mx-auto" density="comfortable" menu-icon=""
-            placeholder="Enter product name / SKU" prepend-inner-icon="mdi-magnify" theme="light" auto-select-first
-            item-title="title" item-value="id" item-props @update:model-value="addProduct"></v-autocomplete>
+          <v-autocomplete
+            :items="products"
+            class="mx-auto"
+            density="comfortable"
+            menu-icon=""
+            placeholder="Enter product name / SKU"
+            prepend-inner-icon="mdi-magnify"
+            theme="light"
+            auto-select-first
+            item-title="title"
+            item-value="id"
+            item-props
+            @update:model-value="addProduct"
+          ></v-autocomplete>
         </div>
         <v-data-table hide-default-footer :headers="headers" :items="formData.soDetails">
           <template v-slot:item.title="{ item }">
@@ -145,22 +155,40 @@ onMounted(async () => {
           </template>
 
           <template v-slot:item.quantity="{ item }">
-            <v-text-field class="mt-2" variant="outlined" density="compact" type="number" style="max-width: 100px"
-              v-model.number="item.quantity"></v-text-field>
+            <v-text-field
+              class="mt-2"
+              variant="outlined"
+              density="compact"
+              type="number"
+              style="max-width: 100px"
+              v-model.number="item.quantity"
+            ></v-text-field>
           </template>
           <template v-slot:item.salePrice="{ item }">
-            <v-text-field class="mt-2" variant="outlined" density="compact" type="number" style="max-width: 100px"
-              v-model.number="item.salePrice"></v-text-field>
+            <v-text-field
+              class="mt-2"
+              variant="outlined"
+              density="compact"
+              type="number"
+              style="max-width: 100px"
+              v-model.number="item.salePrice"
+            ></v-text-field>
           </template>
           <template v-slot:item.discount="{ item }">
-            <v-text-field class="mt-2" variant="outlined" density="compact" type="number" style="max-width: 100px"
-              v-model.number="item.discount"></v-text-field>
+            <v-text-field
+              class="mt-2"
+              variant="outlined"
+              density="compact"
+              type="number"
+              style="max-width: 100px"
+              v-model.number="item.discount"
+            ></v-text-field>
           </template>
           <template v-slot:item.total="{ item }">
             {{ item.total }}
           </template>
           <template v-slot:item.actions="{ item, index }">
-            <v-col  cols="1">
+            <v-col cols="1">
               <v-btn variant="text" size="small" icon="mdi-delete" @click="formData.soDetails.splice(index, 1)"></v-btn>
             </v-col>
           </template>
@@ -168,9 +196,17 @@ onMounted(async () => {
       </v-col>
       <v-col cols="4">
         <div class="d-flex align-start justify-center">
-          <v-select :items="customers" item-title="fullName" item-value="id" v-model="formData.customerId"
-            :loading="$loading('fetchSuppliers')" label="Supplier" variant="outlined" density="compact"
-            class="mx-2"></v-select>
+          <v-select
+            :items="customers"
+            item-title="fullName"
+            item-value="id"
+            v-model="formData.customerId"
+            :loading="$loading('fetchSuppliers')"
+            label="Supplier"
+            variant="outlined"
+            density="compact"
+            class="mx-2"
+          ></v-select>
           <v-btn color="primary" @click="requestFullscreen()">
             <v-icon size="large">mdi-fullscreen</v-icon>
           </v-btn>
@@ -191,8 +227,13 @@ onMounted(async () => {
             <tr>
               <td>Discount</td>
               <td>
-                <v-text-field type="number" v-model.number="formData.discount" variant="outlined" density="compact"
-                  class="mt-2"></v-text-field>
+                <v-text-field
+                  type="number"
+                  v-model.number="formData.discount"
+                  variant="outlined"
+                  density="compact"
+                  class="mt-2"
+                ></v-text-field>
               </td>
             </tr>
             <tr>
