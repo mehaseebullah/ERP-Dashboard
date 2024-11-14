@@ -9,6 +9,7 @@ import { useRoute } from 'vue-router';
 import { hasPermission } from '@/helpers/utils';
 import { useVoucherStore } from '@/store/voucher';
 import { useChartOfAccounts } from '@/store/chart_of_accounts';
+import { useGenerateInoiceNumber } from '@/store/generate_invoice_number';
 
 const route = useRoute();
 const permissionCodes = route.meta.permissionCodes || [];
@@ -31,6 +32,7 @@ const voucherStore = useVoucherStore();
 const { vouchers, voucherTypes } = storeToRefs(voucherStore);
 
 const swal = useSwal();
+const generateInoiceNumberStore = useGenerateInoiceNumber();
 const dialog = ref(false);
 const showPayDrawer = ref(false);
 const drawerTitle = computed(() => (isEdit.value ? 'UPDATE SUPPLIER' : 'CREATE SUPPLIER'));
@@ -59,19 +61,25 @@ watch(showPayDrawer, (newValue) => {
   }
 });
 
-async function payVoucher() {
-  // await voucherStore.updateVoucher(payFormData.value);
+async function newInvoiceNum() {
+  payFormData.value = JSON.parse(JSON.stringify({ ...formModal }));
+  payFormData.value.voucherNo = await generateInoiceNumberStore.fetchGenerateInvoiceNumber({ Prefix: 'SUP' });
+}
 
+async function payVoucher() {
+  payFormData.value.voucherTypeId = 6;
+  await supplierStore.payVoucher(payFormData.value);
   vouchers.value = [];
   showPayDrawer.value = false;
-
   payFormData.value = { ...payFormModal };
+
   // payFormData.value = JSON.parse(JSON.stringify(payFormModal));
 }
 
 async function pay() {
   payFormData.value = { ...payFormModal };
   showPayDrawer.value = true;
+  await newInvoiceNum();
 }
 
 const headers = [
@@ -279,7 +287,7 @@ onMounted(() => {
                 type="number"
                 density="compact"
                 v-model.number="entry.debit"
-                label="Debit"
+                label="Amount"
                 variant="outlined"
               ></v-text-field>
             </v-col>

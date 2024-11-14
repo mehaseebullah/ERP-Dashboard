@@ -155,12 +155,16 @@ watch(showPayDrawer, (newValue) => {
   }
 });
 
-async function payVoucher() {
-  // await voucherStore.updateVoucher(payFormData.value);
+async function newInvoiceNum() {
+  payFormData.value = JSON.parse(JSON.stringify({ ...formModal }));
+  payFormData.value.voucherNo = await generateInoiceNumberStore.fetchGenerateInvoiceNumber({ Prefix: 'CUS' });
+}
 
+async function payVoucher() {
+  payFormData.value.voucherTypeId = 6;
+  await customerStore.payVoucher(payFormData.value);
   vouchers.value = [];
   showPayDrawer.value = false;
-
   payFormData.value = { ...payFormModal };
   // payFormData.value = JSON.parse(JSON.stringify(payFormModal));
 }
@@ -199,6 +203,7 @@ async function fetchCustomerTranstionDetails(accountId) {
 async function pay() {
   payFormData.value = { ...payFormModal };
   showPayDrawer.value = true;
+  await newInvoiceNum();
 }
 
 async function deleteCustomer(id) {
@@ -282,13 +287,12 @@ onMounted(() => {
               ></v-text-field>
             </v-col>
 
-            <v-col
-              ><!--////changed -->
+            <v-col>
               <v-text-field
                 type="number"
                 density="compact"
                 v-model.number="entry.credit"
-                label="Credit"
+                label="Amount"
                 variant="outlined"
               ></v-text-field>
             </v-col>

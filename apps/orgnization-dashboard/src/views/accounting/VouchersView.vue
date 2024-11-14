@@ -293,6 +293,7 @@ onMounted(async () => {
           label="Voucher No"
           variant="outlined"
           :loading="$loading('fetchLedgersByVoucherId')"
+          readonly
         ></v-text-field>
         <v-select
           :items="voucherTypes"
