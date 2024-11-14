@@ -8,27 +8,51 @@ export const useSupplierStore = defineStore({
   }),
   actions: {
     async fetchSuppliers() {
-      this.suppliers=[];
+      this.suppliers = [];
       const { data } = await api.get('/Inventory/Suppliers/GetAllSuppliers');
       this.suppliers = data?.data;
       return this.suppliers;
     },
     async fetchPaginatedSuppliers() {
-      this.suppliers=[];
+      this.suppliers = [];
       const { data } = await api.get('/Inventory/Suppliers/GetPaginatedSuppliers?PageSize=10000&PageNumber=0');
       this.suppliers = data?.data?.data;
       return this.suppliers;
     },
-    
-    async createSupplier({ firstName, lastName, emailAddress, contactNumber,address }) {
-      const { data } = await api.post('/Inventory/Suppliers/Create', { firstName, lastName, emailAddress, contactNumber,address});
+
+    async createSupplier({ firstName, lastName, emailAddress, contactNumber, address }) {
+      const { data } = await api.post('/Inventory/Suppliers/Create', {
+        firstName,
+        lastName,
+        emailAddress,
+        contactNumber,
+        address,
+      });
       this.fetchSuppliers();
       return data?.data;
     },
-    async updateSupplier({ id, firstName, lastName, emailAddress, contactNumber,address }) {
-      const { data } = await api.put('/Inventory/Suppliers/Update', { id, firstName, lastName, emailAddress, contactNumber,address });
+    async updateSupplier({ id, firstName, lastName, emailAddress, contactNumber, address }) {
+      const { data } = await api.put('/Inventory/Suppliers/Update', {
+        id,
+        firstName,
+        lastName,
+        emailAddress,
+        contactNumber,
+        address,
+      });
       this.fetchSuppliers();
       return data?.data;
+    },
+    async payVoucher({ voucherNo, voucherTypeId, voucherDate, description, ledgerDetailDTO }) {
+      const { data } = await api.post('/Finance/Voucher/AddUpdateVoucher', {
+        voucherNo,
+        voucherTypeId,
+        voucherDate,
+        description,
+        ledgerDetailDTO,
+      });
+      this.fetchSuppliers();
+      return data?.data?.data;
     },
     async deleteSupplier({ id }) {
       const { data } = await api.delete(`/Inventory/Suppliers/Delete?Id=${id}`);

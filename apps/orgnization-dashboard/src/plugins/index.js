@@ -61,47 +61,6 @@ export async function registerPlugins(app) {
       return finalResult;
     }, {});
 
-    // Manually added the "Organization Management" module with a "Organization" dropdown
-    menus['Organization Management'] = {
-      isMenu: true,
-      name: 'Organization Management',
-      icon: 'mdi-briefcase',
-      menu: {
-        title: 'Organization Management',
-        children: [
-          {
-            isMenu: true,
-            title: 'Organization',
-            codes: ['ORG-R', 'ORG-C'],
-            icon: 'mdi-domain',
-            url: '/organization',
-            component: 'organization/OrganizationView',
-            position: 0,
-          },
-        ],
-      },
-      position: 4,
-    };
-    menus['Account'] = {
-      isMenu: true,
-      name: 'Account Management',
-      icon: 'mdi-account-cog',
-      menu: {
-        title: 'Account Management',
-        children: [
-          {
-            isMenu: true,
-            title: 'BalanceSheet',
-            codes: ['BLS-R'],
-            icon: 'mdi-file-chart',
-            url: '/balanceSheet',
-            component: 'balanceSheet/BalanceSheetView',
-            position: 0,
-          },
-        ],
-      },
-      position: 4,
-    };
     console.log('menus', menus);
     const modules = [];
 
