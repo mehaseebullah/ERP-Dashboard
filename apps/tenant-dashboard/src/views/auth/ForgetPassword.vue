@@ -1,32 +1,38 @@
 <script setup>
-import { reactive, ref, inject } from 'vue';
-import rules from '@/helpers/rules';
+import { ref, inject } from 'vue';
 import { onMounted } from 'vue';
-import { useRoute } from 'vue-router';
 import { useAuthStore } from '@/store/auth';
 import ResetPassword from './ResetPassword.vue';
+import rules from '@/helpers/rules';
+import { before } from 'lodash';
 
 const swal = inject('$swal');
+const $loading = inject('$loading');
 const authStore = useAuthStore();
-
 const email = ref('');
 const showResetComponent = ref(false);
 const showOtp = ref(false);
 const otpValue = ref('');
+const form = ref();
+const otpform = ref();
 
-onMounted(() => {
-  const route = useRoute();
-  console.log(route.meta.type);
-});
+onMounted(() => {});
 
 const forgetPassword = async () => {
-  if (email.value) {
+  const { valid } = await form.value.validate();
+  if (valid) {
     try {
-      await authStore.forgetPassword({ Email: email.value });
-      showOtp.value = true;
+      const res = await authStore.forgetPassword({ Email: email.value });
+      if (res.statusCode === 404) {
+        swal.error(res.message);
+      } else if (res.statusCode === 200) {
+        showOtp.value = true;
+      } else {
+        swal.error(res.message);
+        showOtp.value = true;
+      }
     } catch (error) {
-      console.error('An error occurred during the password reset process:', error);
-      swal.error('An error occurred. Please try again.');
+      swal.error('An error occurred during the password reset process:', error);
     }
   } else {
     swal.error('Please enter the correct email');
@@ -34,13 +40,19 @@ const forgetPassword = async () => {
 };
 
 const resetPassword = () => {
-  showResetComponent.value = true; // Show the ResetPassword component
+  showResetComponent.value = true;
   showOtp.value = false;
 };
 const verifyOTP = async () => {
   if (otpValue.value) {
-    await authStore.verifyOTP({ OtpCode: otpValue.value, verificationType: '7' });
-    resetPassword();
+    try {
+      const res = await authStore.verifyOTP({ OtpCode: otpValue.value, verificationType: '7' });
+      if (res.statusCode === 200) {
+        resetPassword();
+      }
+    } catch (error) {
+      swal.error('An error occurred during the password reset process:', error);
+    }
   } else {
     swal.error('Please enter the correct OTP');
   }
@@ -48,7 +60,7 @@ const verifyOTP = async () => {
 </script>
 <template>
   <ResetPassword v-if="showResetComponent == true" :email="email" />
-  <v-sheet class="px-16 w-100" v-else-if="!showOtp">
+  <v-form ref="form" class="px-16 w-100" v-else-if="!showOtp">
     <v-row>
       <v-col cols="12">
         <div class="text-center">
@@ -65,16 +77,17 @@ const verifyOTP = async () => {
           color="primary"
           label="email"
           variant="outlined"
+          :rules="[rules.required, rules.email]"
         ></v-text-field>
       </v-col>
     </v-row>
     <v-row>
       <v-col class="text-end" cols="12">
-        <v-btn type="submit" @click="forgetPassword" color="primary">SEND REQUEST</v-btn>
+        <v-btn :loading="$loading('forgetPassword')" @click="forgetPassword" color="primary">SEND REQUEST</v-btn>
       </v-col>
     </v-row>
-  </v-sheet>
-  <v-sheet class="px-16 w-100" v-else>
+  </v-form>
+  <v-form ref="otpform" class="px-16 w-100" v-else>
     <v-row>
       <v-col cols="12">
         <div class="text-center">
@@ -89,10 +102,10 @@ const verifyOTP = async () => {
     </v-row>
     <v-row>
       <v-col cols="12" class="text-center">
-        <v-btn @click="verifyOTP" class="" color="primary">Verify OTP</v-btn>
+        <v-btn :loading="$loading('verifyOTP')" @click="verifyOTP" class="" color="primary">Verify OTP</v-btn>
       </v-col>
     </v-row>
-  </v-sheet>
+  </v-form>
 </template>
 
 <style lang="scss" scoped></style>

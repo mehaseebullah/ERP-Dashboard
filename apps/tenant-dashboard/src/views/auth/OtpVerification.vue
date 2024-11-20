@@ -1,19 +1,15 @@
 <script setup>
-import { reactive, ref, inject } from 'vue';
-import rules from '@/helpers/rules';
+import { ref, inject } from 'vue';
 import { onMounted } from 'vue';
-import { useRoute } from 'vue-router';
 import { useAuthStore } from '@/store/auth';
 
 const swal = inject('$swal');
+const $loading = inject('$loading');
 const authStore = useAuthStore();
 const otpValue = ref('');
 const verificationType = '6';
 
-onMounted(() => {
-  const route = useRoute();
-  console.log(route.meta.type);
-});
+onMounted(() => {});
 
 const verifyOTP = async () => {
   if (otpValue.value) {
@@ -28,7 +24,7 @@ const verifyOTP = async () => {
     <v-row>
       <v-col cols="12" class="text-center">
         <h2 class="">Verify Your Account</h2>
-        <p class="">We sending a OTP to validate your email, Hang on!</p>
+        <p class="">We are sending a OTP to validate your email, Hang on!</p>
       </v-col>
     </v-row>
     <v-row>
@@ -38,8 +34,7 @@ const verifyOTP = async () => {
     </v-row>
     <v-row>
       <v-col cols="12" class="text-center">
-        <v-btn @click="verifyOTP" size="x-small" variant="text" color="primary">Verify</v-btn>
-        <!-- <v-btn type="submit" class="" color="primary">SEND OTP REQUEST</v-btn> -->
+        <v-btn :loading="$loading('verifyOTP')" @click="verifyOTP" color="primary">Verify</v-btn>
       </v-col>
     </v-row>
   </v-sheet>
