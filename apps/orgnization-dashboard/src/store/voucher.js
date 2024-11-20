@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { api, tempApi } from '@/helpers/http';
+import { api } from '@/helpers/http';
 
 export const useVoucherStore = defineStore({
   id: 'voucherStore',
@@ -18,11 +18,8 @@ export const useVoucherStore = defineStore({
       return this.vouchers;
     },
     async fetchLedgersByVoucherId(VoucherId, item) {
-      //console.log('vouc id', VoucherId, 'item is ', item);
-
-      // const { data } = await api.get(`/Finance/Ledgers/GetLedgersByVoucherId/VoucherId?VoucherId=${VoucherId}`);
-      const { data } = await tempApi.get(`/Finance/Ledgers/GetLedgersByVoucherId/VoucherId?VoucherId=${VoucherId}`);
-
+      console.log('vouc id', VoucherId, 'item is ', item);
+      const { data } = await api.get(`/Finance/Ledgers/GetLedgersByVoucherId/VoucherId?VoucherId=${VoucherId}`);
       item['ledgerDetailDTO'] = data?.data || [];
       return item;
     },

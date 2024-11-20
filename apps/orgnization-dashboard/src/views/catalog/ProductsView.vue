@@ -31,6 +31,7 @@ const { manufacturers } = storeToRefs(manufacturerStore);
 const swal = useSwal();
 const drawerTitle = computed(() => (isEdit.value ? 'UPDATE PRODUCT' : 'CREATE PRODUCT'));
 
+const form = ref();
 const isEdit = ref(false);
 const showDrawer = ref(false);
 const selectedImage = ref(null); // Temporary variable to store selected image
@@ -120,6 +121,8 @@ const handleImageUpload = (event) => {
 
 async function newProduct() {
   formData.value = { ...formModal };
+  form.value.resetValidation();
+  selectedImage.value = null;
   isEdit.value = false;
   showDrawer.value = true;
 }
@@ -206,7 +209,7 @@ onMounted(async () => {
     </v-card>
 
     <main-drawer v-model="showDrawer" width="800" :title="drawerTitle" :toolbar="{ color: 'primary' }">
-      <v-form class="pa-5" @submit.prevent="isEdit ? updateProduct() : createProduct()">
+      <v-form ref="form" class="pa-5" @submit.prevent="isEdit ? updateProduct() : createProduct()">
         <v-text-field
           v-model="formData.title"
           label="Title"
