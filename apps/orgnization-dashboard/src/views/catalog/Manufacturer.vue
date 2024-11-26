@@ -53,11 +53,13 @@ const formModal = {
   description: '',
 };
 
+const form = ref();
 const formData = ref({ ...formModal });
 const isEdit = ref(false);
 const showDrawer = ref(false);
 
 async function newManufacturer() {
+  form.value.resetValidation();
   formData.value = { ...formModal };
   isEdit.value = false;
   showDrawer.value = true;
@@ -65,7 +67,6 @@ async function newManufacturer() {
 
 async function createManufacturer() {
   await manufacturerStore.createManufacturer(formData.value);
-  console.log('manu');
   showDrawer.value = false;
   formData.value = { ...formModal };
   isEdit.value = false;
@@ -138,7 +139,7 @@ onMounted(() => {
       </v-card-text>
     </v-card>
     <main-drawer v-model="showDrawer" width="800" :title="drawerTitle" :toolbar="{ color: 'primary' }">
-      <v-form class="pa-5" @submit.prevent="isEdit ? updateManufacturer() : createManufacturer()">
+      <v-form ref="form" class="pa-5" @submit.prevent="isEdit ? updateManufacturer() : createManufacturer()">
         <v-text-field
           v-model="formData.title"
           label="Title"

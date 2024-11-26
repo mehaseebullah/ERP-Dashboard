@@ -75,26 +75,10 @@ const headers = [
 ];
 
 const ledgerHeaders = [
-  {
-    title: '',
-    key: '',
-  },
-  {
-    title: 'Charts of Account',
-    key: 'chartsOfAccount',
-  },
-  {
-    title: 'Account Group',
-    key: 'accountGroup',
-  },
-  {
-    title: 'Account Type',
-    key: 'accountType',
-  },
-  {
-    title: 'Transction Date',
-    key: 'tranactionDate',
-  },
+  // {
+  //   title: '',
+  //   key: '',
+  // },
   {
     title: 'Debit',
     key: 'debit',
@@ -107,6 +91,22 @@ const ledgerHeaders = [
     title: 'Balance',
     key: 'balance',
   },
+  {
+    title: 'Transction Date',
+    key: 'tranactionDate',
+  },
+  // {
+  //   title: 'Charts of Account',
+  //   key: 'chartsOfAccount',
+  // },
+  // {
+  //   title: 'Account Group',
+  //   key: 'accountGroup',
+  // },
+  // {
+  //   title: 'Account Type',
+  //   key: 'accountType',
+  // },
 ];
 
 const formModal = {
@@ -120,20 +120,50 @@ const formModal = {
 const formData = ref({ ...formModal });
 
 const payFormModal = {
-  voucherId: null,
   voucherNo: null,
-  voucherTypeId: null,
+  voucherTypeCode: 6,
   voucherDate: null,
-  description: '',
+  description: 'This is for customer',
+  // voucherId: null,
+  // voucherNo: null,
+  // voucherTypeId: null,
+  // voucherDate: null,
+  // description: '',
   ledgerDetailDTO: [
     {
       accountId: '',
       debit: 0,
-      credit: 0,
+      credit: 200,
       remarks: '',
+    },
+    {
+      accountCode: 1101,
+      debit: 200,
+      credit: 0.0,
     },
   ],
 };
+// CashInHand = 1101 code
+// {
+//   "voucherNo": "Get voucher no from api",
+//   "voucherTypeCode": 6,
+//   "voucherDate": null,
+//   "description": "This is for customer",
+//   "ledgerDetailDTO": [
+//     {
+//       "accountId": "to add customer account id",
+//       "debit": 0.0,
+//       "credit": 200,
+//       "remarks": "aaaa"
+//     },
+//     {
+//       "accountCode": 1101,
+//       "debit": 200,
+//       "credit": 0.0
+//     }
+//   ]
+// }
+// This is for customer
 
 const payFormData = ref({ ...payFormModal });
 //const payFormData = ref(JSON.parse(JSON.stringify(payFormModal)));
@@ -155,13 +185,8 @@ watch(showPayDrawer, (newValue) => {
   }
 });
 
-async function newInvoiceNum() {
-  payFormData.value = JSON.parse(JSON.stringify({ ...formModal }));
-  payFormData.value.voucherNo = await generateInoiceNumberStore.fetchGenerateInvoiceNumber({ Prefix: 'CUS' });
-}
-
 async function payVoucher() {
-  payFormData.value.voucherTypeId = 6;
+  // payFormData.value.voucherTypeId = 6;
   await customerStore.payVoucher(payFormData.value);
   vouchers.value = [];
   showPayDrawer.value = false;
@@ -200,10 +225,16 @@ async function fetchCustomerTranstionDetails(accountId) {
   await balanceSheetStore.fetchLedgerDetails(accountId);
 }
 
-async function pay() {
-  payFormData.value = { ...payFormModal };
+async function newInvoiceNum() {
+  payFormData.value.voucherNo = await generateInoiceNumberStore.fetchGenerateInvoiceNumber({ Prefix: 'VCH' });
+}
+
+async function pay(id) {
+  payFormData.value = JSON.parse(JSON.stringify({ ...payFormModal }));
+  // payFormData.value = { ...payFormModal };
   showPayDrawer.value = true;
   await newInvoiceNum();
+  payFormData.value.ledgerDetailDTO[0].accountId = id;
 }
 
 async function deleteCustomer(id) {
@@ -246,7 +277,7 @@ onMounted(() => {
           <v-icon class="me-2" size="small" @click="fetchCustomerTranstionDetails(item.accountId)"
             >mdi-cash-multiple</v-icon
           >
-          <v-icon v-if="canUpdate" @click="pay()">mdi-credit-card</v-icon>
+          <v-icon v-if="canUpdate" @click="pay(item.accountId)">mdi-credit-card</v-icon>
         </template>
       </v-data-table>
       <!-- Show message if user does not have read permissions -->
@@ -296,25 +327,11 @@ onMounted(() => {
                 variant="outlined"
               ></v-text-field>
             </v-col>
-            <v-col v-if="index > 0" cols="1">
-              <v-btn
-                variant="text"
-                size="small"
-                icon="mdi-delete"
-                @click="payFormData.ledgerDetailDTO.splice(index, 1)"
-              ></v-btn>
-            </v-col>
           </v-row>
         </template>
-        <div class="d-flex justify-end mb-5">
-          <v-btn
-            variant="text"
-            @click="payFormData.ledgerDetailDTO.push({ accountId: '', debit: 0.0, credit: 0.0, remarks: '' })"
-            >Add Entry</v-btn
-          >
-        </div>
+
         <div class="d-flex justify-end">
-          <v-btn :loading="$loading('createVoucher')" type="submit" color="primary">Create</v-btn>
+          <v-btn :loading="$loading('createVoucher')" type="submit" color="primary">Pay</v-btn>
         </div>
       </v-form>
     </main-drawer>
@@ -334,11 +351,11 @@ onMounted(() => {
           >
             <template v-slot:body.append>
               <tr>
-                <td><strong>Total</strong></td>
+                <!-- <td><strong>Total</strong></td>
                 <td></td>
                 <td></td>
                 <td></td>
-                <td></td>
+                <td></td> -->
                 <td>
                   <strong>{{ calculateTotal(ledgerDetails, 'debit') }}</strong>
                 </td>

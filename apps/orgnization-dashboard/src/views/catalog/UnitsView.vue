@@ -53,11 +53,13 @@ const formModal = {
   description: '',
 };
 
+const form = ref();
 const formData = ref({ ...formModal });
 const isEdit = ref(false);
 const showDrawer = ref(false);
 
 async function newUnit() {
+  form.value.resetValidation();
   formData.value = { ...formModal };
   isEdit.value = false;
   showDrawer.value = true;
@@ -133,7 +135,7 @@ onMounted(() => {
       </v-card-text>
     </v-card>
     <main-drawer v-model="showDrawer" width="800" :title="drawerTitle" :toolbar="{ color: 'primary' }">
-      <v-form class="pa-5" @submit.prevent="isEdit ? updateUnit() : createUnit()">
+      <v-form ref="form" class="pa-5" @submit.prevent="isEdit ? updateUnit() : createUnit()">
         <v-text-field
           v-model="formData.title"
           label="Title"

@@ -2,27 +2,7 @@ import axios from 'axios';
 import cfg from '../config';
 import { useAuthStore } from '@/store/auth';
 import { useSwal } from '@/composables/useSwal';
-
-const tempApi = axios.create({
-  baseURL: 'http://phub.pp.ua:5007',
-  headers: {
-    'Cache-Control': 'max-age=0',
-    Authorization: localStorage.getItem('access_token'),
-  },
-});
-tempApi.interceptors.request.use(
-  (config) => {
-    let token = localStorage.getItem('access_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-      // config.headers.common['Authorization'] = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  },
-);
+import router from '@/routes';
 
 const api = axios.create({
   baseURL: cfg.apiUrl,
@@ -65,7 +45,11 @@ api.interceptors.response.use(
   (error) => {
     console.log('tstes');
     const swal = useSwal();
-    if (error?.response?.data?.message && error?.response?.status == '404') {
+
+    if (error?.response?.status === 401) {
+      localStorage.removeItem('access_token');
+      router.push('/auth/login');
+    } else if (error?.response?.data?.message && error?.response?.status == '404') {
       swal.error(error?.response.data.message);
     } else if (error?.response?.data?.message && error?.response?.status == '409') {
       swal.error(error?.response.data.message);
@@ -79,4 +63,4 @@ api.interceptors.response.use(
   },
 );
 
-export { http, api, tempApi };
+export { http, api };
