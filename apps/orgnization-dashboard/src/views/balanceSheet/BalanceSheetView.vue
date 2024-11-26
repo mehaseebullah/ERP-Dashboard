@@ -61,56 +61,42 @@ const headers = [
 // Headers for the nested grid (level 1)
 const nestedItemHeaders = () => [
   { title: '', key: 'data-table-expand' },
+  { title: 'Account Group', key: 'accountGroup', sortable: true },
   { title: 'Debit', key: 'debit', sortable: true },
   { title: 'Credit', key: 'credit', sortable: true },
   { title: 'Balance', key: 'balance', sortable: true },
-  { title: 'Account Type', key: 'accountType', sortable: true },
-  { title: 'Account Type Code', key: 'accountTypeCode', sortable: true },
-  { title: 'Account Group', key: 'accountGroup', sortable: true },
-  { title: 'Account Group Code', key: 'acccountGroupCode', sortable: true },
   { title: 'Last Transaction Date', key: 'lastTranactionDate', sortable: true },
+  // { title: 'Account Type', key: 'accountType', sortable: true },
+  // { title: 'Account Type Code', key: 'accountTypeCode', sortable: true },
+
+  // { title: 'Account Group Code', key: 'acccountGroupCode', sortable: true },
 ];
 
 // Headers for the nested grid within nested grid (level 2)
 const subNestedHeaders = () => [
+  { title: 'Charts of Account', key: 'chartsOfAccount', sortable: true },
   { title: 'Debit', key: 'debit', sortable: true },
   { title: 'Credit', key: 'credit', sortable: true },
   { title: 'Balance', key: 'balance', sortable: true },
-  { title: 'Account Type', key: 'accountType', sortable: true },
-  { title: 'Account Group', key: 'accountGroup', sortable: true },
-  { title: 'Charts of Account', key: 'chartsOfAccount', sortable: true },
-  { title: 'Account Group Code', key: 'accountGroupCode', sortable: true },
-  { title: 'Account Type Code', key: 'accountTypeCode', sortable: true },
-  { title: 'Account Code', key: 'acccountCode', sortable: true },
-  { title: 'Account Id', key: 'accountId', sortable: true },
   { title: 'Last Transaction Date', key: 'lastTranactionDate', sortable: true },
   {
     title: 'Actions',
     key: 'actions',
   },
+  // { title: 'Account Type', key: 'accountType', sortable: true },
+  // { title: 'Account Group', key: 'accountGroup', sortable: true },
+
+  // { title: 'Account Group Code', key: 'accountGroupCode', sortable: true },
+  // { title: 'Account Type Code', key: 'accountTypeCode', sortable: true },
+  // { title: 'Account Code', key: 'acccountCode', sortable: true },
+  // { title: 'Account Id', key: 'accountId', sortable: true },
 ];
 
 const ledgerHeaders = [
-  {
-    title: '',
-    key: '',
-  },
-  {
-    title: 'Charts of Account',
-    key: 'chartsOfAccount',
-  },
-  {
-    title: 'Account Group',
-    key: 'accountGroup',
-  },
-  {
-    title: 'Account Type',
-    key: 'accountType',
-  },
-  {
-    title: 'Transction Date',
-    key: 'tranactionDate',
-  },
+  // {
+  //   title: '',
+  //   key: '',
+  // },
   {
     title: 'Debit',
     key: 'debit',
@@ -123,6 +109,22 @@ const ledgerHeaders = [
     title: 'Balance',
     key: 'balance',
   },
+  {
+    title: 'Transction Date',
+    key: 'tranactionDate',
+  },
+  // {
+  //   title: 'Charts of Account',
+  //   key: 'chartsOfAccount',
+  // },
+  // {
+  //   title: 'Account Group',
+  //   key: 'accountGroup',
+  // },
+  // {
+  //   title: 'Account Type',
+  //   key: 'accountType',
+  // },
 ];
 
 // const formModal = {
@@ -318,11 +320,11 @@ onMounted(async () => {
           >
             <template v-slot:body.append>
               <tr>
-                <td><strong>Total</strong></td>
+                <!-- <td><strong>Total</strong></td>
                 <td></td>
                 <td></td>
                 <td></td>
-                <td></td>
+                <td></td> -->
                 <td>
                   <strong>{{ calculateTotal(ledgerDetails, 'debit') }}</strong>
                 </td>

@@ -46,15 +46,16 @@ const headers = [
     sortable: true,
   },
   {
-    title: 'Description',
-    key: 'description',
-    sortable: true,
-  },
-  {
     title: 'Date',
     key: 'invoiceDate',
     sortable: true,
   },
+  {
+    title: 'Description',
+    key: 'description',
+    sortable: true,
+  },
+
   {
     title: 'Sub Total Amount',
     key: 'subTotal',
@@ -84,11 +85,11 @@ const headers = [
 
 // Headers for the nested grid (Items table)
 const getItemHeaders = () => [
-  { title: 'Product Id', key: 'productId', sortable: true },
-  { title: 'Title', key: 'title', sortable: true },
+  // { title: 'Product Id', key: 'productId', sortable: true },
+  { title: 'Product Name', key: 'title', sortable: true },
+  { title: 'Quantity', key: 'quantity', sortable: true },
   { title: 'Purchase Price', key: 'purchasePrice', sortable: true },
   { title: 'Discount', key: 'discount', sortable: true },
-  { title: 'Quantity', key: 'quantity', sortable: true },
   { title: 'Total', key: 'total', sortable: true },
 ];
 
@@ -248,17 +249,18 @@ onMounted(async () => {
                     <!-- Totals row at the bottom -->
                     <template v-slot:body.append>
                       <tr>
-                        <td><strong>Total</strong></td>
+                        <!-- <td><strong>Total</strong></td> -->
                         <td><strong></strong></td>
+                        <td>
+                          <strong>{{ calculateTotal(item.piDetails, 'quantity') }}</strong>
+                        </td>
                         <td>
                           <strong>{{ calculateTotal(item.piDetails, 'purchasePrice') }}</strong>
                         </td>
                         <td>
                           <strong>{{ calculateTotal(item.piDetails, 'discount') }}</strong>
                         </td>
-                        <td>
-                          <strong>{{ calculateTotal(item.piDetails, 'quantity') }}</strong>
-                        </td>
+
                         <td>
                           <strong>{{ calculateTotal(item.piDetails, 'total') }}</strong>
                         </td>

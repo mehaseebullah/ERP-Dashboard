@@ -48,6 +48,11 @@ const headers = [
     sortable: true,
   },
   {
+    title: 'Description',
+    key: 'description',
+    sortable: true,
+  },
+  {
     title: 'Sub Total Amount',
     key: 'subTotal',
     sortable: true,
@@ -57,11 +62,7 @@ const headers = [
     key: 'total',
     sortable: true,
   },
-  {
-    title: 'Description',
-    key: 'description',
-    sortable: true,
-  },
+
   {
     title: 'Created',
     key: 'createdBy',
@@ -80,11 +81,11 @@ const headers = [
 
 // Headers for the nested grid (Items table)
 const getItemHeaders = () => [
-  { title: 'Product Id', key: 'productId', sortable: true },
-  { title: 'Title', key: 'title', sortable: true },
+  // { title: 'Product Id', key: 'productId', sortable: true },
+  { title: 'Product Name', key: 'title', sortable: true },
+  { title: 'Quantity', key: 'quantity', sortable: true },
   { title: 'Purchase Price', key: 'purchasePrice', sortable: true },
   { title: 'Discount', key: 'discount', sortable: true },
-  { title: 'Quantity', key: 'quantity', sortable: true },
   { title: 'Total', key: 'total', sortable: true },
 ];
 const formModal = {
@@ -263,17 +264,18 @@ onMounted(async () => {
                     <!-- Totals row at the bottom -->
                     <template v-slot:body.append>
                       <tr>
-                        <td><strong>Total</strong></td>
+                        <!-- <td><strong>Total</strong></td> -->
                         <td><strong></strong></td>
+                        <td>
+                          <strong>{{ calculateTotal(item.siDetails, 'quantity') }}</strong>
+                        </td>
                         <td>
                           <strong>{{ calculateTotal(item.siDetails, 'purchasePrice') }}</strong>
                         </td>
                         <td>
                           <strong>{{ calculateTotal(item.siDetails, 'discount') }}</strong>
                         </td>
-                        <td>
-                          <strong>{{ calculateTotal(item.siDetails, 'quantity') }}</strong>
-                        </td>
+
                         <td>
                           <strong>{{ calculateTotal(item.siDetails, 'total') }}</strong>
                         </td>

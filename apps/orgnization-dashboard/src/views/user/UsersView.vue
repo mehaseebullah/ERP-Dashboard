@@ -79,10 +79,6 @@ function calculateTotal(item) {
 
 const headers = ref([
   {
-    title: 'Profile Picture',
-    key: 'fileBase64',
-  },
-  {
     title: 'Username',
     key: 'username',
     sortable: true,
@@ -112,6 +108,10 @@ const headers = ref([
     title: 'Date/Time Format',
     key: 'dateTimeFormat',
     sortable: true,
+  },
+  {
+    title: 'Profile Picture',
+    key: 'fileBase64',
   },
 
   {
@@ -234,6 +234,7 @@ async function fetchUsers() {
 }
 
 async function openEditUserDialog(user) {
+  updateForm.value.resetValidation();
   showEdit.value = true;
 
   if (user.organizationId) {
@@ -257,7 +258,7 @@ async function openEditUserDialog(user) {
 async function updateUser() {
   const { valid } = await updateForm.value.validate();
   if (valid) {
-    showEdit.value = false;
+    // showEdit.value = false;
     const updatedUser = { ...profileData.value };
     if (imgUploadData.value.File) {
       imgUploadData.value.Id = updatedUser.id;
@@ -266,7 +267,7 @@ async function updateUser() {
     }
     await userStore.updateUser(updatedUser);
     swal.success('User updated successfully!');
-    showDrawer.value = false;
+    showEdit.value = false;
   } else {
     swal.error('Please fill all fields');
   }
@@ -745,7 +746,7 @@ onMounted(async () => {
                       </v-card-text>
                     </v-card>
 
-                    <v-btn @click="updateUser" color="primary">Update</v-btn>
+                    <v-btn :loading="$loading('updateUser')" @click="updateUser" color="primary">Update</v-btn>
                     <v-btn @click="cancelEdit" color="primary" class="ml-4">Cancel</v-btn>
                   </v-form>
                 </v-card-text>

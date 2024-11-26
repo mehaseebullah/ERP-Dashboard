@@ -1,7 +1,5 @@
 import { defineStore } from 'pinia';
-
-import { progHubHttpService, tenantAuthHttpService } from '@/helpers/http';
-
+import { progHubHttpService } from '@/helpers/http';
 import { useSwal } from '@/composables/useSwal';
 
 const swal = useSwal();
@@ -18,16 +16,12 @@ export const useAuthStore = defineStore({
     async register({ username, email, password }) {
       try {
         const { data } = await progHubHttpService.post('/ProgHub/Account/Register', { username, email, password });
-        console.log(data)
+        swal.success(data.message);
         if (data?.statusCode == 409) {
-
           swal.success(data?.message);
-
-          // this.$router.push('/');
         } else {
           this.$router.push('/password/verify/otp');
         }
-        // return data;
       } catch (err) {
         swal.error(err.message || 'Something went wrong');
       }
@@ -38,11 +32,9 @@ export const useAuthStore = defineStore({
 
         this.token = data?.data?.token;
         localStorage.setItem('prog_access_token', this.token);
-
         swal.success('You are successfully logged in.');
         this.$router.push('/home');
       } catch (err) {
-        console.log(err);
         if (err.response.data.statusCode === 403) {
           swal.error(err.response.data.message || 'Something went wrong');
           this.$router.push('/password/verify/otp');
@@ -65,14 +57,15 @@ export const useAuthStore = defineStore({
         const { data } = await progHubHttpService.get(
           `/ProgHub/OtpVerification/VerificationByOtpCodeAndType/${OtpCode}`,
         );
-        if(data.statusCode==404)
-        {
+        if (data.statusCode === 404) {
           swal.error(data.message);
-          return;
-        }
-        swal.success('OTP verified successfully');
-        if (verificationType === '6') {
-          this.$router.push('/');
+          return data;
+        } else if (data.statusCode === 200) {
+          swal.success(data.message);
+          if (verificationType === '6') {
+            this.$router.push('/');
+          }
+          return data;
         }
       } catch (err) {
         swal.error(err.message || 'Something went wrong');
@@ -89,6 +82,7 @@ export const useAuthStore = defineStore({
         });
         this.token = data?.data;
         swal.success('Otp Successfully generated');
+        return data;
       } catch (err) {
         swal.error(err.message || 'Something went wrong');
       }

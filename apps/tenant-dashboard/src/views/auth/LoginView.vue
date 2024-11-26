@@ -3,6 +3,7 @@ import { reactive, ref, inject } from 'vue';
 import rules from '@/helpers/rules';
 import { useAuthStore } from '@/store/auth';
 
+const $loading = inject('$loading');
 const swal = inject('$swal');
 const authStore = useAuthStore();
 
@@ -69,7 +70,7 @@ const doLogin = async () => {
           </div>
         </v-col>
         <v-col class="text-right" cols="6">
-          <v-btn type="submit" color="primary">Login</v-btn>
+          <v-btn :loading="$loading('login')" type="submit" color="primary">Login</v-btn>
         </v-col>
       </v-row>
     </v-form>

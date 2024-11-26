@@ -186,6 +186,7 @@ async function deleteOrganization(OrganizationId) {
 
 async function newUser() {
   isEdit.value = false;
+  form.value.resetValidation();
   formData.value = { ...formModal };
   showDrawer.value = true;
 }

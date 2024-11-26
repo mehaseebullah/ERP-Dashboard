@@ -7,6 +7,9 @@ import { useBalanceSheetStore } from '@/store/balanceSheet';
 import rules from '@/helpers/rules';
 import { useRoute } from 'vue-router';
 import { hasPermission } from '@/helpers/utils';
+import { useVoucherStore } from '@/store/voucher';
+import { useChartOfAccounts } from '@/store/chart_of_accounts';
+import { useGenerateInoiceNumber } from '@/store/generate_invoice_number';
 
 const route = useRoute();
 const permissionCodes = route.meta.permissionCodes || [];
@@ -23,8 +26,15 @@ const balanceSheetStore = useBalanceSheetStore();
 const { suppliers } = storeToRefs(supplierStore);
 const { ledgerDetails } = storeToRefs(balanceSheetStore);
 
+const coaStore = useChartOfAccounts();
+const { accounts } = storeToRefs(coaStore);
+const voucherStore = useVoucherStore();
+const { vouchers, voucherTypes } = storeToRefs(voucherStore);
+
 const swal = useSwal();
+const generateInoiceNumberStore = useGenerateInoiceNumber();
 const dialog = ref(false);
+const showPayDrawer = ref(false);
 const drawerTitle = computed(() => (isEdit.value ? 'UPDATE SUPPLIER' : 'CREATE SUPPLIER'));
 
 const cancelDialog = () => {
@@ -37,6 +47,41 @@ watch(dialog, (newValue) => {
     cancelDialog();
   }
 });
+
+const cancelPay = () => {
+  payFormData.value = { ...payFormModal };
+  // payFormData.value = JSON.parse(JSON.stringify(payFormModal));
+  showPayDrawer.value = false;
+};
+
+// Watch for changes in the drawer's visibility (v-model="showEdit")
+watch(showPayDrawer, (newValue) => {
+  if (!newValue) {
+    cancelPay(); // Call cancelPay when drawer is closed (cross icon clicked)
+  }
+});
+
+async function newInvoiceNum() {
+  payFormData.value.voucherNo = await generateInoiceNumberStore.fetchGenerateInvoiceNumber({ Prefix: 'VCH' });
+}
+
+async function payVoucher() {
+  payFormData.value.voucherTypeId = 6;
+  await supplierStore.payVoucher(payFormData.value);
+  vouchers.value = [];
+  showPayDrawer.value = false;
+  payFormData.value = { ...payFormModal };
+
+  // payFormData.value = JSON.parse(JSON.stringify(payFormModal));
+}
+
+async function pay(id) {
+  payFormData.value = JSON.parse(JSON.stringify({ ...payFormModal }));
+  // payFormData.value = { ...payFormModal };
+  showPayDrawer.value = true;
+  await newInvoiceNum();
+  payFormData.value.ledgerDetailDTO[0].accountId = id;
+}
 
 const headers = [
   {
@@ -67,26 +112,10 @@ const headers = [
 ];
 
 const ledgerHeaders = [
-  {
-    title: '',
-    key: '',
-  },
-  {
-    title: 'Charts of Account',
-    key: 'chartsOfAccount',
-  },
-  {
-    title: 'Account Group',
-    key: 'accountGroup',
-  },
-  {
-    title: 'Account Type',
-    key: 'accountType',
-  },
-  {
-    title: 'Transction Date',
-    key: 'tranactionDate',
-  },
+  // {
+  //   title: '',
+  //   key: '',
+  // },
   {
     title: 'Debit',
     key: 'debit',
@@ -99,6 +128,22 @@ const ledgerHeaders = [
     title: 'Balance',
     key: 'balance',
   },
+  {
+    title: 'Transction Date',
+    key: 'tranactionDate',
+  },
+  // {
+  //   title: 'Charts of Account',
+  //   key: 'chartsOfAccount',
+  // },
+  // {
+  //   title: 'Account Group',
+  //   key: 'accountGroup',
+  // },
+  // {
+  //   title: 'Account Type',
+  //   key: 'accountType',
+  // },
 ];
 
 const formModal = {
@@ -110,6 +155,56 @@ const formModal = {
 };
 
 const formData = ref({ ...formModal });
+
+const payFormModal = {
+  voucherNo: null,
+  voucherTypeCode: 6,
+  voucherDate: null,
+  description: 'This is for supplier',
+
+  // voucherId: null,
+  // voucherNo: null,
+  // voucherTypeId: null,
+  // voucherDate: null,
+  // description: '',
+  ledgerDetailDTO: [
+    {
+      accountId: '',
+      debit: 200,
+      credit: 0,
+      remarks: '',
+    },
+    {
+      accountCode: 1101,
+      debit: 0,
+      credit: 200,
+    },
+  ],
+};
+
+// CashInHand = 1101 code
+// {
+//   "voucherNo": "Get voucher no from api",
+//   "voucherTypeCode": 6,
+//   "voucherDate": null,
+//   "description": "This is for supplier",
+//   "ledgerDetailDTO": [
+//     {
+//       "accountId": "to add supplier account id",
+//       "debit": 200,
+//       "credit": 0,
+//       "remarks": "aaaa"
+//     },
+//     {
+//       "accountCode": 1101,
+//       "debit": 0,
+//       "credit": 200
+//     }
+//   ]
+// }this payload for supplier
+
+const payFormData = ref({ ...payFormModal });
+
 const isEdit = ref(false);
 const showDrawer = ref(false);
 
@@ -176,7 +271,10 @@ onMounted(() => {
         <template v-slot:item.actions="{ item }">
           <v-icon v-if="canUpdate" class="me-2" size="small" @click="editSupplier(item)"> mdi-pencil </v-icon>
           <v-icon v-if="canDelete" class="me-2" size="small" @click="deleteSupplier(item.id)"> mdi-delete </v-icon>
-          <v-icon size="small" @click="fetchSupplierTranstionDetails(item.accountId)">mdi-cash-multiple</v-icon>
+          <v-icon class="me-2" size="small" @click="fetchSupplierTranstionDetails(item.accountId)"
+            >mdi-cash-multiple</v-icon
+          >
+          <v-icon v-if="canUpdate" @click="pay(item.accountId)">mdi-credit-card</v-icon>
         </template>
       </v-data-table>
       <!-- Show message if user does not have read permissions -->
@@ -202,6 +300,37 @@ onMounted(() => {
         </div>
       </v-form>
     </main-drawer>
+
+    <main-drawer v-model="showPayDrawer" width="800" title="Pay" :toolbar="{ color: 'primary' }">
+      <v-form class="pa-5" @submit.prevent="payVoucher()">
+        <template v-for="(entry, index) in payFormData.ledgerDetailDTO" :key="index">
+          <v-row>
+            <v-col>
+              <v-text-field
+                type="text"
+                density="compact"
+                v-model.number="entry.remarks"
+                label="Remarks"
+                variant="outlined"
+              ></v-text-field>
+            </v-col>
+            <v-col>
+              <v-text-field
+                type="number"
+                density="compact"
+                v-model.number="entry.debit"
+                label="Amount"
+                variant="outlined"
+              ></v-text-field>
+            </v-col>
+          </v-row>
+        </template>
+
+        <div class="d-flex justify-end">
+          <v-btn :loading="$loading('createVoucher')" type="submit" color="primary">Pay</v-btn>
+        </div>
+      </v-form>
+    </main-drawer>
   </v-container>
   <v-container>
     <!-- Popup dialog -->
@@ -218,11 +347,11 @@ onMounted(() => {
           >
             <template v-slot:body.append>
               <tr>
-                <td><strong>Total</strong></td>
+                <!-- <td><strong>Total</strong></td>
                 <td></td>
+                
                 <td></td>
-                <td></td>
-                <td></td>
+                <td></td> -->
                 <td>
                   <strong>{{ calculateTotal(ledgerDetails, 'debit') }}</strong>
                 </td>

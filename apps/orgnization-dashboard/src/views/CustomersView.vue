@@ -7,6 +7,9 @@ import { useBalanceSheetStore } from '@/store/balanceSheet';
 import rules from '@/helpers/rules';
 import { useRoute } from 'vue-router';
 import { hasPermission } from '@/helpers/utils';
+import { useVoucherStore } from '@/store/voucher';
+import { useChartOfAccounts } from '@/store/chart_of_accounts';
+import { useGenerateInoiceNumber } from '@/store/generate_invoice_number';
 
 const route = useRoute();
 const permissionCodes = route.meta.permissionCodes || [];
@@ -19,8 +22,14 @@ const canDelete = computed(() => hasPermission('Delete', permissionCodes));
 
 const balanceSheetStore = useBalanceSheetStore();
 const customerStore = useCustomerStore();
+const generateInoiceNumberStore = useGenerateInoiceNumber();
 const { customers } = storeToRefs(customerStore);
 const { ledgerDetails } = storeToRefs(balanceSheetStore);
+
+const coaStore = useChartOfAccounts();
+const { accounts } = storeToRefs(coaStore);
+const voucherStore = useVoucherStore();
+const { vouchers, voucherTypes } = storeToRefs(voucherStore);
 
 const swal = useSwal();
 const dialog = ref(false);
@@ -66,26 +75,10 @@ const headers = [
 ];
 
 const ledgerHeaders = [
-  {
-    title: '',
-    key: '',
-  },
-  {
-    title: 'Charts of Account',
-    key: 'chartsOfAccount',
-  },
-  {
-    title: 'Account Group',
-    key: 'accountGroup',
-  },
-  {
-    title: 'Account Type',
-    key: 'accountType',
-  },
-  {
-    title: 'Transction Date',
-    key: 'tranactionDate',
-  },
+  // {
+  //   title: '',
+  //   key: '',
+  // },
   {
     title: 'Debit',
     key: 'debit',
@@ -98,6 +91,22 @@ const ledgerHeaders = [
     title: 'Balance',
     key: 'balance',
   },
+  {
+    title: 'Transction Date',
+    key: 'tranactionDate',
+  },
+  // {
+  //   title: 'Charts of Account',
+  //   key: 'chartsOfAccount',
+  // },
+  // {
+  //   title: 'Account Group',
+  //   key: 'accountGroup',
+  // },
+  // {
+  //   title: 'Account Type',
+  //   key: 'accountType',
+  // },
 ];
 
 const formModal = {
@@ -109,8 +118,81 @@ const formModal = {
 };
 
 const formData = ref({ ...formModal });
+
+const payFormModal = {
+  voucherNo: null,
+  voucherTypeCode: 6,
+  voucherDate: null,
+  description: 'This is for customer',
+  // voucherId: null,
+  // voucherNo: null,
+  // voucherTypeId: null,
+  // voucherDate: null,
+  // description: '',
+  ledgerDetailDTO: [
+    {
+      accountId: '',
+      debit: 0,
+      credit: 200,
+      remarks: '',
+    },
+    {
+      accountCode: 1101,
+      debit: 200,
+      credit: 0.0,
+    },
+  ],
+};
+// CashInHand = 1101 code
+// {
+//   "voucherNo": "Get voucher no from api",
+//   "voucherTypeCode": 6,
+//   "voucherDate": null,
+//   "description": "This is for customer",
+//   "ledgerDetailDTO": [
+//     {
+//       "accountId": "to add customer account id",
+//       "debit": 0.0,
+//       "credit": 200,
+//       "remarks": "aaaa"
+//     },
+//     {
+//       "accountCode": 1101,
+//       "debit": 200,
+//       "credit": 0.0
+//     }
+//   ]
+// }
+// This is for customer
+
+const payFormData = ref({ ...payFormModal });
+//const payFormData = ref(JSON.parse(JSON.stringify(payFormModal)));
+
 const isEdit = ref(false);
 const showDrawer = ref(false);
+const showPayDrawer = ref(false);
+
+const cancelPay = () => {
+  payFormData.value = { ...payFormModal };
+  // payFormData.value = JSON.parse(JSON.stringify(payFormModal));
+  showPayDrawer.value = false;
+};
+
+// Watch for changes in the drawer's visibility (v-model="showEdit")
+watch(showPayDrawer, (newValue) => {
+  if (!newValue) {
+    cancelPay(); // Call cancelPay when drawer is closed (cross icon clicked)
+  }
+});
+
+async function payVoucher() {
+  // payFormData.value.voucherTypeId = 6;
+  await customerStore.payVoucher(payFormData.value);
+  vouchers.value = [];
+  showPayDrawer.value = false;
+  payFormData.value = { ...payFormModal };
+  // payFormData.value = JSON.parse(JSON.stringify(payFormModal));
+}
 
 async function newCustomer() {
   formData.value = { ...formModal };
@@ -143,6 +225,18 @@ async function fetchCustomerTranstionDetails(accountId) {
   await balanceSheetStore.fetchLedgerDetails(accountId);
 }
 
+async function newInvoiceNum() {
+  payFormData.value.voucherNo = await generateInoiceNumberStore.fetchGenerateInvoiceNumber({ Prefix: 'VCH' });
+}
+
+async function pay(id) {
+  payFormData.value = JSON.parse(JSON.stringify({ ...payFormModal }));
+  // payFormData.value = { ...payFormModal };
+  showPayDrawer.value = true;
+  await newInvoiceNum();
+  payFormData.value.ledgerDetailDTO[0].accountId = id;
+}
+
 async function deleteCustomer(id) {
   swal.confirm('Are you sure you want to delete this customer?').then(async (result) => {
     if (result.isConfirmed) {
@@ -163,6 +257,10 @@ function calculateTotal(items, field) {
 
 onMounted(() => {
   if (canRead.value) customerStore.fetchCustomers();
+  if (canCreate.value || canUpdate.value) {
+    voucherStore.fetchVoucherTypes();
+    coaStore.fetchAllChartOfAccounts();
+  }
 });
 </script>
 <template>
@@ -176,7 +274,10 @@ onMounted(() => {
         <template v-slot:item.actions="{ item }">
           <v-icon v-if="canUpdate" class="me-2" size="small" @click="editCustomer(item)"> mdi-pencil </v-icon>
           <v-icon v-if="canDelete" class="me-2" size="small" @click="deleteCustomer(item.id)"> mdi-delete </v-icon>
-          <v-icon size="small" @click="fetchCustomerTranstionDetails(item.accountId)">mdi-cash-multiple</v-icon>
+          <v-icon class="me-2" size="small" @click="fetchCustomerTranstionDetails(item.accountId)"
+            >mdi-cash-multiple</v-icon
+          >
+          <v-icon v-if="canUpdate" @click="pay(item.accountId)">mdi-credit-card</v-icon>
         </template>
       </v-data-table>
       <!-- Show message if user does not have read permissions -->
@@ -202,6 +303,38 @@ onMounted(() => {
         </div>
       </v-form>
     </main-drawer>
+
+    <main-drawer v-model="showPayDrawer" width="800" title="Pay" :toolbar="{ color: 'primary' }">
+      <v-form class="pa-5" @submit.prevent="payVoucher()">
+        <template v-for="(entry, index) in payFormData.ledgerDetailDTO" :key="index">
+          <v-row>
+            <v-col>
+              <v-text-field
+                type="text"
+                density="compact"
+                v-model.number="entry.remarks"
+                label="Remarks"
+                variant="outlined"
+              ></v-text-field>
+            </v-col>
+
+            <v-col>
+              <v-text-field
+                type="number"
+                density="compact"
+                v-model.number="entry.credit"
+                label="Amount"
+                variant="outlined"
+              ></v-text-field>
+            </v-col>
+          </v-row>
+        </template>
+
+        <div class="d-flex justify-end">
+          <v-btn :loading="$loading('createVoucher')" type="submit" color="primary">Pay</v-btn>
+        </div>
+      </v-form>
+    </main-drawer>
   </v-container>
   <v-container>
     <!-- Popup dialog -->
@@ -218,11 +351,11 @@ onMounted(() => {
           >
             <template v-slot:body.append>
               <tr>
-                <td><strong>Total</strong></td>
+                <!-- <td><strong>Total</strong></td>
                 <td></td>
                 <td></td>
                 <td></td>
-                <td></td>
+                <td></td> -->
                 <td>
                   <strong>{{ calculateTotal(ledgerDetails, 'debit') }}</strong>
                 </td>

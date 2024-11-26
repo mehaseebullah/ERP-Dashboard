@@ -43,7 +43,7 @@ const headers = ref([
   },
 
   {
-    title: 'Invoke Permissions',
+    title: 'Actions',
     key: 'actions',
     sortable: false,
   },
@@ -191,7 +191,11 @@ onMounted(async () => {
               <v-card-text>
                 <v-form>
                   <v-row class="justify-end">
-                    <v-btn @click="invokeRolePermission(roleData.roleId, roleData.organizationId)" color="primary">
+                    <v-btn
+                      :loading="$loading('invokeRolePermission')"
+                      @click="invokeRolePermission(roleData.roleId, roleData.organizationId)"
+                      color="primary"
+                    >
                       Update
                     </v-btn>
                     <v-btn @click="cancelEdit" color="primary" class="ml-4">Cancel</v-btn>
