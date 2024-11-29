@@ -164,7 +164,9 @@ onMounted(async () => {
         ><v-card-text>
           <template v-if="loadingPermissions">
             <!-- Loader component -->
-            <v-progress-circular indeterminate color="primary"></v-progress-circular>
+            <v-container fluid fill-height class="d-flex justify-center align-center">
+              <v-progress-circular indeterminate color="primary"></v-progress-circular>
+            </v-container>
           </template>
           <template v-else>
             <v-row>

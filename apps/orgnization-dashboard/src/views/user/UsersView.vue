@@ -376,7 +376,7 @@ async function invokeUserPermission(UserId, OrganizationId) {
       selectedCodes.value.push(feature.code); // Add the feature code to selectedCodes
     }
   });
-  // showUserDialog.value = false;
+  showEdit.value = false;
   fetchUsers();
 }
 onMounted(async () => {
@@ -790,6 +790,7 @@ onMounted(async () => {
                         <v-form>
                           <v-row class="justify-end">
                             <v-btn
+                              :loading="$loading('invokeUserPermission')"
                               @click="invokeUserPermission(profileData.id, profileData.organizationId)"
                               color="primary"
                             >
@@ -845,7 +846,7 @@ onMounted(async () => {
                     ></v-text-field>
 
                     <div class="d-flex justify-end">
-                      <v-btn type="submit" color="primary">Update</v-btn>
+                      <v-btn :loading="$loading('updateUserPassword')" type="submit" color="primary">Update</v-btn>
                     </div>
                   </v-form>
                 </v-card-text>

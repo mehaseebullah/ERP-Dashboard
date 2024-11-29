@@ -14,8 +14,6 @@ export const useRoleStore = defineStore({
       return this.organizationRolePermissions;
     },
     async invokeRolePermission(RoleId, OrganizationId, selectedCodes) {
-      console.log(selectedCodes);
-
       const { data } = await api.post(
         `/Tenant/Account/InvokeRolePermission/${OrganizationId}/${RoleId}`,
         selectedCodes,

@@ -42,10 +42,10 @@ export const useCustomerStore = defineStore({
       this.fetchCustomers();
       return data?.data;
     },
-    async payVoucher({ voucherNo, voucherTypeId, voucherDate, description, ledgerDetailDTO }) {
+    async payVoucher({ voucherNo, voucherTypeCode, voucherDate, description, ledgerDetailDTO }) {
       const { data } = await api.post('/Finance/Voucher/AddUpdateVoucher', {
         voucherNo,
-        voucherTypeId,
+        voucherTypeCode,
         voucherDate,
         description,
         ledgerDetailDTO,

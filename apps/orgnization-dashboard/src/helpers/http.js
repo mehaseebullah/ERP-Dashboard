@@ -33,7 +33,7 @@ api.interceptors.request.use(
 
 api.interceptors.response.use(
   (response) => {
-    console.log('test');
+    // console.log('test');
     const swal = useSwal();
     if (response?.data?.message && (response?.statusText == 'OK' || response?.statusText == 'Created')) {
       swal.success(response.data.message);

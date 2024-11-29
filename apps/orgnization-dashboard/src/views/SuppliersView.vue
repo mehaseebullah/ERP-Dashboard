@@ -31,6 +31,8 @@ const { accounts } = storeToRefs(coaStore);
 const voucherStore = useVoucherStore();
 const { vouchers, voucherTypes } = storeToRefs(voucherStore);
 
+const form = ref();
+const payForm = ref();
 const swal = useSwal();
 const generateInoiceNumberStore = useGenerateInoiceNumber();
 const dialog = ref(false);
@@ -61,28 +63,6 @@ watch(showPayDrawer, (newValue) => {
   }
 });
 
-async function newInvoiceNum() {
-  payFormData.value.voucherNo = await generateInoiceNumberStore.fetchGenerateInvoiceNumber({ Prefix: 'VCH' });
-}
-
-async function payVoucher() {
-  payFormData.value.voucherTypeId = 6;
-  await supplierStore.payVoucher(payFormData.value);
-  vouchers.value = [];
-  showPayDrawer.value = false;
-  payFormData.value = { ...payFormModal };
-
-  // payFormData.value = JSON.parse(JSON.stringify(payFormModal));
-}
-
-async function pay(id) {
-  payFormData.value = JSON.parse(JSON.stringify({ ...payFormModal }));
-  // payFormData.value = { ...payFormModal };
-  showPayDrawer.value = true;
-  await newInvoiceNum();
-  payFormData.value.ledgerDetailDTO[0].accountId = id;
-}
-
 const headers = [
   {
     title: 'First Name',
@@ -112,10 +92,6 @@ const headers = [
 ];
 
 const ledgerHeaders = [
-  // {
-  //   title: '',
-  //   key: '',
-  // },
   {
     title: 'Debit',
     key: 'debit',
@@ -132,18 +108,6 @@ const ledgerHeaders = [
     title: 'Transction Date',
     key: 'tranactionDate',
   },
-  // {
-  //   title: 'Charts of Account',
-  //   key: 'chartsOfAccount',
-  // },
-  // {
-  //   title: 'Account Group',
-  //   key: 'accountGroup',
-  // },
-  // {
-  //   title: 'Account Type',
-  //   key: 'accountType',
-  // },
 ];
 
 const formModal = {
@@ -157,68 +121,77 @@ const formModal = {
 const formData = ref({ ...formModal });
 
 const payFormModal = {
-  voucherNo: null,
+  voucherNo: '',
   voucherTypeCode: 6,
   voucherDate: null,
   description: 'This is for supplier',
 
-  // voucherId: null,
-  // voucherNo: null,
-  // voucherTypeId: null,
-  // voucherDate: null,
-  // description: '',
   ledgerDetailDTO: [
     {
       accountId: '',
-      debit: 200,
-      credit: 0,
+      debit: 0.0, //this
+      credit: 0.0,
       remarks: '',
     },
     {
-      accountCode: 1101,
-      debit: 0,
-      credit: 200,
+      accountCode: '1101',
+      debit: 0.0,
+      credit: 0.0,
     },
   ],
 };
 
-// CashInHand = 1101 code
-// {
-//   "voucherNo": "Get voucher no from api",
-//   "voucherTypeCode": 6,
-//   "voucherDate": null,
-//   "description": "This is for supplier",
-//   "ledgerDetailDTO": [
-//     {
-//       "accountId": "to add supplier account id",
-//       "debit": 200,
-//       "credit": 0,
-//       "remarks": "aaaa"
-//     },
-//     {
-//       "accountCode": 1101,
-//       "debit": 0,
-//       "credit": 200
-//     }
-//   ]
-// }this payload for supplier
-
 const payFormData = ref({ ...payFormModal });
+
+async function newInvoiceNum() {
+  payFormData.value.voucherNo = await generateInoiceNumberStore.fetchGenerateInvoiceNumber({ Prefix: 'VCH' });
+}
+
+async function payVoucher() {
+  const { valid } = await payForm.value.validate();
+  if (valid) {
+    payFormData.value.ledgerDetailDTO[1].credit = payFormData.value.ledgerDetailDTO[0].debit;
+    await supplierStore.payVoucher(payFormData.value);
+    // console.log('this is payData', payFormData.value);
+    vouchers.value = [];
+    showPayDrawer.value = false;
+    payFormData.value = { ...payFormModal };
+  } else {
+    swal.error('Please fill all fields');
+  }
+
+  // payFormData.value = JSON.parse(JSON.stringify(payFormModal));
+}
+
+async function pay(id) {
+  payFormData.value = JSON.parse(JSON.stringify({ ...payFormModal }));
+  payForm.value.resetValidation();
+  // payFormData.value = { ...payFormModal };
+  showPayDrawer.value = true;
+  await newInvoiceNum();
+  payFormData.value.ledgerDetailDTO[0].accountId = id;
+}
 
 const isEdit = ref(false);
 const showDrawer = ref(false);
 
 async function newSupplier() {
   formData.value = { ...formModal };
+  form.value.resetValidation();
   isEdit.value = false;
   showDrawer.value = true;
 }
 
 async function createSupplier() {
-  await supplierStore.createSupplier(formData.value);
-  showDrawer.value = false;
-  formData.value = { ...formModal };
-  isEdit.value = false;
+  const { valid } = await form.value.validate();
+  if (valid) {
+    await supplierStore.createSupplier(formData.value);
+    showDrawer.value = false;
+    formData.value = { ...formModal };
+    isEdit.value = false;
+  } else {
+    swal.error('Please fill all fields');
+  }
 }
 
 async function editSupplier(item) {
@@ -228,10 +201,15 @@ async function editSupplier(item) {
 }
 
 async function updateSupplier() {
-  await supplierStore.updateSupplier(formData.value);
-  showDrawer.value = false;
-  formData.value = { ...formModal };
-  isEdit.value = false;
+  const { valid } = await form.value.validate();
+  if (valid) {
+    await supplierStore.updateSupplier(formData.value);
+    showDrawer.value = false;
+    formData.value = { ...formModal };
+    isEdit.value = false;
+  } else {
+    swal.error('Please fill all fields');
+  }
 }
 async function fetchSupplierTranstionDetails(accountId) {
   dialog.value = true;
@@ -288,12 +266,37 @@ onMounted(() => {
       </v-card-text>
     </v-card>
     <main-drawer v-model="showDrawer" width="800" :title="drawerTitle" :toolbar="{ color: 'primary' }">
-      <v-form class="pa-5" @submit.prevent="isEdit ? updateSupplier() : createSupplier()">
-        <v-text-field v-model="formData.firstName" label="First Name" variant="outlined"></v-text-field>
-        <v-text-field v-model="formData.lastName" label="Last Name" variant="outlined"></v-text-field>
-        <v-text-field v-model="formData.emailAddress" label="Email" variant="outlined"></v-text-field>
-        <v-text-field v-model="formData.contactNumber" label="Phone" variant="outlined"></v-text-field>
-        <v-textarea v-model="formData.address" label="Address" variant="outlined"></v-textarea>
+      <v-form ref="form" class="pa-5" @submit.prevent="isEdit ? updateSupplier() : createSupplier()">
+        <v-text-field
+          v-model="formData.firstName"
+          label="First Name"
+          variant="outlined"
+          :rules="[rules.required]"
+        ></v-text-field>
+        <v-text-field
+          v-model="formData.lastName"
+          label="Last Name"
+          variant="outlined"
+          :rules="[rules.required]"
+        ></v-text-field>
+        <v-text-field
+          v-model="formData.emailAddress"
+          label="Email"
+          variant="outlined"
+          :rules="[rules.email]"
+        ></v-text-field>
+        <v-text-field
+          v-model="formData.contactNumber"
+          label="Phone"
+          variant="outlined"
+          :rules="[rules.required]"
+        ></v-text-field>
+        <v-textarea
+          v-model="formData.address"
+          label="Address"
+          variant="outlined"
+          :rules="[rules.required]"
+        ></v-textarea>
         <div class="d-flex justify-end">
           <v-btn v-if="isEdit" :loading="$loading('updateSupplier')" type="submit" color="primary">Update</v-btn>
           <v-btn v-else :loading="$loading('createSupplier')" type="submit" color="primary">Create</v-btn>
@@ -302,9 +305,9 @@ onMounted(() => {
     </main-drawer>
 
     <main-drawer v-model="showPayDrawer" width="800" title="Pay" :toolbar="{ color: 'primary' }">
-      <v-form class="pa-5" @submit.prevent="payVoucher()">
+      <v-form ref="payForm" class="pa-5" @submit.prevent="payVoucher()">
         <template v-for="(entry, index) in payFormData.ledgerDetailDTO" :key="index">
-          <v-row>
+          <v-row v-if="index === 0">
             <v-col>
               <v-text-field
                 type="text"
@@ -312,6 +315,7 @@ onMounted(() => {
                 v-model.number="entry.remarks"
                 label="Remarks"
                 variant="outlined"
+                :rules="[rules.required]"
               ></v-text-field>
             </v-col>
             <v-col>
@@ -321,13 +325,14 @@ onMounted(() => {
                 v-model.number="entry.debit"
                 label="Amount"
                 variant="outlined"
+                :rules="[rules.required]"
               ></v-text-field>
             </v-col>
           </v-row>
         </template>
 
         <div class="d-flex justify-end">
-          <v-btn :loading="$loading('createVoucher')" type="submit" color="primary">Pay</v-btn>
+          <v-btn :loading="$loading('payVoucher')" type="submit" color="primary">Pay</v-btn>
         </div>
       </v-form>
     </main-drawer>
