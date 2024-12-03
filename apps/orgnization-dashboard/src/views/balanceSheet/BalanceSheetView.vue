@@ -66,10 +66,6 @@ const nestedItemHeaders = () => [
   { title: 'Credit', key: 'credit', sortable: true },
   { title: 'Balance', key: 'balance', sortable: true },
   { title: 'Last Transaction Date', key: 'lastTranactionDate', sortable: true },
-  // { title: 'Account Type', key: 'accountType', sortable: true },
-  // { title: 'Account Type Code', key: 'accountTypeCode', sortable: true },
-
-  // { title: 'Account Group Code', key: 'acccountGroupCode', sortable: true },
 ];
 
 // Headers for the nested grid within nested grid (level 2)
@@ -83,20 +79,9 @@ const subNestedHeaders = () => [
     title: 'Actions',
     key: 'actions',
   },
-  // { title: 'Account Type', key: 'accountType', sortable: true },
-  // { title: 'Account Group', key: 'accountGroup', sortable: true },
-
-  // { title: 'Account Group Code', key: 'accountGroupCode', sortable: true },
-  // { title: 'Account Type Code', key: 'accountTypeCode', sortable: true },
-  // { title: 'Account Code', key: 'acccountCode', sortable: true },
-  // { title: 'Account Id', key: 'accountId', sortable: true },
 ];
 
 const ledgerHeaders = [
-  // {
-  //   title: '',
-  //   key: '',
-  // },
   {
     title: 'Debit',
     key: 'debit',
@@ -113,54 +98,7 @@ const ledgerHeaders = [
     title: 'Transction Date',
     key: 'tranactionDate',
   },
-  // {
-  //   title: 'Charts of Account',
-  //   key: 'chartsOfAccount',
-  // },
-  // {
-  //   title: 'Account Group',
-  //   key: 'accountGroup',
-  // },
-  // {
-  //   title: 'Account Type',
-  //   key: 'accountType',
-  // },
 ];
-
-// const formModal = {
-//   accountType: '',
-//   accountTypeCode: null,
-//   debit: null,
-//   credit: null,
-//   balance: null,
-//   accountTypeDetails: [
-//     {
-//       accountType: '',
-//       accountGroup: '',
-//       accountTypeCode: null,
-//       acccountGroupCode: null,
-//       lastTranactionDate: '',
-//       debit: null,
-//       credit: null,
-//       balance: null,
-//       accountGroupDetails: [
-//         {
-//           accountType: '',
-//           accountGroup: '',
-//           chartsOfAccount: '',
-//           acccountGroupCode: null,
-//           accountTypeCode: null,
-//           acccountCode: null,
-//           accountId: null,
-//           lastTranactionDate: '',
-//           debit: null,
-//           credit: null,
-//           balance: null,
-//         },
-//       ],
-//     },
-//   ],
-// };
 
 async function fetchLedgerDetails(ChartsOfAccountId) {
   dialog.value = true;

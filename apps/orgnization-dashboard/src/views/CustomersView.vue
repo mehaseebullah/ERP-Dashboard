@@ -115,7 +115,7 @@ const payFormModal = {
     {
       accountId: null,
       debit: 0.0,
-      credit: 0.0, //this
+      credit: 0.0,
       remarks: '',
     },
     {
@@ -127,7 +127,6 @@ const payFormModal = {
 };
 
 const payFormData = ref({ ...payFormModal });
-//const payFormData = ref(JSON.parse(JSON.stringify(payFormModal)));
 
 const isEdit = ref(false);
 const showDrawer = ref(false);
@@ -135,7 +134,6 @@ const showPayDrawer = ref(false);
 
 const cancelPay = () => {
   payFormData.value = { ...payFormModal };
-  // payFormData.value = JSON.parse(JSON.stringify(payFormModal));
   showPayDrawer.value = false;
 };
 
@@ -151,15 +149,12 @@ async function payVoucher() {
   if (valid) {
     payFormData.value.ledgerDetailDTO[1].debit = payFormData.value.ledgerDetailDTO[0].credit;
     await customerStore.payVoucher(payFormData.value);
-    // console.log('this is payData', payFormData.value);
     vouchers.value = [];
     showPayDrawer.value = false;
     payFormData.value = { ...payFormModal };
   } else {
     swal.error('Please fill all fields');
   }
-
-  // payFormData.value = JSON.parse(JSON.stringify(payFormModal));
 }
 
 async function newCustomer() {
@@ -211,7 +206,6 @@ async function newInvoiceNum() {
 async function pay(id) {
   payFormData.value = JSON.parse(JSON.stringify({ ...payFormModal }));
   payForm.value.resetValidation();
-  // payFormData.value = { ...payFormModal };
   showPayDrawer.value = true;
   await newInvoiceNum();
   payFormData.value.ledgerDetailDTO[0].accountId = id;

@@ -52,7 +52,6 @@ watch(dialog, (newValue) => {
 
 const cancelPay = () => {
   payFormData.value = { ...payFormModal };
-  // payFormData.value = JSON.parse(JSON.stringify(payFormModal));
   showPayDrawer.value = false;
 };
 
@@ -129,7 +128,7 @@ const payFormModal = {
   ledgerDetailDTO: [
     {
       accountId: '',
-      debit: 0.0, //this
+      debit: 0.0,
       credit: 0.0,
       remarks: '',
     },
@@ -152,21 +151,17 @@ async function payVoucher() {
   if (valid) {
     payFormData.value.ledgerDetailDTO[1].credit = payFormData.value.ledgerDetailDTO[0].debit;
     await supplierStore.payVoucher(payFormData.value);
-    // console.log('this is payData', payFormData.value);
     vouchers.value = [];
     showPayDrawer.value = false;
     payFormData.value = { ...payFormModal };
   } else {
     swal.error('Please fill all fields');
   }
-
-  // payFormData.value = JSON.parse(JSON.stringify(payFormModal));
 }
 
 async function pay(id) {
   payFormData.value = JSON.parse(JSON.stringify({ ...payFormModal }));
   payForm.value.resetValidation();
-  // payFormData.value = { ...payFormModal };
   showPayDrawer.value = true;
   await newInvoiceNum();
   payFormData.value.ledgerDetailDTO[0].accountId = id;
@@ -352,11 +347,6 @@ onMounted(() => {
           >
             <template v-slot:body.append>
               <tr>
-                <!-- <td><strong>Total</strong></td>
-                <td></td>
-                
-                <td></td>
-                <td></td> -->
                 <td>
                   <strong>{{ calculateTotal(ledgerDetails, 'debit') }}</strong>
                 </td>
