@@ -52,6 +52,7 @@ const state = reactive({
 const oldPassword = ref('');
 const newPassword = ref('');
 const tempPassword = ref('');
+const tempUserId = ref(null);
 
 const form = ref();
 const updateForm = ref();
@@ -236,29 +237,33 @@ async function fetchUsers() {
 async function openEditUserDialog(user) {
   updateForm.value.resetValidation();
   showEdit.value = true;
+  loader.value = true; // Show loader
+  tempUserId.value = user.id;
 
-  if (user.organizationId) {
-    await GetRolesByOrganizationId(user.organizationId);
-    await fetchUserGenders(user.organizationId);
-    if (user.roleId) await GetUserByParentRoleId(user.roleId);
-    await fetchUserCountries(user.organizationId);
-    if (user.countryId) {
-      await fetchStateByCountryId(user.countryId);
-      if (user.stateId) await fetchCitiesByStateId(user.stateId);
+  try {
+    if (user.organizationId) {
+      await GetRolesByOrganizationId(user.organizationId);
+      await fetchUserGenders(user.organizationId);
+      if (user.roleId) await GetUserByParentRoleId(user.roleId);
+      await fetchUserCountries(user.organizationId);
+      if (user.countryId) {
+        await fetchStateByCountryId(user.countryId);
+        if (user.stateId) await fetchCitiesByStateId(user.stateId);
+      }
+      await userStore.fetchTimeZones();
+      await userStore.fetchDateFormats();
     }
-    await userStore.fetchTimeZones();
-    await userStore.fetchDateFormats();
+    profileData.value = { ...user }; // Populate user data
+  } catch (error) {
+    swal.error('Error loading user data:', error);
+  } finally {
+    loader.value = false; // Hide loader after API calls
   }
-
-  profileData.value = { ...user }; //to populate user data
-
-  // showUserDialog.value = true; // Show the UserProfileUpdate dialog
 }
 
 async function updateUser() {
   const { valid } = await updateForm.value.validate();
   if (valid) {
-    // showEdit.value = false;
     const updatedUser = { ...profileData.value };
     if (imgUploadData.value.File) {
       imgUploadData.value.Id = updatedUser.id;
@@ -514,7 +519,7 @@ onMounted(async () => {
           <v-tabs v-model="tab" color="primary" direction="vertical">
             <v-tab prepend-icon="mdi-account" text="Basic Info" value="option-1"></v-tab>
             <v-tab
-              @click="fetchPermissions(profileData.id)"
+              @click="fetchPermissions(tempUserId)"
               prepend-icon="mdi-lock"
               text="Permissions"
               value="option-2"
@@ -526,229 +531,240 @@ onMounted(async () => {
             <v-tabs-window-item value="option-1">
               <v-card flat>
                 <v-card-text>
-                  <v-form ref="updateForm">
-                    <!-- Basic Info Section -->
-                    <v-card class="mb-2">
-                      <v-card-text>
-                        <v-row class="align-items-center">
-                          <v-col cols="12" md="2" class="d-flex flex-column align-items-center position-relative">
-                            <v-avatar size="100">
-                              <v-img :src="selectedImage || profileData.fileBase64 || '/default_Profile_Img.jpg'" />
-                              <v-icon
-                                @click="triggerFileInput"
-                                class="position-absolute"
-                                style="
-                                  top: 0;
-                                  right: 0;
-                                  bottom: 0;
-                                  margin: auto;
-                                  color: white;
-                                  background: white;
-                                  border-radius: 50%;
-                                "
-                                color="black"
-                                small
-                              >
-                                mdi-pencil
-                              </v-icon>
-                            </v-avatar>
+                  <template v-if="loader">
+                    <!-- Loader component -->
+                    <div class="d-flex justify-center pa-5">
+                      <v-progress-circular indeterminate color="primary"></v-progress-circular>
+                    </div>
+                  </template>
+                  <template v-else>
+                    <v-form ref="updateForm">
+                      <!-- Basic Info Section -->
+                      <v-card class="mb-2">
+                        <v-card-text>
+                          <v-row class="align-items-center">
+                            <v-col cols="12" md="2" class="d-flex flex-column align-items-center position-relative">
+                              <v-avatar size="100">
+                                <v-img :src="selectedImage || profileData.fileBase64 || '/default_Profile_Img.jpg'" />
+                                <v-icon
+                                  @click="triggerFileInput"
+                                  class="position-absolute"
+                                  style="
+                                    top: 0;
+                                    right: 0;
+                                    bottom: 0;
+                                    margin: auto;
+                                    color: white;
+                                    background: white;
+                                    border-radius: 50%;
+                                  "
+                                  color="black"
+                                  small
+                                >
+                                  mdi-pencil
+                                </v-icon>
+                              </v-avatar>
 
-                            <!-- Hidden file input -->
-                            <input
-                              ref="fileInput"
-                              type="file"
-                              accept="image/*"
-                              style="display: none"
-                              @change="handleImageUpload"
-                            />
-                          </v-col>
+                              <!-- Hidden file input -->
+                              <input
+                                ref="fileInput"
+                                type="file"
+                                accept="image/*"
+                                style="display: none"
+                                @change="handleImageUpload"
+                              />
+                            </v-col>
 
-                          <v-col cols="12" md="10">
-                            <div class="d-flex flex-column justify-center align-start">
-                              <h2 class="mb-3">{{ profileData.username || 'Username' }}</h2>
-                              <h3 class="mb-3">Email: {{ profileData.email }}</h3>
-                              <h3>ID: {{ profileData.id }}</h3>
-                            </div>
-                          </v-col>
+                            <v-col cols="12" md="10">
+                              <div class="d-flex flex-column justify-center align-start">
+                                <h2 class="mb-3">{{ profileData.username || 'Username' }}</h2>
+                                <h3 class="mb-3">Email: {{ profileData.email }}</h3>
+                                <h3>ID: {{ profileData.id }}</h3>
+                              </div>
+                            </v-col>
 
-                          <v-col cols="12" md="6">
-                            <v-text-field
-                              v-model="profileData.firstName"
-                              label="First Name"
-                              :rules="[rules.required, rules.minLength(2)]"
-                            />
-                          </v-col>
-                          <v-col cols="12" md="6">
-                            <v-text-field
-                              v-model="profileData.lastName"
-                              label="Last Name"
-                              :rules="[rules.required, rules.minLength(2)]"
-                            />
-                          </v-col>
-                          <v-col cols="12" md="6">
-                            <v-select
-                              :loading="$loading('fetchUserGenders')"
-                              :items="userGenders"
-                              v-model="profileData.genderId"
-                              item-title="title"
-                              item-value="id"
-                              label="Select Gender"
-                              placeholder="Select Gender"
-                              :rules="[rules.required]"
-                            />
-                          </v-col>
-                          <v-col cols="12" md="6">
-                            <v-text-field v-model="profileData.roles" label="Role" readonly />
-                          </v-col>
-                          <v-col cols="12" md="6">
-                            <v-text-field v-model="profileData.organizationName" label="Organization" readonly />
-                          </v-col>
+                            <v-col cols="12" md="6">
+                              <v-text-field
+                                v-model="profileData.firstName"
+                                label="First Name"
+                                :rules="[rules.required, rules.minLength(2)]"
+                              />
+                            </v-col>
+                            <v-col cols="12" md="6">
+                              <v-text-field
+                                v-model="profileData.lastName"
+                                label="Last Name"
+                                :rules="[rules.required, rules.minLength(2)]"
+                              />
+                            </v-col>
+                            <v-col cols="12" md="6">
+                              <v-select
+                                :loading="$loading('fetchUserGenders')"
+                                :items="userGenders"
+                                v-model="profileData.genderId"
+                                item-title="title"
+                                item-value="id"
+                                label="Select Gender"
+                                placeholder="Select Gender"
+                                :rules="[rules.required]"
+                              />
+                            </v-col>
+                            <v-col cols="12" md="6">
+                              <v-text-field v-model="profileData.roles" label="Role" readonly />
+                            </v-col>
+                            <v-col cols="12" md="6">
+                              <v-text-field v-model="profileData.organizationName" label="Organization" readonly />
+                            </v-col>
 
-                          <v-col cols="12" md="6">
-                            <v-select
-                              :loading="$loading('GetRolesByOrganizationId')"
-                              v-model="profileData.roleId"
-                              :items="organizationRoles"
-                              item-title="roleName"
-                              item-value="roleId"
-                              label="Select Role"
-                              placeholder="Select a role"
-                              @update:model-value="GetUserByParentRoleId"
-                              :rules="[rules.required]"
-                            />
-                          </v-col>
+                            <v-col cols="12" md="6">
+                              <v-select
+                                :loading="$loading('GetRolesByOrganizationId')"
+                                v-model="profileData.roleId"
+                                :items="organizationRoles"
+                                item-title="roleName"
+                                item-value="roleId"
+                                label="Select Role"
+                                placeholder="Select a role"
+                                @update:model-value="GetUserByParentRoleId"
+                                :rules="[rules.required]"
+                              />
+                            </v-col>
 
-                          <v-col v-if="profileData.roles != 'Super Administrator'" cols="12" md="6">
-                            <v-select
-                              :loading="$loading('GetUserByParentRoleId')"
-                              v-model="profileData.reportToId"
-                              :items="pRoleUsers"
-                              item-title="text"
-                              item-value="id"
-                              label="Report To"
-                              placeholder="Please select a user"
-                              :rules="[rules.required]"
-                            />
-                          </v-col>
+                            <v-col v-if="profileData.roles != 'Super Administrator'" cols="12" md="6">
+                              <v-select
+                                :loading="$loading('GetUserByParentRoleId')"
+                                v-model="profileData.reportToId"
+                                :items="pRoleUsers"
+                                item-title="text"
+                                item-value="id"
+                                label="Report To"
+                                placeholder="Please select a user"
+                                :rules="[rules.required]"
+                              />
+                            </v-col>
 
-                          <v-col cols="12" md="6">
-                            <v-text-field v-model="profileData.bio" label="Bio" :rules="[rules.required]" />
-                          </v-col>
-                          <v-col cols="12" md="6">
-                            <v-text-field
-                              v-model="profileData.preferences"
-                              label="Preferences"
-                              :rules="[rules.required]"
-                            />
-                          </v-col>
-                        </v-row>
-                      </v-card-text>
-                    </v-card>
+                            <v-col cols="12" md="6">
+                              <v-text-field v-model="profileData.bio" label="Bio" :rules="[rules.required]" />
+                            </v-col>
+                            <v-col cols="12" md="6">
+                              <v-text-field
+                                v-model="profileData.preferences"
+                                label="Preferences"
+                                :rules="[rules.required]"
+                              />
+                            </v-col>
+                          </v-row>
+                        </v-card-text>
+                      </v-card>
 
-                    <!-- Contacts Section -->
-                    <v-card class="mb-6">
-                      <v-card-title>Contacts</v-card-title>
-                      <v-card-text>
-                        <v-row>
-                          <v-col cols="12" md="6">
-                            <v-text-field v-model="profileData.phoneNumber" label="Phone" :rules="[rules.required]" />
-                          </v-col>
-                          <v-col cols="12" md="6">
-                            <v-text-field v-model="profileData.email" label="Email" readonly />
-                          </v-col>
-                        </v-row>
-                      </v-card-text>
-                    </v-card>
+                      <!-- Contacts Section -->
+                      <v-card class="mb-6">
+                        <v-card-title>Contacts</v-card-title>
+                        <v-card-text>
+                          <v-row>
+                            <v-col cols="12" md="6">
+                              <v-text-field v-model="profileData.phoneNumber" label="Phone" :rules="[rules.required]" />
+                            </v-col>
+                            <v-col cols="12" md="6">
+                              <v-text-field v-model="profileData.email" label="Email" readonly />
+                            </v-col>
+                          </v-row>
+                        </v-card-text>
+                      </v-card>
 
-                    <!-- Address Section -->
-                    <v-card class="mb-6">
-                      <v-card-title>Address</v-card-title>
-                      <v-card-text>
-                        <v-row>
-                          <v-col cols="12" md="6">
-                            <v-text-field v-model="profileData.address" label="Address" :rules="[rules.required]" />
-                          </v-col>
-                          <v-col cols="12" md="6">
-                            <v-select
-                              :loading="$loading('fetchUserCountries')"
-                              v-model="profileData.countryId"
-                              :items="userCountries"
-                              item-title="title"
-                              item-value="id"
-                              label="Select Country"
-                              @update:model-value="fetchStateByCountryId"
-                              placeholder="Select a Country"
-                            />
-                          </v-col>
-                          <v-col cols="12" md="6">
-                            <v-select
-                              :loading="$loading('fetchUserStates')"
-                              :items="userStates"
-                              v-model="profileData.stateId"
-                              item-title="title"
-                              item-value="id"
-                              label="State/province/area"
-                              placeholder="Select a State/province/area"
-                              @update:model-value="fetchCitiesByStateId"
-                            />
-                          </v-col>
-                          <v-col cols="12" md="6">
-                            <v-select
-                              :loading="$loading('fetchUserCities')"
-                              v-model="profileData.cityId"
-                              :items="userCities"
-                              item-title="title"
-                              item-value="id"
-                              label="City"
-                              placeholder="Select a City"
-                            />
-                          </v-col>
+                      <!-- Address Section -->
+                      <v-card class="mb-6">
+                        <v-card-title>Address</v-card-title>
+                        <v-card-text>
+                          <v-row>
+                            <v-col cols="12" md="6">
+                              <v-text-field v-model="profileData.address" label="Address" :rules="[rules.required]" />
+                            </v-col>
+                            <v-col cols="12" md="6">
+                              <v-select
+                                :loading="$loading('fetchUserCountries')"
+                                v-model="profileData.countryId"
+                                :items="userCountries"
+                                item-title="title"
+                                item-value="id"
+                                label="Select Country"
+                                @update:model-value="fetchStateByCountryId"
+                                placeholder="Select a Country"
+                              />
+                            </v-col>
+                            <v-col cols="12" md="6">
+                              <v-select
+                                :loading="$loading('fetchUserStates')"
+                                :items="userStates"
+                                v-model="profileData.stateId"
+                                item-title="title"
+                                item-value="id"
+                                label="State/province/area"
+                                placeholder="Select a State/province/area"
+                                @update:model-value="fetchCitiesByStateId"
+                              />
+                            </v-col>
+                            <v-col cols="12" md="6">
+                              <v-select
+                                :loading="$loading('fetchUserCities')"
+                                v-model="profileData.cityId"
+                                :items="userCities"
+                                item-title="title"
+                                item-value="id"
+                                label="City"
+                                placeholder="Select a City"
+                              />
+                            </v-col>
 
-                          <v-col cols="12" md="6">
-                            <v-text-field
-                              v-model="profileData.zipCode"
-                              label="Zip Code"
-                              type="number"
-                              :rules="[rules.required]"
-                            />
-                          </v-col>
-                        </v-row>
-                      </v-card-text>
-                    </v-card>
+                            <v-col cols="12" md="6">
+                              <v-text-field
+                                v-model="profileData.zipCode"
+                                label="Zip Code"
+                                type="number"
+                                :rules="[rules.required]"
+                              />
+                            </v-col>
+                          </v-row>
+                        </v-card-text>
+                      </v-card>
 
-                    <!-- Time Zone and Date Format Section -->
-                    <v-card class="mb-6">
-                      <v-card-title>Regional Date & Time Preferences</v-card-title>
-                      <v-card-text>
-                        <v-row>
-                          <v-col cols="12" md="6">
-                            <v-select
-                              :loading="$loading('fetchTimeZones')"
-                              v-model="profileData.timezoneName"
-                              :items="timeZones"
-                              item-title="timeZoneName"
-                              item-value="timeZoneName"
-                              label="Select Time Zone"
-                              placeholder="Select Time Zone"
-                              @update:model-value="SetTimeFormat"
-                            />
-                          </v-col>
-                          <v-col cols="12" md="6">
-                            <v-select
-                              :loading="$loading('fetchDateFormats')"
-                              :items="dateFormats"
-                              v-model="profileData.dateTimeFormat"
-                              label="Select a date format"
-                              placeholder="Select a date format"
-                            />
-                          </v-col>
-                        </v-row>
-                      </v-card-text>
-                    </v-card>
-
-                    <v-btn :loading="$loading('updateUser')" @click="updateUser" color="primary">Update</v-btn>
-                    <v-btn @click="cancelEdit" color="primary" class="ml-4">Cancel</v-btn>
-                  </v-form>
+                      <!-- Time Zone and Date Format Section -->
+                      <v-card class="mb-6">
+                        <v-card-title>Regional Date & Time Preferences</v-card-title>
+                        <v-card-text>
+                          <v-row>
+                            <v-col cols="12" md="6">
+                              <v-select
+                                :loading="$loading('fetchTimeZones')"
+                                v-model="profileData.timezoneName"
+                                :items="timeZones"
+                                item-title="timeZoneName"
+                                item-value="timeZoneName"
+                                label="Select Time Zone"
+                                placeholder="Select Time Zone"
+                                @update:model-value="SetTimeFormat"
+                              />
+                            </v-col>
+                            <v-col cols="12" md="6">
+                              <v-select
+                                :loading="$loading('fetchDateFormats')"
+                                :items="dateFormats"
+                                v-model="profileData.dateTimeFormat"
+                                label="Select a date format"
+                                placeholder="Select a date format"
+                              />
+                            </v-col>
+                          </v-row>
+                          <v-row class="justify-end">
+                            <v-btn @click="cancelEdit" color="primary">Cancel</v-btn>
+                            <v-btn :loading="$loading('updateUser')" @click="updateUser" color="primary" class="ml-4"
+                              >Update</v-btn
+                            >
+                          </v-row>
+                        </v-card-text>
+                      </v-card>
+                    </v-form>
+                  </template>
                 </v-card-text>
               </v-card>
             </v-tabs-window-item>
@@ -758,7 +774,9 @@ onMounted(async () => {
                 <v-card-text>
                   <template v-if="loadingPermissions">
                     <!-- Loader component -->
-                    <v-progress-circular indeterminate color="primary"></v-progress-circular>
+                    <div class="d-flex justify-center pa-5">
+                      <v-progress-circular indeterminate color="primary"></v-progress-circular>
+                    </div>
                   </template>
                   <template v-else>
                     <v-row>
@@ -789,14 +807,15 @@ onMounted(async () => {
                       <v-card-text>
                         <v-form>
                           <v-row class="justify-end">
+                            <v-btn @click="cancelEdit" color="primary">Cancel</v-btn>
                             <v-btn
                               :loading="$loading('invokeUserPermission')"
                               @click="invokeUserPermission(profileData.id, profileData.organizationId)"
                               color="primary"
+                              class="ml-4"
                             >
                               Update
                             </v-btn>
-                            <v-btn @click="cancelEdit" color="primary" class="ml-4">Cancel</v-btn>
                           </v-row>
                         </v-form>
                       </v-card-text>

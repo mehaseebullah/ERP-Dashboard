@@ -14,9 +14,12 @@ onMounted(() => {
 
 <template>
   <v-container>
-    <div v-if="$loading('fetchTrialBalance')" class="d-flex justify-center pa-5">
-      <v-progress-circular indeterminate color="primary"></v-progress-circular>
-    </div>
+    <!-- Loader Section -->
+    <template v-if="$loading('fetchTrialBalance')">
+      <v-container class="d-flex justify-center align-center pa-5">
+        <v-progress-circular indeterminate color="primary"></v-progress-circular>
+      </v-container>
+    </template>
 
     <v-sheet v-else>
       <v-row :loading="$loading('fetchTrialBalance')">
@@ -42,3 +45,15 @@ onMounted(() => {
     </v-sheet>
   </v-container>
 </template>
+<style scoped>
+.loader-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100vw;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+}
+</style>

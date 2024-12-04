@@ -159,12 +159,12 @@ onMounted(async () => {
       </v-card-text>
     </v-card>
 
-    <main-drawer v-model="showRoles" width="1025" title="Invoke Permissions" :toolbar="{ color: 'primary' }">
+    <main-drawer v-model="showRoles" width="1025" title="Permissions" :toolbar="{ color: 'primary' }">
       <v-card flat
         ><v-card-text>
           <template v-if="loadingPermissions">
             <!-- Loader component -->
-            <v-container fluid fill-height class="d-flex justify-center align-center">
+            <v-container fluid class="loader-container">
               <v-progress-circular indeterminate color="primary"></v-progress-circular>
             </v-container>
           </template>
@@ -193,14 +193,15 @@ onMounted(async () => {
               <v-card-text>
                 <v-form>
                   <v-row class="justify-end">
+                    <v-btn @click="cancelEdit" color="primary">Cancel</v-btn>
                     <v-btn
                       :loading="$loading('invokeRolePermission')"
                       @click="invokeRolePermission(roleData.roleId, roleData.organizationId)"
                       color="primary"
+                      class="ml-4"
                     >
                       Update
                     </v-btn>
-                    <v-btn @click="cancelEdit" color="primary" class="ml-4">Cancel</v-btn>
                   </v-row>
                 </v-form>
               </v-card-text>
@@ -214,5 +215,14 @@ onMounted(async () => {
 <style scoped>
 .mt-3 {
   margin-top: 1rem;
+}
+
+.loader-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  position: fixed;
+  inset: 0;
 }
 </style>
