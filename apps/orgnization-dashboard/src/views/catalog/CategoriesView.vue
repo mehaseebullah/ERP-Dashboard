@@ -66,10 +66,15 @@ async function newProductCategory() {
 }
 
 async function createProductCategory() {
-  await categoryStore.createProductCategory(formData.value);
-  showDrawer.value = false;
-  formData.value = { ...formModal };
-  isEdit.value = false;
+  const { valid } = await form.value.validate();
+  if (valid) {
+    await categoryStore.createProductCategory(formData.value);
+    showDrawer.value = false;
+    formData.value = { ...formModal };
+    isEdit.value = false;
+  } else {
+    swal.error('Please fill all fields');
+  }
 }
 
 async function editProductCategory(item) {

@@ -31,6 +31,8 @@ const { accounts } = storeToRefs(coaStore);
 const voucherStore = useVoucherStore();
 const { vouchers, voucherTypes } = storeToRefs(voucherStore);
 
+const form = ref();
+const payForm = ref();
 const swal = useSwal();
 const dialog = ref(false);
 const drawerTitle = computed(() => (isEdit.value ? 'UPDATE CUSTOMER' : 'CREATE CUSTOMER'));
@@ -75,10 +77,6 @@ const headers = [
 ];
 
 const ledgerHeaders = [
-  // {
-  //   title: '',
-  //   key: '',
-  // },
   {
     title: 'Debit',
     key: 'debit',
@@ -95,18 +93,6 @@ const ledgerHeaders = [
     title: 'Transction Date',
     key: 'tranactionDate',
   },
-  // {
-  //   title: 'Charts of Account',
-  //   key: 'chartsOfAccount',
-  // },
-  // {
-  //   title: 'Account Group',
-  //   key: 'accountGroup',
-  // },
-  // {
-  //   title: 'Account Type',
-  //   key: 'accountType',
-  // },
 ];
 
 const formModal = {
@@ -120,53 +106,27 @@ const formModal = {
 const formData = ref({ ...formModal });
 
 const payFormModal = {
-  voucherNo: null,
+  voucherNo: '',
   voucherTypeCode: 6,
   voucherDate: null,
   description: 'This is for customer',
-  // voucherId: null,
-  // voucherNo: null,
-  // voucherTypeId: null,
-  // voucherDate: null,
-  // description: '',
+
   ledgerDetailDTO: [
     {
-      accountId: '',
-      debit: 0,
-      credit: 200,
+      accountId: null,
+      debit: 0.0,
+      credit: 0.0,
       remarks: '',
     },
     {
-      accountCode: 1101,
-      debit: 200,
+      accountCode: '1101',
+      debit: 0.0,
       credit: 0.0,
     },
   ],
 };
-// CashInHand = 1101 code
-// {
-//   "voucherNo": "Get voucher no from api",
-//   "voucherTypeCode": 6,
-//   "voucherDate": null,
-//   "description": "This is for customer",
-//   "ledgerDetailDTO": [
-//     {
-//       "accountId": "to add customer account id",
-//       "debit": 0.0,
-//       "credit": 200,
-//       "remarks": "aaaa"
-//     },
-//     {
-//       "accountCode": 1101,
-//       "debit": 200,
-//       "credit": 0.0
-//     }
-//   ]
-// }
-// This is for customer
 
 const payFormData = ref({ ...payFormModal });
-//const payFormData = ref(JSON.parse(JSON.stringify(payFormModal)));
 
 const isEdit = ref(false);
 const showDrawer = ref(false);
@@ -174,7 +134,6 @@ const showPayDrawer = ref(false);
 
 const cancelPay = () => {
   payFormData.value = { ...payFormModal };
-  // payFormData.value = JSON.parse(JSON.stringify(payFormModal));
   showPayDrawer.value = false;
 };
 
@@ -186,25 +145,35 @@ watch(showPayDrawer, (newValue) => {
 });
 
 async function payVoucher() {
-  // payFormData.value.voucherTypeId = 6;
-  await customerStore.payVoucher(payFormData.value);
-  vouchers.value = [];
-  showPayDrawer.value = false;
-  payFormData.value = { ...payFormModal };
-  // payFormData.value = JSON.parse(JSON.stringify(payFormModal));
+  const { valid } = await payForm.value.validate();
+  if (valid) {
+    payFormData.value.ledgerDetailDTO[1].debit = payFormData.value.ledgerDetailDTO[0].credit;
+    await customerStore.payVoucher(payFormData.value);
+    vouchers.value = [];
+    showPayDrawer.value = false;
+    payFormData.value = { ...payFormModal };
+  } else {
+    swal.error('Please fill all fields');
+  }
 }
 
 async function newCustomer() {
   formData.value = { ...formModal };
+  form.value.resetValidation();
   isEdit.value = false;
   showDrawer.value = true;
 }
 
 async function createCustomer() {
-  await customerStore.createCustomer(formData.value);
-  showDrawer.value = false;
-  formData.value = { ...formModal };
-  isEdit.value = false;
+  const { valid } = await form.value.validate();
+  if (valid) {
+    await customerStore.createCustomer(formData.value);
+    showDrawer.value = false;
+    formData.value = { ...formModal };
+    isEdit.value = false;
+  } else {
+    swal.error('Please fill all fields');
+  }
 }
 
 async function editCustomer(item) {
@@ -214,10 +183,15 @@ async function editCustomer(item) {
 }
 
 async function updateCustomer() {
-  await customerStore.updateCustomer(formData.value);
-  showDrawer.value = false;
-  formData.value = { ...formModal };
-  isEdit.value = false;
+  const { valid } = await form.value.validate();
+  if (valid) {
+    await customerStore.updateCustomer(formData.value);
+    showDrawer.value = false;
+    formData.value = { ...formModal };
+    isEdit.value = false;
+  } else {
+    swal.error('Please fill all fields');
+  }
 }
 
 async function fetchCustomerTranstionDetails(accountId) {
@@ -231,7 +205,7 @@ async function newInvoiceNum() {
 
 async function pay(id) {
   payFormData.value = JSON.parse(JSON.stringify({ ...payFormModal }));
-  // payFormData.value = { ...payFormModal };
+  payForm.value.resetValidation();
   showPayDrawer.value = true;
   await newInvoiceNum();
   payFormData.value.ledgerDetailDTO[0].accountId = id;
@@ -291,12 +265,37 @@ onMounted(() => {
       </v-card-text>
     </v-card>
     <main-drawer v-model="showDrawer" width="800" :title="drawerTitle" :toolbar="{ color: 'primary' }">
-      <v-form class="pa-5" @submit.prevent="isEdit ? updateCustomer() : createCustomer()">
-        <v-text-field v-model="formData.firstName" label="First Name" variant="outlined"></v-text-field>
-        <v-text-field v-model="formData.lastName" label="Last Name" variant="outlined"></v-text-field>
-        <v-text-field v-model="formData.emailAddress" label="Email" variant="outlined"></v-text-field>
-        <v-text-field v-model="formData.contactNumber" label="Phone" variant="outlined"></v-text-field>
-        <v-textarea v-model="formData.address" label="Address" variant="outlined"></v-textarea>
+      <v-form ref="form" class="pa-5" @submit.prevent="isEdit ? updateCustomer() : createCustomer()">
+        <v-text-field
+          v-model="formData.firstName"
+          label="First Name"
+          variant="outlined"
+          :rules="[rules.required]"
+        ></v-text-field>
+        <v-text-field
+          v-model="formData.lastName"
+          label="Last Name"
+          variant="outlined"
+          :rules="[rules.required]"
+        ></v-text-field>
+        <v-text-field
+          v-model="formData.emailAddress"
+          label="Email"
+          variant="outlined"
+          :rules="[rules.email]"
+        ></v-text-field>
+        <v-text-field
+          v-model="formData.contactNumber"
+          label="Phone"
+          variant="outlined"
+          :rules="[rules.required]"
+        ></v-text-field>
+        <v-textarea
+          v-model="formData.address"
+          label="Address"
+          variant="outlined"
+          :rules="[rules.required]"
+        ></v-textarea>
         <div class="d-flex justify-end">
           <v-btn v-if="isEdit" :loading="$loading('updateCustomer')" type="submit" color="primary">Update</v-btn>
           <v-btn v-else :loading="$loading('createCustomer')" type="submit" color="primary">Create</v-btn>
@@ -305,9 +304,9 @@ onMounted(() => {
     </main-drawer>
 
     <main-drawer v-model="showPayDrawer" width="800" title="Pay" :toolbar="{ color: 'primary' }">
-      <v-form class="pa-5" @submit.prevent="payVoucher()">
+      <v-form ref="payForm" class="pa-5" @submit.prevent="payVoucher()">
         <template v-for="(entry, index) in payFormData.ledgerDetailDTO" :key="index">
-          <v-row>
+          <v-row v-if="index === 0">
             <v-col>
               <v-text-field
                 type="text"
@@ -315,6 +314,7 @@ onMounted(() => {
                 v-model.number="entry.remarks"
                 label="Remarks"
                 variant="outlined"
+                :rules="[rules.required]"
               ></v-text-field>
             </v-col>
 
@@ -325,13 +325,14 @@ onMounted(() => {
                 v-model.number="entry.credit"
                 label="Amount"
                 variant="outlined"
+                :rules="[rules.required]"
               ></v-text-field>
             </v-col>
           </v-row>
         </template>
 
         <div class="d-flex justify-end">
-          <v-btn :loading="$loading('createVoucher')" type="submit" color="primary">Pay</v-btn>
+          <v-btn :loading="$loading('payVoucher')" type="submit" color="primary">Pay</v-btn>
         </div>
       </v-form>
     </main-drawer>
@@ -351,11 +352,6 @@ onMounted(() => {
           >
             <template v-slot:body.append>
               <tr>
-                <!-- <td><strong>Total</strong></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td> -->
                 <td>
                   <strong>{{ calculateTotal(ledgerDetails, 'debit') }}</strong>
                 </td>

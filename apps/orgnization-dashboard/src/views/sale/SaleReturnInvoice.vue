@@ -74,7 +74,6 @@ const headers = [
 
 // Headers for the nested grid (Items table)
 const getItemHeaders = () => [
-  // { title: 'Product Id', key: 'productId', sortable: true },
   { title: 'Product Name', key: 'title', sortable: true },
   { title: 'Quantity', key: 'quantity', sortable: true },
   { title: 'Purchase Price', key: 'purchasePrice', sortable: true },
@@ -161,7 +160,6 @@ onMounted(async () => {
                     <!-- Totals row at the bottom -->
                     <template v-slot:body.append>
                       <tr>
-                        <!-- <td><strong>Total</strong></td> -->
                         <td><strong></strong></td>
                         <td>
                           <strong>{{ calculateTotal(item.rsiDetails, 'quantity') }}</strong>
