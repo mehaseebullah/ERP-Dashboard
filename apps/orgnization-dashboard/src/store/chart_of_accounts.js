@@ -15,7 +15,7 @@ export const useChartOfAccounts = defineStore({
     },
     async fetchAllAccountGroups() {
       const { data } = await api.get('/Finance/AccountGroups/GetAllAccountGroups');
-      console.log(data);
+      // console.log(data);
       this.accountGroups = data?.data;
     },
     async fetchAllChartOfAccounts() {

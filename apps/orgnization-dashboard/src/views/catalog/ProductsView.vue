@@ -128,10 +128,15 @@ async function newProduct() {
 }
 
 async function createProduct() {
-  await productStore.createProduct(formData.value);
-  showDrawer.value = false;
-  formData.value = { ...formModal };
-  isEdit.value = false;
+  const { valid } = await form.value.validate();
+  if (valid) {
+    await productStore.createProduct(formData.value);
+    showDrawer.value = false;
+    formData.value = { ...formModal };
+    isEdit.value = false;
+  } else {
+    swal.error('Please fill all fields');
+  }
 }
 
 async function editProduct(item) {

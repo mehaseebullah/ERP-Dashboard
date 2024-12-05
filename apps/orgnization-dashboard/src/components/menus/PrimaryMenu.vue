@@ -35,6 +35,8 @@ onMounted(() => {
   const jwtToken = localStorage.getItem('access_token'); // Retrieve token from localStorage
   if (jwtToken) {
     const decodedToken = decodeJwt(jwtToken);
+    // console.log('decoded token is : ', decodedToken);
+
     if (decodedToken) {
       username.value = decodedToken.Username || 'Guest'; // Adjust the key as per your token structure
       profilePicture.value = decodedToken.ProfilePicturePath || 'https://randomuser.me/api/portraits/women/81.jpg'; // Adjust the key as per your token structure

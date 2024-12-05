@@ -26,7 +26,7 @@ export async function registerPlugins(app) {
 
   if (localStorage.getItem('access_token')) {
     const response = await api.get('/Tenant/Account/GetUserMenus');
-    console.log(response);
+    // console.log(response);
     const menus = response.data.data.reduce((finalResult, item) => {
       finalResult[item.module] = finalResult[item.module] || {
         isMenu: item.mIsMenu,
@@ -61,7 +61,7 @@ export async function registerPlugins(app) {
       return finalResult;
     }, {});
 
-    console.log('menus', menus);
+    // console.log('menus', menus);
     const modules = [];
 
     // {

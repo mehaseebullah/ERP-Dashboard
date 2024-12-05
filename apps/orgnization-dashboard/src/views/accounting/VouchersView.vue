@@ -24,6 +24,8 @@ const coaStore = useChartOfAccounts();
 const { accounts } = storeToRefs(coaStore);
 const voucherStore = useVoucherStore();
 const { vouchers, voucherTypes } = storeToRefs(voucherStore);
+
+const form = ref();
 const swal = useSwal();
 const drawerTitle = computed(() => (isEdit.value ? 'UPDATE VOUCHER' : 'CREATE VOUCHER'));
 const expandedItemLength = ref(0);
@@ -98,31 +100,41 @@ watch(showDrawer, (newValue) => {
 });
 
 async function newInvoiceNum() {
-  formData.value = JSON.parse(JSON.stringify({ ...formModal }));
   formData.value.voucherNo = await generateInoiceNumberStore.fetchGenerateInvoiceNumber({ Prefix: 'VCH' });
 }
 
 async function newVoucher() {
-  // formData.value = { ...formModal };
+  formData.value = JSON.parse(JSON.stringify({ ...formModal }));
+  form.value.resetValidation();
   isEdit.value = false;
   showDrawer.value = true;
   await newInvoiceNum();
 }
 
 async function createVoucher() {
-  await voucherStore.createVoucher(formData.value);
-  showDrawer.value = false;
-  formData.value = { ...formModal };
+  const { valid } = await form.value.validate();
+  if (valid) {
+    await voucherStore.createVoucher(formData.value);
+    showDrawer.value = false;
+    formData.value = { ...formModal };
+  } else {
+    swal.error('Please fill all fields');
+  }
 }
 
 async function updateVoucher() {
-  await voucherStore.updateVoucher(formData.value);
-  expanded.value = [];
-  vouchers.value = [];
-  expandedItemLength.value = 0;
-  showDrawer.value = false;
-  formData.value = { ...formModal };
-  isEdit.value = false;
+  const { valid } = await form.value.validate();
+  if (valid) {
+    await voucherStore.updateVoucher(formData.value);
+    expanded.value = [];
+    vouchers.value = [];
+    expandedItemLength.value = 0;
+    showDrawer.value = false;
+    formData.value = { ...formModal };
+    isEdit.value = false;
+  } else {
+    swal.error('Please fill all fields');
+  }
 }
 
 async function deleteVoucher(id) {
@@ -280,29 +292,24 @@ onMounted(async () => {
     </v-card>
 
     <main-drawer v-model="showDrawer" width="800" :title="drawerTitle" :toolbar="{ color: 'primary' }">
-      <v-form class="pa-5" @submit.prevent="isEdit ? updateVoucher() : createVoucher()">
-        <v-text-field
-          v-model="formData.voucherDate"
-          label="Date"
-          type="date"
-          variant="outlined"
-          :loading="$loading('fetchLedgersByVoucherId')"
-        ></v-text-field>
+      <v-form ref="form" class="pa-5" @submit.prevent="isEdit ? updateVoucher() : createVoucher()">
+        <v-text-field v-model="formData.voucherDate" label="Date" type="date" variant="outlined"></v-text-field>
         <v-text-field
           v-model="formData.voucherNo"
           label="Voucher No"
           variant="outlined"
-          :loading="$loading('fetchLedgersByVoucherId')"
+          :loading="$loading('fetchGenerateInvoiceNumber')"
           readonly
+          :rules="[rules.required]"
         ></v-text-field>
         <v-select
           :items="voucherTypes"
           item-title="title"
           item-value="id"
           v-model="formData.voucherTypeId"
-          :loading="$loading('fetchLedgersByVoucherId')"
           label="Type"
           variant="outlined"
+          :rules="[rules.required]"
         >
         </v-select>
         <v-textarea
@@ -310,7 +317,7 @@ onMounted(async () => {
           label="Description"
           variant="outlined"
           rows="2"
-          :loading="$loading('fetchLedgersByVoucherId')"
+          :rules="[rules.required]"
         ></v-textarea>
         <template v-for="(entry, index) in formData.ledgerDetailDTO" :key="index">
           <v-row>
@@ -324,6 +331,7 @@ onMounted(async () => {
                 label="Account"
                 variant="outlined"
                 density="compact"
+                :rules="[rules.required]"
               ></v-select>
             </v-col>
             <v-col>
@@ -333,6 +341,7 @@ onMounted(async () => {
                 v-model.number="entry.remarks"
                 label="Remarks"
                 variant="outlined"
+                :rules="[rules.required]"
               ></v-text-field>
             </v-col>
             <v-col>
@@ -342,6 +351,7 @@ onMounted(async () => {
                 v-model.number="entry.debit"
                 label="Debit"
                 variant="outlined"
+                :rules="[rules.required]"
               ></v-text-field>
             </v-col>
             <v-col>
@@ -351,6 +361,7 @@ onMounted(async () => {
                 v-model.number="entry.credit"
                 label="Credit"
                 variant="outlined"
+                :rules="[rules.required]"
               ></v-text-field>
             </v-col>
             <v-col v-if="index > 0" cols="1">

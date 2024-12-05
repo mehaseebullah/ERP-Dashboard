@@ -116,8 +116,6 @@ export const useUserStore = defineStore({
     },
 
     async invokeUserPermission(UserId, OrganizationId, selectedCodes) {
-      console.log(selectedCodes);
-
       const { data } = await api.post(
         `/Tenant/Account/InvokeUserPermission/${OrganizationId}/${UserId}`,
         selectedCodes,

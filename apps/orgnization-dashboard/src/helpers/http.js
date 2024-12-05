@@ -33,7 +33,7 @@ api.interceptors.request.use(
 
 api.interceptors.response.use(
   (response) => {
-    console.log('test');
+    // console.log('test');
     const swal = useSwal();
     if (response?.data?.message && (response?.statusText == 'OK' || response?.statusText == 'Created')) {
       swal.success(response.data.message);
@@ -46,7 +46,7 @@ api.interceptors.response.use(
     console.log('tstes');
     const swal = useSwal();
 
-    if (error?.response?.status === 401) {
+    if (error?.response?.status == '401') {
       localStorage.removeItem('access_token');
       router.push('/auth/login');
     } else if (error?.response?.data?.message && error?.response?.status == '404') {
