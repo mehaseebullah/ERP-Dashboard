@@ -76,7 +76,6 @@ const headers = [
 const getItemHeaders = () => [
   { title: 'Product Name', key: 'title', sortable: true },
   { title: 'Quantity', key: 'quantity', sortable: true },
-  { title: 'Purchase Price', key: 'purchasePrice', sortable: true },
   { title: 'Sale Price', key: 'salePrice', sortable: true },
   { title: 'Discount', key: 'discount', sortable: true },
   { title: 'Total', key: 'total', sortable: true },
@@ -163,9 +162,6 @@ onMounted(async () => {
                         <td><strong></strong></td>
                         <td>
                           <strong>{{ calculateTotal(item.rsiDetails, 'quantity') }}</strong>
-                        </td>
-                        <td>
-                          <strong>{{ calculateTotal(item.rsiDetails, 'purchasePrice') }}</strong>
                         </td>
                         <td>
                           <strong>{{ calculateTotal(item.rsiDetails, 'salePrice') }}</strong>

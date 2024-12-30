@@ -1,5 +1,5 @@
 export default {
-  required: (value) => !!value || 'Required.',
+  required: (value) => (value !== null && value !== undefined && value !== '') || 'Required.',
   maxLength: (len) => (value) => value.length <= len || `Max ${len} characters`,
   minLength: (len) => (value) => value.length >= len || `Minimum ${len} characters`,
   email: (value) => {
