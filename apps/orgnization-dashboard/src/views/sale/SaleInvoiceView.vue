@@ -83,7 +83,7 @@ const headers = [
 const getItemHeaders = () => [
   { title: 'Product Name', key: 'title', sortable: true },
   { title: 'Quantity', key: 'quantity', sortable: true },
-  { title: 'Purchase Price', key: 'purchasePrice', sortable: true },
+  { title: 'Sale Price', key: 'salePrice', sortable: true },
   { title: 'Discount', key: 'discount', sortable: true },
   { title: 'Total', key: 'total', sortable: true },
 ];
@@ -268,12 +268,11 @@ onMounted(async () => {
                           <strong>{{ calculateTotal(item.siDetails, 'quantity') }}</strong>
                         </td>
                         <td>
-                          <strong>{{ calculateTotal(item.siDetails, 'purchasePrice') }}</strong>
+                          <strong>{{ calculateTotal(item.siDetails, 'salePrice') }}</strong>
                         </td>
                         <td>
                           <strong>{{ calculateTotal(item.siDetails, 'discount') }}</strong>
                         </td>
-
                         <td>
                           <strong>{{ calculateTotal(item.siDetails, 'total') }}</strong>
                         </td>
